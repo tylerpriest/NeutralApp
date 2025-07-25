@@ -34,7 +34,7 @@ actions:
       
       **Step 2: 🎯 Identify Current Task**
       - Reference specific task from tasks.md file
-      - Update task status to in progress with [o] in tasks.md
+      - Update task status to in progress with [-] in tasks.md
       - Ensure task references specific requirements from requirements.md
       - Check task has not already been completed even if not marked completed
       
@@ -59,14 +59,38 @@ actions:
       
       After implementation:
       
-      **Step 5: 🧪 Verify All Tests Pass**
+      **Step 5: 🧪 Verify Production-Ready Quality Gates**
+      
+      **MANDATORY QUALITY GATES - ALL MUST PASS BEFORE PROCEEDING:**
+      
+      **Gate 1: TypeScript Compilation Gate**
+      - ALL TypeScript compilation must succeed with zero errors
+      - No compilation warnings that could lead to runtime issues
+      - All type definitions must be complete and accurate
+      - Command: `npm run build` or `tsc --noEmit` must pass completely
+      
+      **Gate 2: Core Test Suite Gate** 
+      - Core test suite must maintain >80% pass rate minimum
+      - All critical functionality tests must pass
+      - No failing tests in core system components
+      - Command: `npm test` must show >80% pass rate
+      
+      **Gate 3: Critical Services Gate**
+      - All critical services must have working interfaces
+      - Core system APIs must be functional and responsive
+      - Authentication, plugin manager, settings, and UI shell must be operational
+      - Integration tests for critical services must pass
+      
+      **Additional Quality Verification:**
       - Run all tests (unit, integration, end-to-end)
       - Ensure no regressions in existing functionality
       - Verify error handling works as designed
+      - Confirm all acceptance criteria are met
       
       **Step 6: 📚 Update Documentation**
       - Update any relevant README
-      - Update relex all tasks that have been completed @000-definition-of-done.mdc @00-relentless-mode-rule.mdc vant specs files in `.kiro/specs/`
+      - Update all tasks that have been completed 
+      - Update specs files in `.kiro/specs/` if applicable
       - Update API documentation if applicable
       - Add code comments for complex logic
       - Update steering files in `.kiro/steering/` if patterns changed
@@ -94,10 +118,14 @@ actions:
       2. Current task identified and marked in_progress
       3. Tests written first (TDD approach)
       4. Minimal implementation completed following steering guidelines
-      5. All tests passing
-      6. Documentation updated
-      7. Task status updated to completed
-      8. Changes committed
+      5. Production-ready quality gates passed:
+         - **TypeScript Compilation Gate**: All compilation succeeds (zero errors)
+         - **Core Test Suite Gate**: >80% pass rate maintained  
+         - **Critical Services Gate**: All critical services have working interfaces
+      6. All tests passing
+      7. Documentation updated
+      8. Task status updated to completed
+      9. Changes committed
       
       Please complete missing steps following Kiro's spec workflow.
 
@@ -110,10 +138,14 @@ actions:
       - [ ] 2. 🎯 Current task identified and status set to in progress
       - [ ] 3. ✅ Tests written first (TDD approach)
       - [ ] 4. 🏗 Minimal implementation following modular feature-based architecture
-      - [ ] 5. 🧪 All tests passing (unit, integration, e2e)
-      - [ ] 6.  Documentation updated (README, API docs, steering, specs)
-      - [ ] 7.  Tasks status updated to completed
-      - [ ] 8. 🔄 Changes committed, ready for next task
+      - [ ] 5. 🚦 Production-ready quality gates passed:
+        - [ ] 5.1. **TypeScript Compilation Gate**: All compilation succeeds (zero errors)
+        - [ ] 5.2. **Core Test Suite Gate**: >80% pass rate maintained
+        - [ ] 5.3. **Critical Services Gate**: All critical services have working interfaces
+      - [ ] 6. 🧪 All tests passing (unit, integration, e2e)
+      - [ ] 7. � Doscumentation updated (README, API docs, steering, specs)
+      - [ ] 8. � CTasks status updated to completed
+      - [ ] 9. 🔄 Changes committed, ready for next task
 
 examples:
   - input: "Implement authentication feature"
