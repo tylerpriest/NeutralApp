@@ -24,10 +24,11 @@ This project is in early planning phase. Tech stack decisions are pending based 
 - Version management and dependency resolution
 
 ### Development Tools
-- Automated testing framework (unit, integration, e2e)
-- Code linting and formatting standards
-- Build system with plugin hot-reloading
-- Comprehensive logging and debugging tools
+- **Testing Framework**: Comprehensive suite supporting unit, integration, and headless e2e tests
+- **Error Logging**: Structured logging system with dashboard integration (no console copy-pasting)
+- **Code Quality**: Linting, formatting, and quality gates preventing incomplete code
+- **Build System**: Plugin hot-reloading with automated test execution
+- **Debugging Tools**: Real-time error monitoring and traceability systems
 
 ## Common Commands (TBD)
 Once tech stack is selected, this section will include:
@@ -40,5 +41,7 @@ Once tech stack is selected, this section will include:
 - Security-first plugin isolation
 - Performance with many plugins
 - Developer-friendly APIs
-- Comprehensive error handling
-- Automated testing integration
+- **Complete error capture and traceability**
+- **Real-world testing with headless e2e scenarios**
+- **Dashboard-based error monitoring (no console debugging)**
+- Automated testing integration with quality gates
