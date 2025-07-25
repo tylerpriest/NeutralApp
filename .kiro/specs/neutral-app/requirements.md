@@ -126,29 +126,4 @@ NeutralApp is a domain-agnostic, ultra-modular application shell designed to ser
 1. WHEN accessing developer documentation THEN the system SHALL provide complete API interface documentation with examples
 2. WHEN building plugins THEN the system SHALL provide step-by-step developer guides and best practices
 3. WHEN administering the system THEN the system SHALL provide system administration documentation and troubleshooting guides
-4. WHEN API changes occur THEN the system SHALL maintain up-to-date documentation with version compatibility information
-5. IF documentation is outdated THEN the system SHALL provide warnings and links to current information
 
-### Requirement 11: Production Deployment and System Health
-
-**User Story:** As a system administrator, I want reliable deployment processes and health monitoring, so that I can maintain a stable production environment.
-
-#### Acceptance Criteria
-
-1. WHEN deploying to production THEN the system SHALL use optimized build configurations and environment-specific settings
-2. WHEN the system starts THEN the system SHALL provide health check endpoints for monitoring and load balancer integration
-3. WHEN system health degrades THEN the system SHALL provide early warning indicators and diagnostic information
-4. WHEN configuration changes are needed THEN the system SHALL support environment-specific settings without code changes
-5. IF deployment fails THEN the system SHALL provide detailed error information and rollback capabilities
-
-### Requirement 12: Web Server and Local Development Environment
-
-**User Story:** As a developer, I want a local web server that serves the NeutralApp with a beautiful interface, so that I can develop and test the application locally with immediate visual feedback.
-
-#### Acceptance Criteria
-
-1. WHEN the application starts THEN the system SHALL serve a web interface accessible at localhost:3000
-2. WHEN accessing the root URL THEN the system SHALL display a modern, responsive landing page showcasing NeutralApp features
-3. WHEN accessing the API status endpoint THEN the system SHALL return JSON status information about the running application
-4. WHEN the server is running THEN the system SHALL provide clear console output indicating the server status and available endpoints
-5. IF the server fails to start THEN the system SHALL provide detailed error messages and troubleshooting guidance

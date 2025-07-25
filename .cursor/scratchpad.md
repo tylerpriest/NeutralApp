@@ -32,4 +32,8 @@ Need to ensure specs, steering, rules, and README work together without overlap 
 **Definition of Done**: No overlapping documentation, clear hierarchy established, all docs reference modular architecture, consistent information across all files.
 
 
-## 3. Aesthetics 
+## 3. Update aesthetics based on .kiro/steering/design.md
+
+4. App works, Tests work, Acceptance Criteria are Good, Documentation is sync
+
+5. Build a hello world plugin
