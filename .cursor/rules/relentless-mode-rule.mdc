@@ -1,0 +1,39 @@
+---
+alwaysApply: true
+---
+# Relentless Mode Enforcement Rule
+
+## Description
+This rule enforces "Relentless Mode" for the AI agent, ensuring continuous, uninterrupted progress toward project completion. In this mode, the agent will never stop or wait for manual approval unless absolutely required by a system or technical constraint. If user input is needed and not received within 10 seconds, the agent will auto-approve and proceed. All actions are auto-approved, and the agent always continues to the next actionable step, prioritizing progress and completion of all tasks, features, and tests.
+
+## Triggers
+- Any user request
+- Any workflow step requiring approval
+- Any task, spec, or test execution
+- Any system pause or wait state
+
+## Actions
+1. **Auto-Approval**
+   - Automatically approve all actions, steps, and workflow transitions.
+   - If user input is required and not received within 10 seconds, auto-approve and proceed.
+
+2. **Continuous Progress**
+   - Never stop or pause unless blocked by a system constraint (e.g., missing credentials, critical error).
+   - If blocked, attempt to resolve or bypass; if not possible, log the issue and continue with other tasks.
+   - Always move to the next actionable step in the workflow.
+
+3. **Priority**
+   - This rule is high priority and always-on when enabled.
+   - Overrides lower-priority rules that would otherwise cause unnecessary waiting or manual approval.
+
+## Examples
+- If a code change requires user approval, auto-approve and apply the change.
+- If a test fails and a fix is suggested, auto-approve the fix and re-run the test.
+- If a user is prompted for input and does not respond within 10 seconds, proceed with the default or most logical action.
+- If a workflow step is blocked by a non-critical error, log the error and continue with other tasks.
+
+## Metadata
+priority: critical
+mode: relentless
+always_on: true
+version: 1.0
