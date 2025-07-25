@@ -1,9 +1,10 @@
-.kiro/specs/neutral-app-foundation
+.kiro/specs/neutral-app-foundation - in Cursor
 
-.kiro/specs/relentless-mode-improvement
+.kiro/specs/relentless-mode-improvement - in Kiro
 
 Update .cursor/rules/000-definition-of-done.mdc that we dont do TODO: 
 
+Notes
 
  @00-relentless-mode-rule.mdc
  @000-definition-of-done.mdc 

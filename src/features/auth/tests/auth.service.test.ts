@@ -24,8 +24,8 @@ describe('AuthenticationService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSupabaseClient.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
     authService = new AuthenticationService();
-    mockSupabaseClient.auth.getSession.mockResolvedValue({ data: { session: null }, error: null });
   });
 
   describe('signUp', () => {
@@ -258,19 +258,15 @@ describe('AuthenticationService', () => {
 
   describe('initializeAuth', () => {
     it('should initialize auth state from session', async () => {
-      const mockSession = {
-        access_token: 'test-token',
-        refresh_token: 'test-refresh-token',
-        user: {
-          id: 'user-123',
-          email: 'test@example.com',
-          email_confirmed_at: '2024-01-01T00:00:00Z',
-          created_at: '2024-01-01T00:00:00Z',
-          last_sign_in_at: '2024-01-15T00:00:00Z',
-          user_metadata: { displayName: 'Test User' }
-        }
+      const mockUser = {
+        id: 'user-123',
+        email: 'test@example.com',
+        email_confirmed_at: '2024-01-01T00:00:00Z',
+        created_at: '2024-01-01T00:00:00Z',
+        last_sign_in_at: '2024-01-15T00:00:00Z',
+        user_metadata: { displayName: 'Test User' }
       };
-      mockSupabaseClient.auth.getSession.mockResolvedValue({ data: { session: mockSession }, error: null });
+      mockSupabaseClient.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null });
 
       await authService.initializeAuth();
 
@@ -282,7 +278,7 @@ describe('AuthenticationService', () => {
     });
 
     it('should not set current user if no session exists', async () => {
-      mockSupabaseClient.auth.getSession.mockResolvedValue({ data: { session: null }, error: null });
+      mockSupabaseClient.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
 
       await authService.initializeAuth();
 
