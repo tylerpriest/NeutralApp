@@ -136,7 +136,7 @@ actions:
       - [ ] 1. 📋 Spec foundation verified (.kiro/specs/{feature}/requirements.md, design.md, tasks.md)
       - [ ] 1.1. 🎯 Steering guidelines reviewed (.kiro/steering/ for architecture and quality standards)
       - [ ] 2. 🎯 Current task identified and status set to in progress
-      - [ ] 3. ✅ Tests written first (TDD approach)
+      - [ ] 4. ✅ Tests written first (TDD approach)
       - [ ] 4. 🏗 Minimal implementation following modular feature-based architecture
       - [ ] 5. 🚦 Production-ready quality gates passed:
         - [ ] 5.1. **TypeScript Compilation Gate**: All compilation succeeds (zero errors)
