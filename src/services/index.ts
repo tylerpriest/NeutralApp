@@ -7,6 +7,10 @@ export { LayoutManager } from './layout.manager';
 export { DashboardManager } from './dashboard.manager';
 export { WidgetRegistry } from './widget.registry';
 export { LoggingService } from './logging.service';
+export { ErrorRecoveryService } from './error-recovery.service';
+export { TestRunner } from './test-runner.service';
+export { PluginTestManager } from './plugin-test-manager.service';
+export { ContinuousTestingService } from './continuous-testing.service';
 
 // Admin Services
 export { AdminDashboard } from './admin.dashboard';
