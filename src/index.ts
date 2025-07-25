@@ -1,6 +1,50 @@
-// Core exports
-export * from './types';
-export * from './interfaces';
+// NeutralApp Main Entry Point - Feature-Based Architecture
+
+// Shared Infrastructure (exported first to avoid conflicts)
+export * from './shared';
+// TODO: Add core exports when event bus and DI are implemented
+// export * from './core';
+
+// Feature Module Service Exports (avoiding interface conflicts with shared types)
+export { 
+  AuthenticationService, 
+  SessionManager 
+} from './features/auth';
+
+export { 
+  PluginManager, 
+  DependencyResolver,
+  PluginEventBus,
+  PluginStorageManager,
+  PluginHealthMonitor,
+  PluginVerifier,
+  PluginTestManager,
+  TestRunner,
+  ContinuousTestingService
+} from './features/plugin-manager';
+
+export {
+  NavigationManager,
+  LayoutManager,
+  DashboardManager,
+  WidgetRegistry
+} from './features/ui-shell';
+
+export {
+  SettingsService
+} from './features/settings';
+
+export {
+  AdminDashboard,
+  UserManager,
+  SystemMonitor,
+  SystemReportGenerator
+} from './features/admin';
+
+export {
+  LoggingService,
+  ErrorRecoveryService
+} from './features/error-reporter';
 
 // Main application class (to be implemented)
 export class NeutralApp {
