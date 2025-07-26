@@ -54,6 +54,7 @@ const TransitionWrapper: React.FC<TransitionWrapperProps> = ({
         return () => clearTimeout(enterTimeout);
       } else {
         setIsVisible(true);
+        return undefined;
       }
     } else if (!show && isVisible) {
       // Exit transition
@@ -66,10 +67,13 @@ const TransitionWrapper: React.FC<TransitionWrapperProps> = ({
           setIsTransitioning(false);
           onTransitionEnd?.();
         }, duration + delay);
+        return undefined;
       } else {
         setIsVisible(false);
+        return undefined;
       }
     }
+    return undefined;
   }, [show, isVisible, enter, exit, duration, delay, onTransitionStart, onTransitionEnd]);
 
   // Cleanup on unmount
@@ -146,6 +150,7 @@ export function useTransition(show: boolean, options: {
         return () => clearTimeout(enterTimeout);
       } else {
         setIsVisible(true);
+        return undefined;
       }
     } else if (!show && isVisible) {
       if (exit) {
@@ -154,10 +159,13 @@ export function useTransition(show: boolean, options: {
           setIsVisible(false);
           setIsTransitioning(false);
         }, duration + delay);
+        return undefined;
       } else {
         setIsVisible(false);
+        return undefined;
       }
     }
+    return undefined;
   }, [show, isVisible, enter, exit, duration, delay]);
 
   useEffect(() => {

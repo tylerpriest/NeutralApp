@@ -174,7 +174,7 @@ export function useDataFetching<T>(
     }));
 
     throw lastError;
-  }, [key, fetcher, cacheTime, retryCount, retryDelay, timeout, monitorApiCall]);
+  }, [key, cacheTime, retryCount, retryDelay, timeout]);
 
   const refetch = useCallback(() => {
     return fetchData(true);
@@ -199,7 +199,7 @@ export function useDataFetching<T>(
         clearTimeout(retryTimeoutRef.current);
       }
     };
-  }, [immediate, fetchData]);
+  }, [immediate]);
 
   return {
     ...state,
