@@ -16,6 +16,7 @@ import {
   SystemAlert,
   PluginStatus
 } from '../../../shared/types';
+import './AdminPage.css';
 
 interface TabData {
   id: string;
@@ -175,6 +176,7 @@ const AdminPage: React.FC = () => {
       <div className="admin-page" role="main">
         <div className="admin-content">
           <h1>Admin Dashboard</h1>
+          <p>System monitoring and administration</p>
           <div className="loading-state">
             <div className="loading-spinner" data-testid="loading-spinner"></div>
             <p>Loading admin data...</p>
@@ -216,9 +218,9 @@ const AdminPage: React.FC = () => {
             <div className="admin-card">
               <h3>Plugins</h3>
               <div className="metrics">
-                <p>Installed: {pluginHealth.length}</p>
-                <p>Active: {pluginHealth.filter(p => p.status === PluginStatus.ENABLED).length}</p>
-                <p>Errors: {pluginHealth.reduce((total, p) => total + p.errors, 0)}</p>
+                <p>Installed: {pluginHealth?.length || 0}</p>
+                <p>Active: {pluginHealth?.filter(p => p.status === PluginStatus.ENABLED).length || 0}</p>
+                <p>Errors: {pluginHealth?.reduce((total, p) => total + p.errors, 0) || 0}</p>
               </div>
             </div>
           </div>
@@ -284,7 +286,7 @@ const AdminPage: React.FC = () => {
         <div className="users-content">
           <h3>User List</h3>
           <div className="user-list">
-            {users.map(user => (
+            {users?.map(user => (
               <div key={user.id} className="user-item">
                 <div className="user-info">
                   <span className="email">{user.email}</span>
@@ -333,7 +335,7 @@ const AdminPage: React.FC = () => {
         <div className="plugins-content">
           <h3>Plugin Health</h3>
           <div className="plugin-list">
-            {pluginHealth.map(plugin => (
+            {pluginHealth?.map(plugin => (
               <div key={plugin.pluginId} className="plugin-item">
                 <div className="plugin-info">
                   <span className="plugin-name">{plugin.pluginId}</span>
@@ -375,7 +377,7 @@ const AdminPage: React.FC = () => {
           </div>
           
           <div className="reports-list">
-            {reports.map((report, index) => (
+            {reports?.map((report, index) => (
               <div key={index} className="report-item">
                 <div className="report-info">
                   <span className="report-date">

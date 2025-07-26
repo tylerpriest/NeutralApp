@@ -8,29 +8,35 @@ import DashboardPage from './pages/DashboardPage';
 import PluginManagerPage from './pages/PluginManagerPage';
 import SettingsPage from './pages/SettingsPage';
 import AdminPage from './pages/AdminPage';
+import ErrorBoundary from './components/ErrorBoundary';
+import { ToastProvider } from './components/ToastManager';
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <div className="app">
-        <Routes>
-          <Route path="/auth" element={<AuthPage />} />
-          <Route
-            path="/"
-            element={
-              <AuthGuard>
-                <AppShell />
-              </AuthGuard>
-            }
-          >
-            <Route index element={<DashboardPage />} />
-            <Route path="plugins" element={<PluginManagerPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="admin" element={<AdminPage />} />
-          </Route>
-        </Routes>
-      </div>
-    </AuthProvider>
+    <ErrorBoundary>
+      <ToastProvider>
+        <AuthProvider>
+          <div className="app">
+            <Routes>
+              <Route path="/auth" element={<AuthPage />} />
+              <Route
+                path="/"
+                element={
+                  <AuthGuard>
+                    <AppShell />
+                  </AuthGuard>
+                }
+              >
+                <Route index element={<DashboardPage />} />
+                <Route path="plugins" element={<PluginManagerPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="admin" element={<AdminPage />} />
+              </Route>
+            </Routes>
+          </div>
+        </AuthProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 };
 

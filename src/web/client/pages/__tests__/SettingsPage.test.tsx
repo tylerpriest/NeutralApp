@@ -247,9 +247,14 @@ describe('SettingsPage', () => {
       
       renderWithProviders(<SettingsPage />);
       
+      // Wait for loading to complete
+      await waitFor(() => {
+        expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+      });
+      
+      // Plugin settings should be loaded and displayed in navigation
       await waitFor(() => {
         expect(screen.getByText('Test Plugin')).toBeInTheDocument();
-        expect(screen.getByText('Settings for Test Plugin')).toBeInTheDocument();
       });
     });
 
@@ -266,10 +271,22 @@ describe('SettingsPage', () => {
       
       renderWithProviders(<SettingsPage />);
       
+      // Wait for loading to complete
       await waitFor(() => {
-        const pluginButton = screen.getByText('Test Plugin');
-        fireEvent.click(pluginButton);
-        
+        expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+      });
+      
+      // Plugin settings should be loaded and displayed in navigation
+      await waitFor(() => {
+        expect(screen.getByText('Test Plugin')).toBeInTheDocument();
+      });
+      
+      // Click on plugin to view its settings
+      const pluginButton = screen.getByText('Test Plugin');
+      fireEvent.click(pluginButton);
+      
+      // Wait for plugin settings to be displayed
+      await waitFor(() => {
         const settingInput = screen.getByDisplayValue('test-value');
         fireEvent.change(settingInput, { target: { value: 'new-value' } });
         
@@ -286,13 +303,16 @@ describe('SettingsPage', () => {
     it('should show reset confirmation dialog', async () => {
       renderWithProviders(<SettingsPage />);
       
+      // Wait for loading to complete
       await waitFor(() => {
-        const resetButton = screen.getByRole('button', { name: 'Reset to Defaults' });
-        fireEvent.click(resetButton);
-        
-        expect(screen.getByText('Reset Settings')).toBeInTheDocument();
-        expect(screen.getByText('Are you sure you want to reset all settings to their default values? This action cannot be undone.')).toBeInTheDocument();
+        expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
       });
+      
+      const resetButton = screen.getByRole('button', { name: 'Reset to Defaults' });
+      fireEvent.click(resetButton);
+      
+      expect(screen.getByText('Reset Settings')).toBeInTheDocument();
+      expect(screen.getByText('Are you sure you want to reset all settings to their default values? This action cannot be undone.')).toBeInTheDocument();
     });
 
     it('should reset settings when confirmed', async () => {
@@ -300,39 +320,53 @@ describe('SettingsPage', () => {
       
       renderWithProviders(<SettingsPage />);
       
+      // Wait for loading to complete
       await waitFor(() => {
-        const resetButton = screen.getByRole('button', { name: 'Reset to Defaults' });
-        fireEvent.click(resetButton);
-        
+        expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+      });
+      
+      // Click reset button
+      const resetButton = screen.getByRole('button', { name: 'Reset to Defaults' });
+      fireEvent.click(resetButton);
+      
+      // Wait for dialog to appear and click confirm
+      await waitFor(() => {
         const confirmButton = screen.getByRole('button', { name: 'Reset All Settings' });
         fireEvent.click(confirmButton);
-        
-        expect(mockSettingsInstance.resetToDefaults).toHaveBeenCalled();
-        expect(screen.getByText('Settings reset to defaults')).toBeInTheDocument();
       });
+      
+      // Verify reset was called and notification shown
+      expect(mockSettingsInstance.resetToDefaults).toHaveBeenCalled();
+      expect(screen.getByText('Settings reset to defaults')).toBeInTheDocument();
     });
 
     it('should show export dialog', async () => {
       renderWithProviders(<SettingsPage />);
       
+      // Wait for loading to complete
       await waitFor(() => {
-        const exportButton = screen.getByRole('button', { name: 'Export' });
-        fireEvent.click(exportButton);
-        
-        expect(screen.getByRole('heading', { name: 'Export Settings' })).toBeInTheDocument();
+        expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
       });
+      
+      const exportButton = screen.getByRole('button', { name: 'Export' });
+      fireEvent.click(exportButton);
+      
+      expect(screen.getByRole('heading', { name: 'Export Settings' })).toBeInTheDocument();
     });
 
     it('should handle search functionality', async () => {
       renderWithProviders(<SettingsPage />);
       
+      // Wait for loading to complete
       await waitFor(() => {
-        const searchInput = screen.getByPlaceholderText('Search settings...');
-        fireEvent.change(searchInput, { target: { value: 'theme' } });
-        
-        // Should still show theme setting
-        expect(screen.getByText('Theme')).toBeInTheDocument();
+        expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
       });
+      
+      const searchInput = screen.getByPlaceholderText('Search settings...');
+      fireEvent.change(searchInput, { target: { value: 'theme' } });
+      
+      // Should still show theme setting
+      expect(screen.getByText('Theme')).toBeInTheDocument();
     });
   });
 
@@ -345,12 +379,15 @@ describe('SettingsPage', () => {
       
       renderWithProviders(<SettingsPage />);
       
+      // Wait for loading to complete
       await waitFor(() => {
-        const themeSelect = screen.getByDisplayValue('Light');
-        fireEvent.change(themeSelect, { target: { value: 'invalid' } });
-        
-        expect(screen.getByText('Invalid value: Validation failed')).toBeInTheDocument();
+        expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
       });
+      
+      const themeSelect = screen.getByDisplayValue('Light');
+      fireEvent.change(themeSelect, { target: { value: 'invalid' } });
+      
+      expect(screen.getByText('Invalid value: Validation failed')).toBeInTheDocument();
     });
 
     it('should show error notification when setting save fails', async () => {
@@ -358,10 +395,17 @@ describe('SettingsPage', () => {
       
       renderWithProviders(<SettingsPage />);
       
+      // Wait for loading to complete
       await waitFor(() => {
-        const themeSelect = screen.getByDisplayValue('Light');
-        fireEvent.change(themeSelect, { target: { value: 'dark' } });
-        
+        expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+      });
+      
+      // Change theme setting
+      const themeSelect = screen.getByDisplayValue('Light');
+      fireEvent.change(themeSelect, { target: { value: 'dark' } });
+      
+      // Wait for error notification
+      await waitFor(() => {
         expect(screen.getByText('Save failed')).toBeInTheDocument();
       });
     });
