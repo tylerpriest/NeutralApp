@@ -1,0 +1,225 @@
+/* Widget Container Styles */
+.widget-grid {
+  display: grid;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  min-height: 400px;
+}
+
+.widget-item {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--spacing-sm);
+  overflow: hidden;
+  transition: var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.widget-item:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.widget-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-header {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-gray-very-light);
+}
+
+.widget-title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.widget-body {
+  flex: 1;
+  padding: var(--spacing-md);
+  overflow: auto;
+}
+
+/* Error States */
+.widget-error-item {
+  border-color: var(--color-error);
+}
+
+.widget-error {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-error);
+}
+
+.widget-error-content h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+.widget-error-content p {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-small);
+  color: var(--color-gray-medium);
+}
+
+.widget-error-retry {
+  background: var(--color-error);
+  color: white;
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.widget-error-retry:hover {
+  background: var(--color-error-dark);
+}
+
+/* Loading States */
+.widget-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl);
+  color: var(--color-gray-medium);
+}
+
+.widget-loading .loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--spacing-md);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.widget-loading p {
+  margin: 0;
+  font-size: var(--font-size-small);
+}
+
+/* Empty State */
+.widget-empty-state {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--color-gray-medium);
+  grid-column: 1 / -1;
+}
+
+.widget-empty-state h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.widget-empty-state p {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .widget-grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+  }
+
+  .widget-item {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  .widget-header {
+    padding: var(--spacing-sm);
+  }
+
+  .widget-body {
+    padding: var(--spacing-sm);
+  }
+
+  .widget-error {
+    padding: var(--spacing-md);
+  }
+
+  .widget-loading {
+    padding: var(--spacing-xl);
+  }
+
+  .widget-empty-state {
+    padding: var(--spacing-xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .widget-grid {
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+  }
+
+  .widget-header {
+    padding: var(--spacing-xs);
+  }
+
+  .widget-body {
+    padding: var(--spacing-xs);
+  }
+
+  .widget-title {
+    font-size: var(--font-size-small);
+  }
+
+  .widget-error-content h4 {
+    font-size: var(--font-size-small);
+  }
+
+  .widget-error-content p {
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .widget-item {
+    border-width: 2px;
+  }
+
+  .widget-error-item {
+    border-width: 3px;
+  }
+
+  .widget-error-retry {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .widget-item {
+    transition: none;
+  }
+
+  .widget-item:hover {
+    transform: none;
+  }
+
+  .widget-loading .loading-spinner {
+    animation: none;
+  }
+} 

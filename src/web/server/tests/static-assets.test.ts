@@ -33,8 +33,16 @@ describe('Static Asset Delivery Tests', () => {
       const testApp = testServer.getApp();
 
       // Create a test JS file
-      const testJsPath = path.join(__dirname, '../client/test.js');
       const fs = require('fs');
+      const path = require('path');
+      const testJsPath = path.join(__dirname, '../../client/test.js');
+      
+      // Ensure directory exists
+      const dir = path.dirname(testJsPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       fs.writeFileSync(testJsPath, 'console.log("test");');
 
       try {
@@ -61,8 +69,16 @@ describe('Static Asset Delivery Tests', () => {
       const testServer = new SimpleWebServer();
       const testApp = testServer.getApp();
 
-      const testCssPath = path.join(__dirname, '../client/test.css');
       const fs = require('fs');
+      const path = require('path');
+      const testCssPath = path.join(__dirname, '../../client/test.css');
+      
+      // Ensure directory exists
+      const dir = path.dirname(testCssPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       fs.writeFileSync(testCssPath, 'body { color: red; }');
 
       try {
@@ -87,8 +103,16 @@ describe('Static Asset Delivery Tests', () => {
       const testServer = new SimpleWebServer();
       const testApp = testServer.getApp();
 
-      const testImagePath = path.join(__dirname, '../client/test.png');
       const fs = require('fs');
+      const path = require('path');
+      const testImagePath = path.join(__dirname, '../../client/test.png');
+      
+      // Ensure directory exists
+      const dir = path.dirname(testImagePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       fs.writeFileSync(testImagePath, 'fake-png-data');
 
       try {
@@ -134,8 +158,16 @@ describe('Static Asset Delivery Tests', () => {
       const testServer = new SimpleWebServer();
       const testApp = testServer.getApp();
 
-      const testJsPath = path.join(__dirname, '../client/test.js');
       const fs = require('fs');
+      const path = require('path');
+      const testJsPath = path.join(__dirname, '../../client/test.js');
+      
+      // Ensure directory exists
+      const dir = path.dirname(testJsPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       fs.writeFileSync(testJsPath, 'console.log("test");');
 
       try {
@@ -156,8 +188,16 @@ describe('Static Asset Delivery Tests', () => {
 
   describe('Asset Delivery', () => {
     it('should serve static files from the correct directory', async () => {
-      const testFilePath = path.join(__dirname, '../client/test.txt');
       const fs = require('fs');
+      const path = require('path');
+      const testFilePath = path.join(__dirname, '../../client/test.txt');
+      
+      // Ensure directory exists
+      const dir = path.dirname(testFilePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       fs.writeFileSync(testFilePath, 'test content');
 
       try {
@@ -178,10 +218,14 @@ describe('Static Asset Delivery Tests', () => {
       }
     });
 
-    it('should return 404 for non-existent static files', async () => {
+    it('should serve React app for non-existent static files (SPA behavior)', async () => {
       const response = await request(app)
         .get('/non-existent-file.txt')
-        .expect(404);
+        .expect(200);
+
+      // Should serve the React app HTML for SPA routing
+      expect(response.text).toContain('<!DOCTYPE html>');
+      expect(response.headers['content-type']).toContain('text/html');
     });
 
     it('should serve React app for all non-API routes', async () => {
@@ -206,8 +250,16 @@ describe('Static Asset Delivery Tests', () => {
 
   describe('Security Headers', () => {
     it('should include security headers for JavaScript files', async () => {
-      const testJsPath = path.join(__dirname, '../client/test.js');
       const fs = require('fs');
+      const path = require('path');
+      const testJsPath = path.join(__dirname, '../../client/test.js');
+      
+      // Ensure directory exists
+      const dir = path.dirname(testJsPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       fs.writeFileSync(testJsPath, 'console.log("test");');
 
       try {
@@ -227,8 +279,16 @@ describe('Static Asset Delivery Tests', () => {
     });
 
     it('should include ETag headers for static assets', async () => {
-      const testFilePath = path.join(__dirname, '../client/test.txt');
       const fs = require('fs');
+      const path = require('path');
+      const testFilePath = path.join(__dirname, '../../client/test.txt');
+      
+      // Ensure directory exists
+      const dir = path.dirname(testFilePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       fs.writeFileSync(testFilePath, 'test content');
 
       try {
@@ -248,8 +308,16 @@ describe('Static Asset Delivery Tests', () => {
     });
 
     it('should include Last-Modified headers for static assets', async () => {
-      const testFilePath = path.join(__dirname, '../client/test.txt');
       const fs = require('fs');
+      const path = require('path');
+      const testFilePath = path.join(__dirname, '../../client/test.txt');
+      
+      // Ensure directory exists
+      const dir = path.dirname(testFilePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       fs.writeFileSync(testFilePath, 'test content');
 
       try {
@@ -271,8 +339,16 @@ describe('Static Asset Delivery Tests', () => {
 
   describe('Performance Optimization', () => {
     it('should compress static assets when possible', async () => {
-      const testFilePath = path.join(__dirname, '../client/test.txt');
       const fs = require('fs');
+      const path = require('path');
+      const testFilePath = path.join(__dirname, '../../client/test.txt');
+      
+      // Ensure directory exists
+      const dir = path.dirname(testFilePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       const testContent = 'a'.repeat(1000); // Create content that would benefit from compression
       fs.writeFileSync(testFilePath, testContent);
 

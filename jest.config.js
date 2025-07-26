@@ -33,5 +33,8 @@ module.exports = {
       statements: 80
     }
   },
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts']
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
+  }
 }; 

@@ -40,11 +40,23 @@ export class SimpleWebServer {
         ? process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
         : true,
       credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      optionsSuccessStatus: 200 // Some legacy browsers choke on 204
     }));
 
     // Body parsing middleware
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+    // JSON parsing error handler
+    this.app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+      if (error instanceof SyntaxError && 'body' in error) {
+        return res.status(400).json({ error: 'Invalid JSON' });
+      }
+      next();
+      return;
+    });
 
     // Request logging middleware
     this.app.use((req: Request, res: Response, next: NextFunction) => {
@@ -89,6 +101,14 @@ export class SimpleWebServer {
     const apiRouter = new SimpleAPIRouter();
     this.app.use('/api', apiRouter.getRouter());
 
+    // Catch-all for API routes (must come before static file serving)
+    this.app.use('/api/*', (req: Request, res: Response) => {
+      res.status(404).json({ 
+        error: 'API endpoint not found',
+        available: ['/api/status', '/api/auth/*', '/api/plugins/*', '/api/admin/*']
+      });
+    });
+
     // Serve static files (React app) with caching and optimization
     this.app.use(express.static(path.join(__dirname, '../client'), {
       maxAge: process.env.NODE_ENV === 'production' ? '1y' : '0',
@@ -120,14 +140,6 @@ export class SimpleWebServer {
         res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
       }
       res.sendFile(path.join(__dirname, '../client/index.html'));
-    });
-
-    // Catch-all for API routes
-    this.app.get('/api/*', (req: Request, res: Response) => {
-      res.status(404).json({ 
-        error: 'API endpoint not found',
-        available: ['/api/status', '/api/auth/*', '/api/plugins/*', '/api/admin/*']
-      });
     });
 
     // Error handling middleware

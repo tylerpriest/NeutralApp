@@ -309,6 +309,7 @@ describe('API Integration Tests', () => {
     it('should include CORS headers', async () => {
       const response = await request(app)
         .get('/api/plugins')
+        .set('Origin', 'http://localhost:3001')
         .expect(200);
 
       expect(response.headers).toHaveProperty('access-control-allow-origin');

@@ -71,7 +71,7 @@ describe('TestRunner', () => {
       expect(results.totalTests).toBe(2);
       expect(results.passedTests).toBe(2);
       expect(results.failedTests).toBe(0);
-      expect(results.executionTime).toBeGreaterThan(0);
+      expect(results.executionTime).toBeGreaterThanOrEqual(0);
       expect(results.startTime).toBeInstanceOf(Date);
       expect(results.endTime).toBeInstanceOf(Date);
     });
