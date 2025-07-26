@@ -92,6 +92,11 @@
 
 ## Quality Gates
 
+### Failure Response Protocol
+- **Multi-Perspective Analysis Trigger**: When the same quality gate fails 3+ times in a row, or when facing persistent technical problems that resist straightforward solutions, automatically invoke the Multi-Perspective Problem Analysis framework using the `#multi-perspective-analysis` context key
+- **Systematic Problem Solving**: Step back from immediate implementation and analyze the problem from 7 professional perspectives (PM, Senior Dev, Code Monkey, QA Tester, DevOps, Tech Lead, Architect) before continuing
+- **Root Cause Focus**: Address underlying causes rather than repeatedly attempting surface-level fixes
+
 ### Pre-Production Checklist
 - [ ] All tests passing (unit, integration, e2e)
 - [ ] No TODOs in code
@@ -100,3 +105,4 @@
 - [ ] User-facing error messages reviewed
 - [ ] Error logging verified in dashboard
 - [ ] Task status properly updated in spec files (checked boxes or status updates)
+- [ ] If any gate failed 3+ times, Multi-Perspective Problem Analysis was completed

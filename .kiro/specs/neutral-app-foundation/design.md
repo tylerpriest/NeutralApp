@@ -1,3 +1,6 @@
+# Status: ACTIVE (In Progress)
+# Implementation: Partially implemented - architecture refactoring complete, web interface in progress
+
 # NeutralApp Foundation Design Document
 
 ## Overview
