@@ -3,6 +3,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Header from '../Header';
 
+// Mock the auth context
+const mockUseAuth = jest.fn();
+
+jest.mock('../../contexts/AuthContext', () => ({
+  ...jest.requireActual('../../contexts/AuthContext'),
+  useAuth: () => mockUseAuth(),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
 const renderWithRouter = (component: React.ReactElement) => {
   return render(
     <BrowserRouter>
@@ -12,6 +21,18 @@ const renderWithRouter = (component: React.ReactElement) => {
 };
 
 describe('Header', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+    // Mock default auth state
+    mockUseAuth.mockReturnValue({
+      user: { id: '1', email: 'test@example.com', firstName: 'Test', lastName: 'User' },
+      isAuthenticated: true,
+      isLoading: false,
+      logout: jest.fn(),
+    });
+  });
+
   it('should render without crashing', () => {
     renderWithRouter(<Header />);
     expect(screen.getByRole('banner')).toBeInTheDocument();
@@ -30,7 +51,7 @@ describe('Header', () => {
 
   it('should render user menu', () => {
     renderWithRouter(<Header />);
-    expect(screen.getByText('User')).toBeInTheDocument();
+    expect(screen.getByText('Test User')).toBeInTheDocument();
   });
 
   it('should have logout functionality', () => {

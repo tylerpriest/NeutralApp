@@ -1,6 +1,13 @@
 import React from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Header: React.FC = () => {
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <header className="header">
       <div className="header-content">
@@ -9,8 +16,12 @@ const Header: React.FC = () => {
         </div>
         <div className="header-right">
           <div className="user-menu">
-            <span className="user-name">User</span>
-            <button className="logout-button">Logout</button>
+            <span className="user-name">
+              {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email || 'User'}
+            </span>
+            <button className="logout-button" onClick={handleLogout}>
+              Logout
+            </button>
           </div>
         </div>
       </div>
