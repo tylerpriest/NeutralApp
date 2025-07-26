@@ -41,6 +41,16 @@
 - All edge cases must be handled
 - All error paths must be tested
 
+### Industry-Standard Development Practices
+- **Proven Solutions First**: Prioritize well-established, battle-tested solutions over custom implementations
+- **Standard Libraries**: Use standard libraries and frameworks instead of reinventing functionality
+- **Robust Patterns**: Ensure all implementations follow maintainable, industry-standard patterns
+- **No Hacky Solutions**: Reject temporary fixes, workarounds, or "glued together" implementations in favor of solid engineering
+- **Best Practice Compliance**: All code must follow established best practices for the technology stack
+- **Maintainability Focus**: Prioritize long-term maintainability over short-term convenience
+- **Documentation Standards**: Follow industry-standard documentation practices and conventions
+- **Security Best Practices**: Implement security following established industry standards and guidelines
+
 ### Error Traceability
 - Every error must include:
   - Full stack trace

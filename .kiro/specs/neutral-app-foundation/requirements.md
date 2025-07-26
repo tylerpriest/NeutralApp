@@ -190,3 +190,55 @@ This specification addresses the critical foundation work needed to transform Ne
 4. WHEN testing plugin functionality THEN the system SHALL demonstrate secure plugin sandboxing and API access
 5. WHEN documenting the demo plugin THEN the system SHALL provide clear examples for future plugin developers
 6. IF the demo plugin fails THEN the system SHALL handle the failure gracefully without affecting core functionality
+
+### Requirement 15: Pre-Work Assessment Protocol
+
+**User Story:** As a developer, I want systematic protocols for assessing existing implementations before starting new work, so that I can avoid duplicate effort and build upon existing functionality effectively.
+
+#### Acceptance Criteria
+
+1. WHEN starting any development task THEN the system SHALL require systematic assessment of existing implementations across codebase, tests, and documentation
+2. WHEN beginning feature work THEN the system SHALL document what exists versus what needs to be built to prevent duplication
+3. WHEN analyzing current state THEN the system SHALL use file search and code analysis to understand implementation status
+4. WHEN planning new work THEN the system SHALL establish clear boundaries between existing and new functionality
+5. WHEN investigating existing systems THEN the system SHALL promote thorough understanding before building new components
+6. IF existing functionality is discovered THEN the system SHALL integrate with or enhance existing code rather than duplicating
+
+### Requirement 16: Test Reality Alignment Standards
+
+**User Story:** As a developer, I want clear standards for when to use mocks versus real responses in tests, so that tests accurately reflect production behavior while maintaining reliability and speed.
+
+#### Acceptance Criteria
+
+1. WHEN writing unit tests THEN the system SHALL use mocks for external dependencies while testing real component logic
+2. WHEN creating integration tests THEN the system SHALL use real responses for critical system interactions
+3. WHEN testing error scenarios THEN the system SHALL simulate both mocked and real failure conditions appropriately
+4. WHEN validating API interactions THEN the system SHALL test against actual service responses in integration environments
+5. WHEN ensuring test reliability THEN the system SHALL balance test speed with realistic behavior validation
+6. IF tests fail due to mock/real mismatches THEN the system SHALL provide clear guidance on appropriate testing approach
+
+### Requirement 17: Development Workflow Standards
+
+**User Story:** As a developer, I want clear commit standards and continuous integration practices, so that development history is transparent and code quality is maintained automatically.
+
+#### Acceptance Criteria
+
+1. WHEN committing code THEN the system SHALL require descriptive, verbose commit messages explaining both what and why
+2. WHEN making changes THEN the system SHALL create separate commits for different functional areas
+3. WHEN developing features THEN the system SHALL commit frequently to avoid large, mixed changesets
+4. WHEN running continuous integration THEN the system SHALL automatically execute all tests before allowing code integration
+5. WHEN CI pipeline runs THEN the system SHALL enforce quality gates including compilation, testing, and code standards
+6. IF commits lack proper description THEN the system SHALL provide guidance on commit message standards and formatting
+
+### Requirement 18: Comprehensive Duplication Prevention
+
+**User Story:** As a developer, I want systematic protocols for checking existing implementations across all project areas, so that I can avoid creating duplicate functionality or conflicting implementations.
+
+#### Acceptance Criteria
+
+1. WHEN creating new specifications THEN the system SHALL require assessment across rules, steering, docs, specs, tests, and application code
+2. WHEN planning new features THEN the system SHALL establish search protocols for existing implementations in all project areas
+3. WHEN reviewing project state THEN the system SHALL check current steering rules before creating new specifications
+4. WHEN identifying functionality THEN the system SHALL create methodology for detecting overlapping or conflicting work
+5. WHEN documenting analysis THEN the system SHALL template the existing versus proposed functionality comparison
+6. IF duplicate work is identified THEN the system SHALL provide clear process for consolidation or differentiation
