@@ -10,13 +10,18 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
     "dev": "ts-node src/web/server/index.ts",
     "dev:client": "vite",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:client\"",
     "dev:build": "npm run build && node dist/web/server/index.js",
     "start": "node dist/web/server/index.js",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "mcp": "npx @playwright/mcp@latest --port 8931"
   },
   "keywords": [
     "modular",
@@ -26,6 +31,8 @@
   "author": "NeutralApp Team",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/mcp": "^0.0.32",
+    "@playwright/test": "^1.54.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -40,19 +47,20 @@
     "jest-environment-jsdom": "^29.7.0",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.4",
+    "terser": "^5.43.1",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "vite": "^7.0.6"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.0",
     "@types/cors": "^2.8.19",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "helmet": "^8.1.0",
+    "next-auth": "^4.24.11",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1"

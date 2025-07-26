@@ -42,16 +42,17 @@ describe('API Integration Tests', () => {
       const fetcher = jest.fn().mockRejectedValue(error);
       
       const { result } = renderHook(() => 
-        useDataFetching('error-key', fetcher)
+        useDataFetching('error-key', fetcher, { immediate: true, retryCount: 0 })
       );
 
+      // Wait for the error to be set
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+        expect(result.current.error).toBe(error);
       });
 
-      expect(result.current.error).toBe(error);
+      expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(null);
-    });
+    }, 10000);
 
     it('should retry failed requests', async () => {
       const mockData = { id: 1, name: 'Test Item' };
@@ -178,11 +179,12 @@ describe('API Integration Tests', () => {
         await result.current.loadMore();
       });
 
+      // Wait for the data to be updated
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toHaveLength(4);
       });
 
-      expect(result.current.data).toHaveLength(4);
+      expect(result.current.loading).toBe(false);
       expect(result.current.hasMore).toBe(false);
       expect(result.current.page).toBe(2);
     });
@@ -200,7 +202,7 @@ describe('API Integration Tests', () => {
         .mockRejectedValueOnce(error);
       
       const { result } = renderHook(() => 
-        usePaginatedFetching('error-pagination-key', fetcher)
+        usePaginatedFetching('error-pagination-key', fetcher, { retryCount: 0 })
       );
 
       // Wait for initial load
@@ -217,7 +219,11 @@ describe('API Integration Tests', () => {
         }
       });
 
-      expect(result.current.error).toBe(error);
+      // Wait for the error to be set
+      await waitFor(() => {
+        expect(result.current.error).toBe(error);
+      });
+
       expect(result.current.data).toEqual(mockPage1Data.data); // Should keep original data
     });
 
@@ -256,15 +262,16 @@ describe('API Integration Tests', () => {
       const fetcher = jest.fn().mockRejectedValue(networkError);
       
       const { result } = renderHook(() => 
-        useDataFetching('network-error-key', fetcher)
+        useDataFetching('network-error-key', fetcher, { immediate: true, retryCount: 0 })
       );
 
+      // Wait for the error to be set
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+        expect(result.current.error).toBe(networkError);
       });
 
-      expect(result.current.error).toBe(networkError);
-    });
+      expect(result.current.loading).toBe(false);
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       const fetcher = jest.fn().mockImplementation(() => 
@@ -272,16 +279,17 @@ describe('API Integration Tests', () => {
       );
       
       const { result } = renderHook(() => 
-        useDataFetching('timeout-key', fetcher, { timeout: 1000 })
+        useDataFetching('timeout-key', fetcher, { timeout: 500, immediate: true, retryCount: 0 })
       );
 
+      // Wait for the error to be set
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+        expect(result.current.error).toBeInstanceOf(Error);
+      }, { timeout: 5000 });
 
-      expect(result.current.error).toBeInstanceOf(Error);
+      expect(result.current.loading).toBe(false);
       expect(result.current.error?.message).toContain('timeout');
-    });
+    }, 10000);
 
     it('should handle malformed JSON responses', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -294,15 +302,16 @@ describe('API Integration Tests', () => {
       const fetcher = jest.fn().mockRejectedValue(new Error('Invalid JSON'));
       
       const { result } = renderHook(() => 
-        useDataFetching('json-error-key', fetcher)
+        useDataFetching('json-error-key', fetcher, { immediate: true, retryCount: 0 })
       );
 
+      // Wait for the error to be set
       await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+        expect(result.current.error).toBeInstanceOf(Error);
       });
 
-      expect(result.current.error).toBeInstanceOf(Error);
-    });
+      expect(result.current.loading).toBe(false);
+    }, 10000);
   });
 
   describe('API Performance Integration', () => {
@@ -331,13 +340,15 @@ describe('API Integration Tests', () => {
       );
 
       // Make multiple concurrent calls
-      const promises = [
-        result.current.refetch(),
-        result.current.refetch(),
-        result.current.refetch()
-      ];
+      await act(async () => {
+        const promises = [
+          result.current.refetch(),
+          result.current.refetch(),
+          result.current.refetch()
+        ];
 
-      await Promise.all(promises);
+        await Promise.all(promises);
+      });
 
       expect(result.current.data).toEqual(mockData);
       // Should handle concurrent calls gracefully

@@ -1,45 +1,50 @@
-import express, { Request, Response, Router } from 'express';
-import { AuthenticationService } from '../../features/auth/services/auth.service';
-import { SessionManager } from '../../features/auth/services/session.manager';
+import { Router, Request, Response } from 'express';
+import { getServerSession } from 'next-auth';
+import { authOptions } from './auth/nextauth.config';
 import { PluginManager } from '../../features/plugin-manager/services/plugin.manager';
 import { SettingsService } from '../../features/settings/services/settings.service';
 
 export class SimpleAPIRouter {
   private router: Router;
-  private authService: AuthenticationService;
-  private sessionManager: SessionManager;
   private pluginManager: PluginManager;
   private settingsService: SettingsService;
 
   constructor() {
-    this.router = express.Router();
-    this.authService = new AuthenticationService();
-    this.sessionManager = new SessionManager();
+    this.router = Router();
     this.pluginManager = new PluginManager();
     this.settingsService = new SettingsService();
     this.setupRoutes();
   }
 
-  /**
-   * Authentication middleware to protect routes
-   */
-  private authenticateToken(req: Request, res: Response, next: Function): void {
-    if (!this.sessionManager.isAuthenticated()) {
-      res.status(401).json({ error: 'Authentication required' });
+  private async authenticateToken(req: Request, res: Response, next: Function): Promise<void> {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      res.status(401).json({ error: 'Not authenticated' });
       return;
     }
+    (req as any).user = session.user;
     next();
   }
 
   private setupRoutes(): void {
+    // Health check endpoint
+    this.router.get('/health', (req: Request, res: Response) => {
+      res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        version: '1.0.0',
+        architecture: 'feature-based modular'
+      });
+    });
+
     // API status endpoint
     this.router.get('/status', (req: Request, res: Response) => {
       res.json({
-        message: 'NeutralApp API Ready',
-        version: '1.0.0',
+        status: 'operational',
         timestamp: new Date().toISOString(),
         features: {
-          auth: 'Authentication API endpoints available',
+          auth: 'NextAuth.js authentication available',
           plugins: 'Plugin management API endpoints available', 
           settings: 'Settings API endpoints available',
           admin: 'Admin dashboard API endpoints available',
@@ -47,10 +52,9 @@ export class SimpleAPIRouter {
         },
         endpoints: {
           auth: [
-            'POST /api/auth/register',
-            'POST /api/auth/login',
-            'POST /api/auth/logout',
-            'GET /api/auth/me'
+            'POST /api/auth/signin',
+            'POST /api/auth/signout',
+            'GET /api/auth/session'
           ],
           plugins: [
             'GET /api/plugins',
@@ -76,9 +80,24 @@ export class SimpleAPIRouter {
       });
     });
 
-    // Authentication routes
-    this.setupAuthRoutes();
-    
+    // Authentication routes - now handled by NextAuth.js
+    this.router.get('/auth/session', async (req: Request, res: Response) => {
+      try {
+        const session = await getServerSession(req, res, authOptions);
+        if (session) {
+          res.json({
+            success: true,
+            data: { user: session.user }
+          });
+        } else {
+          res.status(401).json({ error: 'Not authenticated' });
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
     // Plugin routes
     this.setupPluginRoutes();
     
@@ -90,143 +109,6 @@ export class SimpleAPIRouter {
     
     // Logging routes
     this.setupLoggingRoutes();
-  }
-
-  private setupAuthRoutes(): void {
-    // Register new user
-    this.router.post('/auth/register', async (req: Request, res: Response) => {
-      try {
-        const { email, password, metadata } = req.body;
-        
-        if (!email || !password) {
-          return res.status(400).json({ error: 'Email and password are required' });
-        }
-
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          return res.status(400).json({ error: 'Invalid email format' });
-        }
-
-        // Validate password length
-        if (password.length < 6) {
-          return res.status(400).json({ error: 'Password must be at least 6 characters' });
-        }
-
-
-
-        const result = await this.authService.signUp(email, password, metadata);
-        
-        if (result.success) {
-          return res.status(201).json({
-            success: true,
-            message: result.requiresEmailVerification ? 'Registration successful. Please check your email for verification.' : 'Registration successful.',
-            data: { user: result.user }
-          });
-        } else {
-          return res.status(400).json({ error: result.error });
-        }
-      } catch (error) {
-        console.error('Registration error:', error);
-        return res.status(500).json({ error: 'Internal server error' });
-      }
-    });
-
-    // Login user
-    this.router.post('/auth/login', async (req: Request, res: Response) => {
-      try {
-        const { email, password } = req.body;
-        
-        if (!email || !password) {
-          return res.status(400).json({ error: 'Email and password are required' });
-        }
-
-        // For test environment, validate credentials
-        if (process.env.NODE_ENV === 'test' && password === 'wrongpassword') {
-          return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-
-
-        const result = await this.authService.signIn(email, password);
-        
-        if (result.success && result.user) {
-          // Get session after successful login
-          const session = this.sessionManager.getSession();
-          return res.json({
-            success: true,
-            message: 'Login successful',
-            data: { 
-              user: result.user,
-              session: session
-            }
-          });
-        } else {
-          return res.status(401).json({ error: result.error });
-        }
-      } catch (error) {
-        console.error('Login error:', error);
-        return res.status(500).json({ error: 'Internal server error' });
-      }
-    });
-
-    // Logout user
-    this.router.post('/auth/logout', async (req: Request, res: Response) => {
-      try {
-        await this.authService.signOut();
-        await this.sessionManager.terminateSession();
-        
-        return res.json({ 
-          success: true, 
-          message: 'Logout successful'
-        });
-      } catch (error) {
-        console.error('Logout error:', error);
-        return res.status(500).json({ error: 'Internal server error' });
-      }
-    });
-
-    // Get current user
-    this.router.get('/auth/me', async (req: Request, res: Response) => {
-      try {
-        // For test environment, provide mock response
-        if (process.env.NODE_ENV === 'test') {
-          return res.json({
-            user: {
-              id: 'mock-user-id',
-              email: 'test@example.com',
-              emailVerified: true,
-              createdAt: new Date(),
-              lastLoginAt: new Date(),
-              settings: {
-                theme: 'light',
-                language: 'en',
-                notifications: true
-              },
-              roles: []
-            }
-          });
-        }
-
-        if (!this.sessionManager.isAuthenticated()) {
-          return res.status(401).json({ error: 'Not authenticated' });
-        }
-
-        const userProfile = await this.sessionManager.getUserProfile();
-        
-        if (userProfile) {
-          return res.json({
-            success: true,
-            data: { user: userProfile }
-          });
-        } else {
-          return res.status(404).json({ error: 'User profile not found' });
-        }
-      } catch (error) {
-        console.error('Auth validation error:', error);
-        return res.status(500).json({ error: 'Internal server error' });
-      }
-    });
   }
 
   private setupPluginRoutes(): void {

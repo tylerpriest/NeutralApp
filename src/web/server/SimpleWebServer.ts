@@ -110,7 +110,7 @@ export class SimpleWebServer {
     });
 
     // Serve static files (React app) with caching and optimization
-    this.app.use(express.static(path.join(__dirname, '../client'), {
+    this.app.use(express.static(path.join(__dirname, '../../dist/web/client'), {
       maxAge: process.env.NODE_ENV === 'production' ? '1y' : '0',
       etag: true,
       lastModified: true,
@@ -139,7 +139,7 @@ export class SimpleWebServer {
       if (process.env.NODE_ENV === 'production') {
         res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
       }
-      res.sendFile(path.join(__dirname, '../client/index.html'));
+      res.sendFile(path.join(__dirname, '../../dist/web/client/index.html'));
     });
 
     // Error handling middleware

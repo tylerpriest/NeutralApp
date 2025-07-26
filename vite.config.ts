@@ -15,12 +15,6 @@ export default defineConfig({
           // Vendor chunks for better caching
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
-          // Feature-based chunks
-          auth: ['../contexts/AuthContext'],
-          error: ['../components/ErrorBoundary', '../components/ToastManager'],
-          admin: ['../pages/AdminPage'],
-          plugins: ['../pages/PluginManagerPage'],
-          settings: ['../pages/SettingsPage'],
         },
       },
     },

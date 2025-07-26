@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
 import { SimpleAPIRouter } from './SimpleAPIRouter';
+import NextAuth from 'next-auth';
+import { authOptions } from './auth/nextauth.config';
 
 /**
  * WebServer class manages the Express.js application lifecycle
@@ -12,10 +14,14 @@ export class WebServer {
   private app: Express;
   private server: any;
   private apiRouter: SimpleAPIRouter;
+  private nextAuthHandler: any;
 
   constructor() {
     this.app = express();
     this.apiRouter = new SimpleAPIRouter();
+    console.log('Initializing NextAuth.js handler...');
+    this.nextAuthHandler = NextAuth(authOptions);
+    console.log('NextAuth.js handler initialized successfully');
     this.setupMiddleware();
     this.setupRoutes();
   }
@@ -82,11 +88,19 @@ export class WebServer {
       res.json({ 
         status: 'healthy', 
         timestamp: new Date().toISOString(),
-        uptime: process.uptime()
+        uptime: process.uptime(),
+        version: '1.0.0',
+        architecture: 'feature-based modular'
       });
     });
 
-    // API routes
+    // NextAuth.js API routes - handle all auth-related requests FIRST
+    this.app.use('/api/auth', (req: Request, res: Response, next: NextFunction) => {
+      console.log('NextAuth.js route called:', req.method, req.path);
+      return this.nextAuthHandler(req, res);
+    });
+
+    // Other API routes
     this.app.use('/api', this.apiRouter.getRouter());
 
     // Serve static files from React build
@@ -101,16 +115,7 @@ export class WebServer {
       }
       
       // Serve React app for all other routes
-      return res.sendFile(path.join(buildPath, 'index.html'));
-    });
-
-    // Error handling middleware
-    this.app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-      console.error('Server error:', error);
-      res.status(500).json({ 
-        error: 'Internal server error',
-        message: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
+      res.sendFile(path.join(buildPath, 'index.html'));
     });
   }
 

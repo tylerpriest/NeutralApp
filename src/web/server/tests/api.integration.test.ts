@@ -42,10 +42,11 @@ describe('API Integration Tests', () => {
           .send(userData)
           .expect(201);
 
-        expect(response.body).toHaveProperty('user');
-        expect(response.body.user).toHaveProperty('id');
-        expect(response.body.user).toHaveProperty('email', userData.email);
-        expect(response.body).toHaveProperty('message', 'User registered successfully');
+        expect(response.body).toHaveProperty('data');
+        expect(response.body.data).toHaveProperty('user');
+        expect(response.body.data.user).toHaveProperty('id');
+        expect(response.body.data.user).toHaveProperty('email', userData.email);
+        expect(response.body).toHaveProperty('message', 'Registration successful.');
       });
 
       it('should return 400 for invalid registration data', async () => {
@@ -75,7 +76,8 @@ describe('API Integration Tests', () => {
           .send(loginData)
           .expect(200);
 
-        expect(response.body).toHaveProperty('user');
+        expect(response.body).toHaveProperty('data');
+        expect(response.body.data).toHaveProperty('user');
         expect(response.body).toHaveProperty('message', 'Login successful');
       });
 

@@ -187,7 +187,10 @@ export function useDataFetching<T>(
   // Initial fetch
   useEffect(() => {
     if (immediate) {
-      fetchData();
+      fetchData().catch(error => {
+        // Error is already handled in fetchData, just ensure it's logged
+        console.error('Error in initial fetch:', error);
+      });
     }
 
     // Cleanup on unmount
@@ -199,7 +202,7 @@ export function useDataFetching<T>(
         clearTimeout(retryTimeoutRef.current);
       }
     };
-  }, [immediate]);
+  }, [immediate, fetchData]);
 
   return {
     ...state,
@@ -215,56 +218,70 @@ export function usePaginatedFetching<T>(
   fetcher: (page: number, limit: number) => Promise<{ data: T[]; total: number; hasMore: boolean }>,
   options: FetchOptions & { pageSize?: number } = {}
 ) {
-  const { pageSize = 20, ...fetchOptions } = options;
+  const { pageSize = 20, immediate = true, ...fetchOptions } = options;
   
   const [page, setPage] = useState(1);
   const [allData, setAllData] = useState<T[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const { data, loading, error, fetchData, refetch } = useDataFetching(
-    `${key}_page_${page}`,
-    () => fetcher(page, pageSize),
-    fetchOptions
-  );
+  const fetchPage = useCallback(async (pageNum: number) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await fetcher(pageNum, pageSize);
+      
+      if (pageNum === 1) {
+        setAllData(result.data);
+      } else {
+        setAllData(prev => [...prev, ...result.data]);
+      }
+      
+      setHasMore(result.hasMore);
+      setTotal(result.total);
+      setPage(pageNum);
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetcher, pageSize]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || loading) return;
 
     const nextPage = page + 1;
-    setPage(nextPage);
-
+    
     try {
-      const result = await fetchData();
-      setAllData(prev => [...prev, ...result.data]);
-      setHasMore(result.hasMore);
-      setTotal(result.total);
+      await fetchPage(nextPage);
     } catch (error) {
-      // Revert page on error
-      setPage(prev => prev - 1);
+      // Error is already set in fetchPage
       throw error;
     }
-  }, [hasMore, loading, page, fetchData]);
+  }, [hasMore, loading, page, fetchPage]);
 
   const reset = useCallback(() => {
     setPage(1);
     setAllData([]);
     setHasMore(true);
     setTotal(0);
+    setError(null);
   }, []);
 
-  // Update allData when new page data arrives
+  const refetch = useCallback(async () => {
+    await fetchPage(1);
+  }, [fetchPage]);
+
+  // Initial fetch
   useEffect(() => {
-    if (data) {
-      if (page === 1) {
-        setAllData(data.data);
-      } else {
-        setAllData(prev => [...prev, ...data.data]);
-      }
-      setHasMore(data.hasMore);
-      setTotal(data.total);
+    if (immediate) {
+      fetchPage(1);
     }
-  }, [data, page]);
+  }, [immediate, fetchPage]);
 
   return {
     data: allData,
