@@ -59,27 +59,41 @@ actions:
       
       After implementation:
       
-      **Step 5: 🧪 Verify Production-Ready Quality Gates**
+      **Step 5: 🚦 PRODUCTION-READY QUALITY GATES ENFORCEMENT**
       
-      **MANDATORY QUALITY GATES - ALL MUST PASS BEFORE PROCEEDING:**
+      **🛑 MANDATORY QUALITY GATES - ALL MUST PASS BEFORE PROCEEDING 🛑**
       
-      **Gate 1: TypeScript Compilation Gate**
-      - ALL TypeScript compilation must succeed with zero errors
+      These three gates are NON-NEGOTIABLE for production readiness:
+      
+      **🔴 Gate 1: TypeScript Compilation Gate**
+      - **REQUIREMENT**: ALL TypeScript compilation MUST succeed with ZERO errors
+      - **VALIDATION**: Run `npm run build` or `tsc --noEmit` - must complete successfully
+      - **FAILURE ACTION**: STOP immediately and fix all compilation errors before proceeding
+      - **RATIONALE**: Compilation errors lead to runtime failures in production
       - No compilation warnings that could lead to runtime issues
       - All type definitions must be complete and accurate
-      - Command: `npm run build` or `tsc --noEmit` must pass completely
+      - TypeScript strict mode must be enabled and passing
       
-      **Gate 2: Core Test Suite Gate** 
-      - Core test suite must maintain >80% pass rate minimum
+      **🟡 Gate 2: Core Test Suite Gate**
+      - **REQUIREMENT**: Core test suite MUST maintain >80% pass rate minimum
+      - **VALIDATION**: Run `npm test` - pass rate must be >80%
+      - **FAILURE ACTION**: STOP immediately and fix failing tests before proceeding
+      - **RATIONALE**: Low test pass rates indicate unstable foundation
       - All critical functionality tests must pass
-      - No failing tests in core system components
-      - Command: `npm test` must show >80% pass rate
+      - No failing tests in core system components (auth, plugin-manager, ui-shell, settings, admin, error-reporter)
+      - Test coverage must be maintained for new functionality
+      - Integration tests for feature interactions must pass
       
-      **Gate 3: Critical Services Gate**
-      - All critical services must have working interfaces
+      **🟢 Gate 3: Critical Services Gate**
+      - **REQUIREMENT**: ALL critical services MUST have working interfaces
+      - **VALIDATION**: Integration tests for critical services must pass
+      - **FAILURE ACTION**: STOP immediately and restore working interfaces before proceeding
+      - **RATIONALE**: Broken critical services render application unusable
       - Core system APIs must be functional and responsive
       - Authentication, plugin manager, settings, and UI shell must be operational
-      - Integration tests for critical services must pass
+      - All service interfaces must respond correctly to basic operations
+      - Service health checks must pass for all critical components
+      - API endpoints must return expected responses for core functionality
       
       **Additional Quality Verification:**
       - Run all tests (unit, integration, end-to-end)
@@ -118,10 +132,10 @@ actions:
       2. Current task identified and marked in_progress
       3. Tests written first (TDD approach)
       4. Minimal implementation completed following steering guidelines
-      5. Production-ready quality gates passed:
-         - **TypeScript Compilation Gate**: All compilation succeeds (zero errors)
-         - **Core Test Suite Gate**: >80% pass rate maintained  
-         - **Critical Services Gate**: All critical services have working interfaces
+      5. 🚦 PRODUCTION-READY QUALITY GATES PASSED (ALL THREE MANDATORY):
+         - **🔴 TypeScript Compilation Gate**: ALL compilation succeeds (ZERO errors, strict mode enabled)
+         - **🟡 Core Test Suite Gate**: >80% pass rate maintained (NO failing core tests, coverage maintained)
+         - **🟢 Critical Services Gate**: ALL critical services have working interfaces (health checks pass)
       6. All tests passing
       7. Documentation updated
       8. Task status updated to completed
@@ -138,13 +152,13 @@ actions:
       - [ ] 2. 🎯 Current task identified and status set to in progress
       - [ ] 4. ✅ Tests written first (TDD approach)
       - [ ] 4. 🏗 Minimal implementation following modular feature-based architecture
-      - [ ] 5. 🚦 Production-ready quality gates passed:
-        - [ ] 5.1. **TypeScript Compilation Gate**: All compilation succeeds (zero errors)
-        - [ ] 5.2. **Core Test Suite Gate**: >80% pass rate maintained
-        - [ ] 5.3. **Critical Services Gate**: All critical services have working interfaces
+      - [ ] 5. 🚦 PRODUCTION-READY QUALITY GATES PASSED (ALL THREE MANDATORY):
+        - [ ] 5.1. **🔴 TypeScript Compilation Gate**: ALL compilation succeeds (ZERO errors, strict mode enabled)
+        - [ ] 5.2. **🟡 Core Test Suite Gate**: >80% pass rate maintained (NO failing core tests, coverage maintained)
+        - [ ] 5.3. **🟢 Critical Services Gate**: ALL critical services have working interfaces (health checks pass)
       - [ ] 6. 🧪 All tests passing (unit, integration, e2e)
-      - [ ] 7. � Doscumentation updated (README, API docs, steering, specs)
-      - [ ] 8. � CTasks status updated to completed
+      - [ ] 7. 📚 Documentation updated (README, API docs, steering, specs)
+      - [ ] 8. 📌 Tasks status updated to completed
       - [ ] 9. 🔄 Changes committed, ready for next task
 
 examples:
