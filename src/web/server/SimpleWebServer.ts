@@ -89,65 +89,37 @@ export class SimpleWebServer {
     const apiRouter = new SimpleAPIRouter();
     this.app.use('/api', apiRouter.getRouter());
 
-    // Serve static files (placeholder for React app)
-    this.app.use(express.static(path.join(__dirname, '../client')));
+    // Serve static files (React app) with caching and optimization
+    this.app.use(express.static(path.join(__dirname, '../client'), {
+      maxAge: process.env.NODE_ENV === 'production' ? '1y' : '0',
+      etag: true,
+      lastModified: true,
+      setHeaders: (res, path) => {
+        // Cache static assets aggressively in production
+        if (process.env.NODE_ENV === 'production') {
+          if (path.endsWith('.js') || path.endsWith('.css')) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          } else if (path.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+          } else if (path.match(/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+          }
+        }
+        
+        // Security headers for static assets
+        if (path.endsWith('.js')) {
+          res.setHeader('X-Content-Type-Options', 'nosniff');
+        }
+      }
+    }));
 
-    // Default route for web app
-    this.app.get('/', (req: Request, res: Response) => {
-      res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>NeutralApp - Foundation Ready</title>
-          <style>
-            body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 2rem; background: #fafafa; }
-            .container { max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-            h1 { color: #1a1a1a; margin-bottom: 1rem; }
-            .status { background: #f0f9ff; border: 1px solid #0ea5e9; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
-            .success { color: #15803d; }
-            .api-list { background: #f8fafc; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
-            .endpoint { font-family: monospace; background: white; padding: 0.5rem; margin: 0.25rem 0; border-radius: 2px; }
-            a { color: #0ea5e9; text-decoration: none; }
-            a:hover { text-decoration: underline; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>🚀 NeutralApp Foundation</h1>
-            <div class="status">
-              <div class="success">✅ Web Server: Running</div>
-              <div class="success">✅ Feature Architecture: Complete</div>
-              <div class="success">✅ API Foundation: Ready</div>
-            </div>
-            
-            <h2>Available Endpoints</h2>
-            <div class="api-list">
-              <div class="endpoint">GET <a href="/health">/health</a> - Server health check</div>
-              <div class="endpoint">GET <a href="/api/status">/api/status</a> - API status</div>
-              <div class="endpoint">POST /api/auth/register - User registration</div>
-              <div class="endpoint">POST /api/auth/login - User login</div>
-              <div class="endpoint">GET /api/plugins - List plugins</div>
-              <div class="endpoint">GET /api/admin/health - System health</div>
-            </div>
-
-            <h2>Architecture Status</h2>
-            <div class="api-list">
-              <div>📁 Feature-based modular structure: ✅ Complete</div>
-              <div>🔐 Auth feature: ✅ Organized</div>
-              <div>🧩 Plugin manager feature: ✅ Organized</div>
-              <div>🖥️ UI shell feature: ✅ Organized</div>
-              <div>⚙️ Settings feature: ✅ Organized</div>
-              <div>👤 Admin feature: ✅ Organized</div>
-              <div>📊 Error reporter feature: ✅ Organized</div>
-            </div>
-
-            <p>Next: React application layer will be built on this foundation.</p>
-          </div>
-        </body>
-        </html>
-      `);
+    // Default route for web app - serve React app
+    this.app.get('*', (req: Request, res: Response) => {
+      // Set cache headers for HTML
+      if (process.env.NODE_ENV === 'production') {
+        res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+      }
+      res.sendFile(path.join(__dirname, '../client/index.html'));
     });
 
     // Catch-all for API routes

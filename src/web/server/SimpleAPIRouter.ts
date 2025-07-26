@@ -1,11 +1,34 @@
 import express, { Request, Response, Router } from 'express';
+import { AuthenticationService } from '../../features/auth/services/auth.service';
+import { SessionManager } from '../../features/auth/services/session.manager';
+import { PluginManager } from '../../features/plugin-manager/services/plugin.manager';
+import { SettingsService } from '../../features/settings/services/settings.service';
 
 export class SimpleAPIRouter {
   private router: Router;
+  private authService: AuthenticationService;
+  private sessionManager: SessionManager;
+  private pluginManager: PluginManager;
+  private settingsService: SettingsService;
 
   constructor() {
     this.router = express.Router();
+    this.authService = new AuthenticationService();
+    this.sessionManager = new SessionManager();
+    this.pluginManager = new PluginManager();
+    this.settingsService = new SettingsService();
     this.setupRoutes();
+  }
+
+  /**
+   * Authentication middleware to protect routes
+   */
+  private authenticateToken(req: Request, res: Response, next: Function): void {
+    if (!this.sessionManager.isAuthenticated()) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+    next();
   }
 
   private setupRoutes(): void {
@@ -73,18 +96,46 @@ export class SimpleAPIRouter {
     // Register new user
     this.router.post('/auth/register', async (req: Request, res: Response) => {
       try {
-        const { email, password } = req.body;
+        const { email, password, metadata } = req.body;
         
         if (!email || !password) {
           return res.status(400).json({ error: 'Email and password are required' });
         }
 
-        // TODO: Connect to AuthenticationService
-        return res.status(201).json({
-          success: true,
-          message: 'User registration endpoint ready - will integrate with AuthenticationService',
-          data: { email }
-        });
+        // For development/testing without Supabase, provide mock response
+        if (process.env.NODE_ENV === 'development' && !process.env.SUPABASE_URL) {
+          return res.status(201).json({
+            success: true,
+            message: 'Registration successful (mock mode - Supabase not configured)',
+            data: { 
+              user: {
+                id: 'mock-user-id',
+                email: email,
+                emailVerified: false,
+                createdAt: new Date(),
+                lastLoginAt: new Date(),
+                settings: {
+                  theme: 'light',
+                  language: 'en',
+                  notifications: true
+                },
+                roles: []
+              }
+            }
+          });
+        }
+
+        const result = await this.authService.signUp(email, password, metadata);
+        
+        if (result.success) {
+          return res.status(201).json({
+            success: true,
+            message: result.requiresEmailVerification ? 'Registration successful. Please check your email for verification.' : 'Registration successful.',
+            data: { user: result.user }
+          });
+        } else {
+          return res.status(400).json({ error: result.error });
+        }
       } catch (error) {
         console.error('Registration error:', error);
         return res.status(500).json({ error: 'Internal server error' });
@@ -100,12 +151,50 @@ export class SimpleAPIRouter {
           return res.status(400).json({ error: 'Email and password are required' });
         }
 
-        // TODO: Connect to AuthenticationService and SessionManager
-        return res.json({
-          success: true,
-          message: 'Login endpoint ready - will integrate with AuthenticationService',
-          mockToken: 'jwt-token-placeholder'
-        });
+        // For development/testing without Supabase, provide mock response
+        if (process.env.NODE_ENV === 'development' && !process.env.SUPABASE_URL) {
+          return res.json({
+            success: true,
+            message: 'Login successful (mock mode - Supabase not configured)',
+            data: { 
+              user: {
+                id: 'mock-user-id',
+                email: email,
+                emailVerified: true,
+                createdAt: new Date(),
+                lastLoginAt: new Date(),
+                settings: {
+                  theme: 'light',
+                  language: 'en',
+                  notifications: true
+                },
+                roles: []
+              },
+              session: {
+                token: 'mock-jwt-token',
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+                refreshToken: 'mock-refresh-token'
+              }
+            }
+          });
+        }
+
+        const result = await this.authService.signIn(email, password);
+        
+        if (result.success && result.user) {
+          // Get session after successful login
+          const session = this.sessionManager.getSession();
+          return res.json({
+            success: true,
+            message: 'Login successful',
+            data: { 
+              user: result.user,
+              session: session
+            }
+          });
+        } else {
+          return res.status(401).json({ error: result.error });
+        }
       } catch (error) {
         console.error('Login error:', error);
         return res.status(500).json({ error: 'Internal server error' });
@@ -115,14 +204,12 @@ export class SimpleAPIRouter {
     // Logout user
     this.router.post('/auth/logout', async (req: Request, res: Response) => {
       try {
-        const authHeader = req.headers.authorization;
-        const token = authHeader?.split(' ')[1];
+        await this.authService.signOut();
+        await this.sessionManager.terminateSession();
         
-        // TODO: Connect to SessionManager
         return res.json({ 
           success: true, 
-          message: 'Logout endpoint ready - will integrate with SessionManager',
-          tokenReceived: !!token
+          message: 'Logout successful'
         });
       } catch (error) {
         console.error('Logout error:', error);
@@ -133,22 +220,20 @@ export class SimpleAPIRouter {
     // Get current user
     this.router.get('/auth/me', async (req: Request, res: Response) => {
       try {
-        const authHeader = req.headers.authorization;
-        const token = authHeader?.split(' ')[1];
-        
-        if (!token) {
-          return res.status(401).json({ error: 'No token provided' });
+        if (!this.sessionManager.isAuthenticated()) {
+          return res.status(401).json({ error: 'Not authenticated' });
         }
 
-        // TODO: Connect to SessionManager for validation
-        return res.json({
-          message: 'User profile endpoint ready - will integrate with SessionManager',
-          mockUser: {
-            id: 'user-123',
-            email: 'user@example.com',
-            emailVerified: true
-          }
-        });
+        const userProfile = await this.sessionManager.getUserProfile();
+        
+        if (userProfile) {
+          return res.json({
+            success: true,
+            data: { user: userProfile }
+          });
+        } else {
+          return res.status(404).json({ error: 'User profile not found' });
+        }
       } catch (error) {
         console.error('Auth validation error:', error);
         return res.status(500).json({ error: 'Internal server error' });
@@ -160,10 +245,15 @@ export class SimpleAPIRouter {
     // Get all plugins
     this.router.get('/plugins', async (req: Request, res: Response) => {
       try {
-        // TODO: Connect to PluginManager
+        const availablePlugins = await this.pluginManager.getAvailablePlugins();
+        const installedPlugins = await this.pluginManager.getInstalledPlugins();
+        
         return res.json({ 
-          plugins: [],
-          message: 'Plugin list endpoint ready - will integrate with PluginManager'
+          success: true,
+          data: {
+            available: availablePlugins,
+            installed: installedPlugins
+          }
         });
       } catch (error) {
         console.error('Get plugins error:', error);
@@ -180,7 +270,20 @@ export class SimpleAPIRouter {
           return res.status(400).json({ error: 'Plugin ID is required' });
         }
 
-        // TODO: Connect to PluginManager
+        // For development/testing, provide mock response
+        if (process.env.NODE_ENV === 'development') {
+          return res.json({
+            success: true,
+            message: 'Plugin installation successful (mock mode)',
+            data: {
+              pluginId,
+              version: version || 'latest',
+              status: 'installed'
+            }
+          });
+        }
+
+        // TODO: Implement actual plugin installation
         return res.json({
           success: true,
           message: 'Plugin install endpoint ready - will integrate with PluginManager',
@@ -198,7 +301,19 @@ export class SimpleAPIRouter {
       try {
         const { pluginId } = req.params;
         
-        // TODO: Connect to PluginManager
+        // For development/testing, provide mock response
+        if (process.env.NODE_ENV === 'development') {
+          return res.json({
+            success: true,
+            message: 'Plugin uninstallation successful (mock mode)',
+            data: {
+              pluginId,
+              status: 'uninstalled'
+            }
+          });
+        }
+
+        // TODO: Implement actual plugin uninstallation
         return res.json({
           success: true,
           message: 'Plugin uninstall endpoint ready - will integrate with PluginManager',
@@ -220,7 +335,19 @@ export class SimpleAPIRouter {
           return res.status(400).json({ error: 'enabled field must be a boolean' });
         }
 
-        // TODO: Connect to PluginManager
+        // For development/testing, provide mock response
+        if (process.env.NODE_ENV === 'development') {
+          return res.json({
+            success: true,
+            message: `Plugin ${enabled ? 'enabled' : 'disabled'} successfully (mock mode)`,
+            data: {
+              pluginId,
+              enabled
+            }
+          });
+        }
+
+        // TODO: Implement actual plugin update
         return res.json({
           success: true,
           message: `Plugin ${enabled ? 'enable' : 'disable'} endpoint ready - will integrate with PluginManager`,
@@ -240,7 +367,22 @@ export class SimpleAPIRouter {
       try {
         const userId = req.query.userId as string;
         
-        // TODO: Connect to SettingsService
+        // For development/testing, provide mock response
+        if (process.env.NODE_ENV === 'development') {
+          return res.json({ 
+            success: true,
+            data: {
+              settings: {
+                theme: 'light',
+                language: 'en',
+                notifications: true
+              },
+              userId: userId || 'mock-user-id'
+            }
+          });
+        }
+
+        // TODO: Implement actual settings retrieval
         return res.json({ 
           settings: {},
           message: 'Settings retrieval endpoint ready - will integrate with SettingsService',
@@ -258,7 +400,24 @@ export class SimpleAPIRouter {
         const { key } = req.params;
         const { value, userId } = req.body;
         
-        // TODO: Connect to SettingsService
+        if (value === undefined) {
+          return res.status(400).json({ error: 'Value is required' });
+        }
+
+        // For development/testing, provide mock response
+        if (process.env.NODE_ENV === 'development') {
+          return res.json({
+            success: true,
+            message: 'Setting updated successfully (mock mode)',
+            data: {
+              key,
+              value,
+              userId: userId || 'mock-user-id'
+            }
+          });
+        }
+
+        // TODO: Implement actual setting update
         return res.json({
           success: true,
           message: 'Setting update endpoint ready - will integrate with SettingsService',
@@ -278,7 +437,19 @@ export class SimpleAPIRouter {
         const { key } = req.params;
         const userId = req.query.userId as string;
         
-        // TODO: Connect to SettingsService
+        // For development/testing, provide mock response
+        if (process.env.NODE_ENV === 'development') {
+          return res.json({
+            success: true,
+            message: 'Setting deleted successfully (mock mode)',
+            data: {
+              key,
+              userId: userId || 'mock-user-id'
+            }
+          });
+        }
+
+        // TODO: Implement actual setting deletion
         return res.json({
           success: true,
           message: 'Setting deletion endpoint ready - will integrate with SettingsService',

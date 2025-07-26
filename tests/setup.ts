@@ -15,4 +15,30 @@ if (typeof global.setImmediate === 'undefined') {
   };
 }
 
-// Global test utilities and mocks can be added here 
+// Global test utilities and mocks can be added here
+
+// React Testing Library setup
+import '@testing-library/jest-dom';
+
+// Mock window.matchMedia for responsive design tests
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
+// Mock IntersectionObserver for lazy loading tests
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  unobserve() {}
+} as any; 
