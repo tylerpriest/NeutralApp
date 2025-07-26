@@ -1,0 +1,181 @@
+/* VirtualList.css - Virtual Scrolling Component Styling */
+
+.virtual-list {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+}
+
+.virtual-list-content {
+  position: relative;
+  width: 100%;
+}
+
+.virtual-list-items {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  will-change: transform;
+}
+
+.virtual-list-item {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Smooth scrolling */
+.virtual-list {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar styling */
+.virtual-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.virtual-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.virtual-list::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.virtual-list::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Firefox scrollbar */
+.virtual-list {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f1f5f9;
+}
+
+/* Performance optimizations */
+.virtual-list * {
+  box-sizing: border-box;
+}
+
+.virtual-list-items {
+  contain: layout style paint;
+}
+
+.virtual-list-item {
+  contain: layout style;
+}
+
+/* Loading state */
+.virtual-list.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.virtual-list.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Empty state */
+.virtual-list.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .virtual-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .virtual-list::-webkit-scrollbar-thumb {
+    background: #a0aec0;
+  }
+}
+
+@media (max-width: 480px) {
+  .virtual-list::-webkit-scrollbar {
+    width: 4px;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .virtual-list::-webkit-scrollbar-track {
+    background: #374151;
+  }
+  
+  .virtual-list::-webkit-scrollbar-thumb {
+    background: #6b7280;
+  }
+  
+  .virtual-list::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+  
+  .virtual-list {
+    scrollbar-color: #6b7280 #374151;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .virtual-list::-webkit-scrollbar-track {
+    background: #ffffff;
+    border: 1px solid #000000;
+  }
+  
+  .virtual-list::-webkit-scrollbar-thumb {
+    background: #000000;
+  }
+  
+  .virtual-list {
+    scrollbar-color: #000000 #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .virtual-list {
+    scroll-behavior: auto;
+  }
+  
+  .virtual-list-items {
+    transition: none;
+  }
+}
+
+/* Focus styles for accessibility */
+.virtual-list:focus-within {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.virtual-list-item:focus-within {
+  outline: 2px solid #667eea;
+  outline-offset: -2px;
+} 
