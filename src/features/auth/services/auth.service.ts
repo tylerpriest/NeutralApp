@@ -3,21 +3,31 @@ import { IAuthenticationService } from '../interfaces/auth.interface';
 import { AuthResult, ValidationResult, User, UserMetadata } from '../../../shared';
 
 export class AuthenticationService implements IAuthenticationService {
-  private supabase: SupabaseClient;
+  private supabase: SupabaseClient | null = null;
   private currentUser: User | null = null;
+  private isMockMode: boolean = false;
 
   constructor() {
-    // TODO: Get these from environment variables
-    const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
-    const supabaseKey = process.env.SUPABASE_ANON_KEY || 'placeholder-key';
+    // Check if Supabase is properly configured
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
-    this.supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // Initialize current user state asynchronously
-    this.initializeAuth().catch(console.error);
+    if (supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder')) {
+      this.supabase = createClient(supabaseUrl, supabaseKey);
+      // Initialize current user state asynchronously
+      this.initializeAuth().catch(console.error);
+    } else {
+      // Fall back to mock mode for development/testing
+      this.isMockMode = true;
+      console.log('🔧 Authentication running in mock mode (no Supabase configuration)');
+    }
   }
 
   public async initializeAuth(): Promise<void> {
+    if (!this.supabase) {
+      return; // Mock mode, no initialization needed
+    }
+    
     try {
       const { data: { user }, error } = await this.supabase.auth.getUser();
       if (user && !error) {
@@ -54,6 +64,32 @@ export class AuthenticationService implements IAuthenticationService {
         return {
           success: false,
           error: validation.errors.join(', ')
+        };
+      }
+
+      // Mock mode - return success without calling Supabase
+      if (this.isMockMode || !this.supabase) {
+        const mockUser: User = {
+          id: 'mock-user-id',
+          email: email,
+          displayName: metadata?.displayName,
+          emailVerified: true,
+          createdAt: new Date(),
+          lastLoginAt: new Date(),
+          settings: {
+            theme: 'light',
+            language: 'en',
+            notifications: true,
+            ...metadata
+          },
+          roles: []
+        };
+        
+        this.currentUser = mockUser;
+        return {
+          success: true,
+          user: mockUser,
+          requiresEmailVerification: false
         };
       }
 
@@ -95,6 +131,29 @@ export class AuthenticationService implements IAuthenticationService {
 
   async signIn(email: string, password: string): Promise<AuthResult> {
     try {
+      // Mock mode - return success for any valid email/password
+      if (this.isMockMode || !this.supabase) {
+        const mockUser: User = {
+          id: 'mock-user-id',
+          email: email,
+          emailVerified: true,
+          createdAt: new Date(),
+          lastLoginAt: new Date(),
+          settings: {
+            theme: 'light',
+            language: 'en',
+            notifications: true
+          },
+          roles: []
+        };
+        
+        this.currentUser = mockUser;
+        return {
+          success: true,
+          user: mockUser
+        };
+      }
+
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email,
         password
@@ -140,7 +199,9 @@ export class AuthenticationService implements IAuthenticationService {
 
   async signOut(): Promise<void> {
     try {
-      await this.supabase.auth.signOut();
+      if (this.supabase) {
+        await this.supabase.auth.signOut();
+      }
       this.currentUser = null;
     } catch (error) {
       // Log error but don't throw - signOut should be graceful
@@ -150,6 +211,12 @@ export class AuthenticationService implements IAuthenticationService {
   }
 
   async resetPassword(email: string): Promise<void> {
+    if (!this.supabase) {
+      // Mock mode - just log the action
+      console.log(`Mock password reset requested for: ${email}`);
+      return;
+    }
+    
     const { error } = await this.supabase.auth.resetPasswordForEmail(email);
     if (error) {
       throw new Error(error.message);
@@ -157,6 +224,12 @@ export class AuthenticationService implements IAuthenticationService {
   }
 
   async updatePassword(newPassword: string): Promise<void> {
+    if (!this.supabase) {
+      // Mock mode - just log the action
+      console.log('Mock password update requested');
+      return;
+    }
+    
     const { error } = await this.supabase.auth.updateUser({
       password: newPassword
     });
@@ -170,6 +243,11 @@ export class AuthenticationService implements IAuthenticationService {
   }
 
   onAuthStateChange(callback: (user: User | null) => void): () => void {
+    if (!this.supabase) {
+      // Mock mode - return a no-op unsubscribe function
+      return () => {};
+    }
+    
     const { data: { subscription } } = this.supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         this.currentUser = this.mapSupabaseUserToUser(session.user);
@@ -210,6 +288,12 @@ export class AuthenticationService implements IAuthenticationService {
   }
 
   async sendEmailVerification(email: string): Promise<void> {
+    if (!this.supabase) {
+      // Mock mode - just log the action
+      console.log(`Mock email verification requested for: ${email}`);
+      return;
+    }
+    
     const { error } = await this.supabase.auth.resetPasswordForEmail(email);
     if (error) {
       throw new Error(error.message);

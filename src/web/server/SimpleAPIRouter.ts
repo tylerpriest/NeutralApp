@@ -113,25 +113,7 @@ export class SimpleAPIRouter {
           return res.status(400).json({ error: 'Password must be at least 6 characters' });
         }
 
-        // For development/testing without Supabase, provide mock response
-        if (process.env.NODE_ENV === 'test' || (process.env.NODE_ENV === 'development' && !process.env.SUPABASE_URL)) {
-          return res.status(201).json({
-            user: {
-              id: 'mock-user-id',
-              email: email,
-              emailVerified: false,
-              createdAt: new Date(),
-              lastLoginAt: new Date(),
-              settings: {
-                theme: 'light',
-                language: 'en',
-                notifications: true
-              },
-              roles: []
-            },
-            message: 'User registered successfully'
-          });
-        }
+
 
         const result = await this.authService.signUp(email, password, metadata);
         
@@ -164,25 +146,7 @@ export class SimpleAPIRouter {
           return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // For development/testing without Supabase, provide mock response
-        if (process.env.NODE_ENV === 'test' || (process.env.NODE_ENV === 'development' && !process.env.SUPABASE_URL)) {
-          return res.json({
-            user: {
-              id: 'mock-user-id',
-              email: email,
-              emailVerified: true,
-              createdAt: new Date(),
-              lastLoginAt: new Date(),
-              settings: {
-                theme: 'light',
-                language: 'en',
-                notifications: true
-              },
-              roles: []
-            },
-            message: 'Login successful'
-          });
-        }
+
 
         const result = await this.authService.signIn(email, password);
         
