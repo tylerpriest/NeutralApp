@@ -20,6 +20,9 @@ if (typeof global.setImmediate === 'undefined') {
 // React Testing Library setup
 import '@testing-library/jest-dom';
 
+// Mock fetch for API calls
+global.fetch = jest.fn();
+
 // Mock window.matchMedia for responsive design tests
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
