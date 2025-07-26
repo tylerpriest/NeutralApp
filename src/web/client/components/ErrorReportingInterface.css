@@ -1,0 +1,485 @@
+/* ErrorReportingInterface.css - Error Reporting Interface Styling */
+
+.error-reporting-interface {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.error-reporting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.error-reporting-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.refresh-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.refresh-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.error-reporting-tabs {
+  display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 16px 24px;
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-button:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.tab-button.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: white;
+}
+
+.error-reporting-content {
+  padding: 24px;
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-state p {
+  color: #e53e3e;
+  margin-bottom: 16px;
+}
+
+.retry-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  background: #5a67d8;
+  transform: translateY(-2px);
+}
+
+/* Overview Tab */
+.overview-tab {
+  width: 100%;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 8px;
+}
+
+.stat-period {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Severity Breakdown */
+.severity-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.severity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.severity-critical {
+  background: #fef2f2;
+  color: #dc2626;
+  border-left: 4px solid #dc2626;
+}
+
+.severity-high {
+  background: #fffbeb;
+  color: #d97706;
+  border-left: 4px solid #d97706;
+}
+
+.severity-medium {
+  background: #f0f9ff;
+  color: #0284c7;
+  border-left: 4px solid #0284c7;
+}
+
+.severity-low {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-left: 4px solid #16a34a;
+}
+
+.severity-count {
+  font-weight: 600;
+}
+
+/* Component and Type Breakdown */
+.component-breakdown,
+.type-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.component-item,
+.type-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.component-name,
+.type-name {
+  color: #374151;
+  font-weight: 500;
+}
+
+.component-count,
+.type-count {
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* Errors Tab */
+.errors-tab {
+  width: 100%;
+}
+
+.errors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.no-errors {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+.error-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.error-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.error-message {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  flex: 1;
+  margin-right: 16px;
+}
+
+.error-severity {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.error-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.error-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.error-count {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.error-timeline {
+  display: flex;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+/* Suggestions Tab */
+.suggestions-tab {
+  width: 100%;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.suggestion-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.suggestion-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.suggestion-action {
+  background: #f0f9ff;
+  color: #0284c7;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.suggestion-text {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .error-reporting-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .error-reporting-tabs {
+    flex-direction: column;
+  }
+
+  .tab-button {
+    border-bottom: none;
+    border-right: 3px solid transparent;
+  }
+
+  .tab-button.active {
+    border-right-color: #667eea;
+    border-bottom-color: transparent;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .error-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .error-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .error-timeline {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .suggestion-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-reporting-content {
+    padding: 16px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .error-item,
+  .suggestion-item {
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+}
+
+/* Accessibility */
+.error-reporting-interface:focus-within {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.tab-button:focus {
+  outline: 2px solid #667eea;
+  outline-offset: -2px;
+}
+
+.refresh-button:focus,
+.retry-button:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .error-reporting-interface {
+    border: 2px solid #000000;
+  }
+
+  .error-reporting-header {
+    background: #000000;
+    color: #ffffff;
+  }
+
+  .tab-button {
+    border-color: #000000;
+  }
+
+  .tab-button.active {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .stat-card,
+  .error-item,
+  .suggestion-item {
+    border-color: #000000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+
+  .refresh-button:hover,
+  .retry-button:hover {
+    transform: none;
+  }
+} 

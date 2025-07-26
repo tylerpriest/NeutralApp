@@ -1,50 +1,72 @@
-# UI Modernization Implementation Tasks
+# Status: ACTIVE (In Progress)
+# Implementation: Not started - awaiting initial setup
 
-- [ ] 1. Install and configure Tailwind CSS
-  - [ ] 1.1 Add Tailwind and PostCSS dependencies
-  - [ ] 1.2 Create tailwind.config.js and postcss.config.js
-  - [ ] 1.3 Integrate Tailwind with Vite and React
+# Implementation Plan
+
+- [ ] 1. Set up Tailwind CSS and shadcn/ui foundation
+  - [ ] 1.1 Install Tailwind CSS, PostCSS, and Autoprefixer dependencies
+    - [ ] Add Tailwind and PostCSS to project
+    - [ ] Configure PostCSS with Tailwind and Autoprefixer
+    - [ ] Update vite.config.ts if needed
+  - [ ] 1.2 Install shadcn/ui and peer dependencies
+    - [ ] Set up shadcn/ui for React/TypeScript
+    - [ ] Test shadcn/ui Button and Input in a sample component
+  - [ ] 1.3 Create or update Tailwind config to match visual-design.md
+    - [ ] Add color palette, spacing, and typography tokens
+    - [ ] Ensure support for light, neutral backgrounds and subtle gradients
   - [ ] 1.4 Add base Tailwind imports to global.css
-  - _Requirements: Technical Implementation_
+    - [ ] Remove any legacy global CSS not needed
+  - _Requirements: 3_
 
-- [ ] 2. Install and configure shadcn/ui
-  - [ ] 2.1 Add shadcn/ui and peer dependencies
-  - [ ] 2.2 Set up shadcn/ui for React/TypeScript
-  - [ ] 2.3 Test shadcn/ui Button and Input in a sample component
-  - _Requirements: Technical Implementation_
+- [ ] 2. Build shared UI primitives in /src/shared/ui/
+  - [ ] 2.1 Create shared icon component(s) (Lucide, Heroicons, or Phosphor)
+  - [ ] 2.2 Create shared loading spinner and progress indicator
+  - [ ] 2.3 Create shared button variants (primary, secondary, ghost)
+  - [ ] 2.4 Create shared form input components
+  - [ ] 2.5 Create shared card/container components
+  - [ ] 2.6 Create shared toast notification and error boundary components
+  - [ ] 2.7 Write tests for all shared UI primitives
+  - _Requirements: 4_
 
-- [ ] 3. Refactor shared primitives and layout components
-  - [ ] 3.1 Refactor AppShell to use Tailwind and shadcn/ui
-  - [ ] 3.2 Refactor Header, Navigation, and AuthGuard
-  - [ ] 3.3 Refactor ErrorBoundary and ToastManager
-  - [ ] 3.4 Remove legacy CSS for these components
-  - [ ] 3.5 Update or add tests for all changes
-  - _Requirements: Visual Style, Technical Implementation_
+- [ ] 3. Modernize feature UI components (one feature at a time)
+  - [ ] 3.1 Auth feature: Refactor /src/features/auth/web/ components
+    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
+    - [ ] Remove legacy CSS
+    - [ ] Update or add tests
+  - [ ] 3.2 Plugin-manager feature: Refactor /src/features/plugin-manager/web/ components
+    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
+    - [ ] Remove legacy CSS
+    - [ ] Update or add tests
+  - [ ] 3.3 UI-shell feature: Refactor /src/features/ui-shell/web/ components
+    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
+    - [ ] Remove legacy CSS
+    - [ ] Update or add tests
+  - [ ] 3.4 Settings feature: Refactor /src/features/settings/web/ components
+    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
+    - [ ] Remove legacy CSS
+    - [ ] Update or add tests
+  - [ ] 3.5 Admin feature: Refactor /src/features/admin/web/ components
+    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
+    - [ ] Remove legacy CSS
+    - [ ] Update or add tests
+  - [ ] 3.6 Error-reporter feature: Refactor /src/features/error-reporter/web/ components
+    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
+    - [ ] Remove legacy CSS
+    - [ ] Update or add tests
+  - _Requirements: 1, 3, 4, 5_
 
-- [ ] 4. Refactor all pages to new UI patterns
-  - [ ] 4.1 Refactor DashboardPage and WelcomeScreen
-  - [ ] 4.2 Refactor AuthPage and SettingsPage
-  - [ ] 4.3 Refactor PluginManagerPage and AdminPage
-  - [ ] 4.4 Remove legacy CSS for all pages
-  - [ ] 4.5 Update or add tests for all changes
-  - _Requirements: Visual Style, Technical Implementation_
+- [ ] 4. Ensure accessibility and responsiveness
+  - [ ] 4.1 Audit all shared and feature UI components for WCAG compliance
+  - [ ] 4.2 Test keyboard navigation and screen reader support
+  - [ ] 4.3 Test mobile responsiveness and touch targets
+  - [ ] 4.4 Update or add tests for accessibility and responsiveness
+  - _Requirements: 1, 5_
 
-- [ ] 5. Refactor all remaining components
-  - [ ] 5.1 Refactor WidgetContainer, ToastNotification, etc.
-  - [ ] 5.2 Remove any remaining legacy CSS
-  - [ ] 5.3 Update or add tests for all changes
-  - _Requirements: Visual Style, Technical Implementation_
-
-- [ ] 6. Ensure accessibility and responsiveness
-  - [ ] 6.1 Audit all components/pages for WCAG compliance
-  - [ ] 6.2 Test keyboard navigation and screen reader support
-  - [ ] 6.3 Test mobile responsiveness
-  - [ ] 6.4 Update or add tests for accessibility and responsiveness
-  - _Requirements: Visual Style, Technical Implementation_
-
-- [ ] 7. Finalize and document
-  - [ ] 7.1 Remove all unused/legacy CSS files
-  - [ ] 7.2 Update README and relevant documentation
-  - [ ] 7.3 Ensure all tests pass and quality gates are met
-  - [ ] 7.4 Mark tasks as complete in this file
-  - _Requirements: All_ 
+- [ ] 5. Finalize, document, and verify quality
+  - [ ] 5.1 Remove all unused/legacy CSS files
+  - [ ] 5.2 Update README and relevant documentation
+  - [ ] 5.3 Ensure all tests pass and quality gates are met
+  - [ ] 5.4 Double-check that Tailwind CSS and shadcn/ui are fully implemented
+  - [ ] 5.5 Ensure the app looks visually polished, clean, and professional
+  - [ ] 5.6 Mark tasks as complete in this file
+  - _Requirements: 6, 7, 8, 9_ 

@@ -16,6 +16,7 @@ import {
   SystemAlert,
   PluginStatus
 } from '../../../shared/types';
+import ErrorReportingInterface from '../components/ErrorReportingInterface';
 import './AdminPage.css';
 
 interface TabData {
@@ -395,6 +396,15 @@ const AdminPage: React.FC = () => {
               </div>
             ))}
           </div>
+        </div>
+      )
+    },
+    {
+      id: 'errors',
+      label: 'Error Reporting',
+      content: (
+        <div className="errors-content">
+          <ErrorReportingInterface />
         </div>
       )
     }

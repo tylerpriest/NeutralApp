@@ -1,4 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { webErrorLogger } from '../services/WebErrorLogger';
+import { ErrorSeverity } from '../../../features/error-reporter/interfaces/logging.interface';
 
 interface Props {
   children: ReactNode;
@@ -40,13 +42,8 @@ class ErrorBoundary extends Component<Props, State> {
       errorInfo
     });
 
-    // Log the error to console
-    console.error('React Error Boundary caught an error:', {
-      error: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      timestamp: new Date().toISOString()
-    });
+    // Log the error using WebErrorLogger
+    webErrorLogger.logReactError(error, errorInfo, this.constructor.name);
 
     // Call custom error handler if provided
     if (this.props.onError) {
@@ -65,12 +62,19 @@ class ErrorBoundary extends Component<Props, State> {
 
   private handleReportError = () => {
     if (this.state.error && this.state.errorInfo) {
-      console.error('User reported error:', {
-        error: this.state.error.message,
-        stack: this.state.error.stack,
-        componentStack: this.state.errorInfo.componentStack,
-        userReported: true,
-        timestamp: new Date().toISOString()
+      // Log user-reported error with additional context
+      webErrorLogger.logWebError({
+        error: this.state.error,
+        context: {
+          component: this.constructor.name,
+          action: 'user-reported-error',
+          metadata: {
+            userReported: true,
+            componentStack: this.state.errorInfo.componentStack
+          }
+        },
+        userFacing: false,
+        severity: ErrorSeverity.MEDIUM
       });
     }
   };
