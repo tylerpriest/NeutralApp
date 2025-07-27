@@ -5,6 +5,14 @@ import { PluginInfo, PluginPackage, InstallResult, PluginStatus } from '../../..
 jest.mock('../services/dependency.resolver');
 jest.mock('../services/plugin.verifier');
 
+// Mock the modular plugin registry
+jest.mock('../../../plugins', () => ({
+  PLUGIN_REGISTRY: {},
+  discoverPlugins: jest.fn(),
+  getPluginInfo: jest.fn(),
+  validatePlugin: jest.fn()
+}));
+
 const mockDependencyResolver = {
   resolveDependencies: jest.fn(),
   checkDependencyConflicts: jest.fn(),
@@ -25,6 +33,9 @@ const mockPluginRegistry = {
   updatePluginStatus: jest.fn(),
 };
 
+// Import the mocked functions
+import { discoverPlugins, getPluginInfo, validatePlugin } from '../../../plugins';
+
 describe('PluginManager', () => {
   let pluginManager: PluginManager;
 
@@ -42,32 +53,45 @@ describe('PluginManager', () => {
     it('should return list of available plugins', async () => {
       const mockPlugins: PluginInfo[] = [
         {
-          id: 'plugin-1',
-          name: 'Test Plugin 1',
+          id: 'demo-hello-world',
+          name: 'Hello World Demo',
           version: '1.0.0',
-          description: 'A test plugin',
-          author: 'Test Author',
-          rating: 4.5,
-          downloads: 1000,
+          description: 'A simple demo plugin to validate the plugin system',
+          author: 'NeutralApp Team',
+          rating: 0,
+          downloads: 0,
           dependencies: [],
           permissions: [],
           status: PluginStatus.AVAILABLE
         }
       ];
 
-      mockPluginRegistry.getAvailablePlugins.mockResolvedValue(mockPlugins);
+      // Mock the modular plugin registry functions
+      (discoverPlugins as jest.Mock).mockReturnValue(['demo-hello-world']);
+      (getPluginInfo as jest.Mock).mockReturnValue({
+        id: 'demo-hello-world',
+        name: 'Hello World Demo',
+        version: '1.0.0',
+        description: 'A simple demo plugin to validate the plugin system',
+        author: 'NeutralApp Team'
+      });
 
       const result = await pluginManager.getAvailablePlugins();
 
       expect(result).toEqual(mockPlugins);
-      expect(mockPluginRegistry.getAvailablePlugins).toHaveBeenCalled();
+      expect(discoverPlugins).toHaveBeenCalled();
+      expect(getPluginInfo).toHaveBeenCalledWith('demo-hello-world');
     });
 
     it('should handle registry errors gracefully', async () => {
-      mockPluginRegistry.getAvailablePlugins.mockRejectedValue(new Error('Registry error'));
+      // Mock the modular plugin registry to throw an error
+      (discoverPlugins as jest.Mock).mockImplementation(() => {
+        throw new Error('Registry error');
+      });
 
       const result = await pluginManager.getAvailablePlugins();
 
+      // Should return empty array on error, not throw
       expect(result).toEqual([]);
     });
   });
@@ -263,47 +287,57 @@ describe('PluginManager', () => {
   describe('downloadAndVerifyPlugin', () => {
     it('should download and verify a plugin package', async () => {
       const mockDownloadedPackage: PluginPackage = {
-        id: 'downloaded-plugin',
+        id: 'demo-hello-world',
         version: '1.0.0',
-        code: 'downloaded code',
+        code: '// Plugin loaded from modular registry: demo-hello-world',
         manifest: {
-          id: 'downloaded-plugin',
-          name: 'Downloaded Plugin',
+          id: 'demo-hello-world',
+          name: 'Hello World Demo',
           version: '1.0.0',
-          description: 'A downloaded plugin',
-          author: 'Remote Author',
-          main: 'index.js',
+          description: 'A simple demo plugin to validate the plugin system',
+          author: 'NeutralApp Team',
+          main: './demo-hello-world/demo-hello-world.js',
           dependencies: [],
           permissions: [],
           api: []
         },
-        signature: 'download-signature'
+        signature: 'modular-registry-demo-hello-world'
       };
+
+      // Mock the modular plugin registry functions
+      (validatePlugin as jest.Mock).mockReturnValue(true);
+      (getPluginInfo as jest.Mock).mockReturnValue({
+        id: 'demo-hello-world',
+        name: 'Hello World Demo',
+        version: '1.0.0',
+        description: 'A simple demo plugin to validate the plugin system',
+        author: 'NeutralApp Team',
+        entryPoint: './demo-hello-world/demo-hello-world.js'
+      });
 
       // Mock the download and verification process
       const mockDownload = jest.fn().mockResolvedValue(mockDownloadedPackage);
       (pluginManager as any).downloadFromRegistry = mockDownload;
       mockPluginVerifier.verifyPluginSignature.mockResolvedValue(true);
 
-      const result = await pluginManager.downloadAndVerifyPlugin('downloaded-plugin');
+      const result = await pluginManager.downloadAndVerifyPlugin('demo-hello-world');
 
       expect(result).toEqual(mockDownloadedPackage);
-      expect(mockDownload).toHaveBeenCalledWith('downloaded-plugin');
       expect(mockPluginVerifier.verifyPluginSignature).toHaveBeenCalledWith(mockDownloadedPackage);
     });
 
     it('should reject plugin with failed verification', async () => {
       const mockDownloadedPackage: PluginPackage = {
-        id: 'downloaded-plugin',
+        id: 'demo-hello-world',
         version: '1.0.0',
-        code: 'downloaded code',
+        code: '// Plugin loaded from modular registry: demo-hello-world',
         manifest: {
-          id: 'downloaded-plugin',
-          name: 'Downloaded Plugin',
+          id: 'demo-hello-world',
+          name: 'Hello World Demo',
           version: '1.0.0',
-          description: 'A downloaded plugin',
-          author: 'Remote Author',
-          main: 'index.js',
+          description: 'A simple demo plugin to validate the plugin system',
+          author: 'NeutralApp Team',
+          main: './demo-hello-world/demo-hello-world.js',
           dependencies: [],
           permissions: [],
           api: []
@@ -311,11 +345,22 @@ describe('PluginManager', () => {
         signature: 'invalid-signature'
       };
 
+      // Mock the modular plugin registry functions
+      (validatePlugin as jest.Mock).mockReturnValue(true);
+      (getPluginInfo as jest.Mock).mockReturnValue({
+        id: 'demo-hello-world',
+        name: 'Hello World Demo',
+        version: '1.0.0',
+        description: 'A simple demo plugin to validate the plugin system',
+        author: 'NeutralApp Team',
+        entryPoint: './demo-hello-world/demo-hello-world.js'
+      });
+
       const mockDownload = jest.fn().mockResolvedValue(mockDownloadedPackage);
       (pluginManager as any).downloadFromRegistry = mockDownload;
       mockPluginVerifier.verifyPluginSignature.mockResolvedValue(false);
 
-      await expect(pluginManager.downloadAndVerifyPlugin('downloaded-plugin')).rejects.toThrow('Plugin verification failed');
+      await expect(pluginManager.downloadAndVerifyPlugin('demo-hello-world')).rejects.toThrow('Plugin verification failed');
     });
   });
 

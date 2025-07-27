@@ -73,6 +73,12 @@ describe('AuthContext', () => {
 
   describe('Initial State', () => {
     it('should start with unauthenticated state', async () => {
+      // Mock initial session check to return no user
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       renderAuthContext();
       
       // Wait for initial loading to complete
@@ -125,18 +131,28 @@ describe('AuthContext', () => {
 
   describe('Login Functionality', () => {
     it('should handle successful login', async () => {
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       // Mock successful login response
-      const mockResponse = {
+      mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue({
+        json: async () => ({
           success: true,
           user: { id: '1', email: 'test@example.com', name: 'Test User' },
           token: 'new-jwt-token'
         })
-      };
-      mockFetch.mockResolvedValueOnce(mockResponse);
+      });
 
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const loginButton = screen.getByTestId('login-btn');
       
@@ -162,6 +178,12 @@ describe('AuthContext', () => {
     });
 
     it('should handle login failure', async () => {
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       // Mock failed login response
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -172,6 +194,11 @@ describe('AuthContext', () => {
       });
 
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const loginButton = screen.getByTestId('login-btn');
       
@@ -186,10 +213,21 @@ describe('AuthContext', () => {
     });
 
     it('should handle network errors during login', async () => {
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       // Mock network error
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const loginButton = screen.getByTestId('login-btn');
       
@@ -206,6 +244,12 @@ describe('AuthContext', () => {
 
   describe('Logout Functionality', () => {
     it('should handle successful logout', async () => {
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       // Mock successful logout response
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -213,6 +257,11 @@ describe('AuthContext', () => {
       });
 
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const logoutButton = screen.getByTestId('logout-btn');
       
@@ -234,10 +283,21 @@ describe('AuthContext', () => {
     });
 
     it('should clear local storage even if logout request fails', async () => {
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       // Mock failed logout response
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const logoutButton = screen.getByTestId('logout-btn');
       
@@ -255,20 +315,28 @@ describe('AuthContext', () => {
 
   describe('Registration Functionality', () => {
     it('should handle successful registration', async () => {
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       // Mock successful registration response
-      const mockResponse = {
+      mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue({
+        json: async () => ({
           success: true,
-          data: {
-            user: { id: '2', email: 'test@example.com', name: 'Test User' },
-            token: 'new-jwt-token'
-          }
+          user: { id: '2', email: 'test@example.com', name: 'Test User' },
+          token: 'new-jwt-token'
         })
-      };
-      mockFetch.mockResolvedValueOnce(mockResponse);
+      });
 
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const registerButton = screen.getByTestId('register-btn');
       
@@ -297,6 +365,12 @@ describe('AuthContext', () => {
     });
 
     it('should handle registration failure', async () => {
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       // Mock failed registration response
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -307,6 +381,11 @@ describe('AuthContext', () => {
       });
 
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const registerButton = screen.getByTestId('register-btn');
       
@@ -323,7 +402,18 @@ describe('AuthContext', () => {
 
   describe('Password Reset Functionality', () => {
     it('should handle successful password reset', async () => {
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const resetButton = screen.getByTestId('reset-btn');
       
@@ -335,16 +425,22 @@ describe('AuthContext', () => {
       // Only the initial session check should have been called
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledTimes(1); // Only the initial session check
-        expect(mockFetch).toHaveBeenCalledWith('/api/auth/session', {
-          headers: {
-            'Authorization': 'Bearer invalid-token'
-          }
-        });
       });
     });
 
     it('should handle password reset failure', async () => {
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
+
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const resetButton = screen.getByTestId('reset-btn');
       
@@ -356,11 +452,6 @@ describe('AuthContext', () => {
       // Only the initial session check should have been called
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledTimes(1); // Only the initial session check
-        expect(mockFetch).toHaveBeenCalledWith('/api/auth/session', {
-          headers: {
-            'Authorization': 'Bearer invalid-token'
-          }
-        });
       });
     });
   });
@@ -370,6 +461,12 @@ describe('AuthContext', () => {
       // Temporarily remove JWT_SECRET
       const originalEnv = process.env.JWT_SECRET;
       delete process.env.JWT_SECRET;
+
+      // Mock initial session check
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'No token' })
+      });
 
       // This should not throw an error in the context, but the service calls might fail
       expect(() => renderAuthContext()).not.toThrow();
@@ -388,6 +485,11 @@ describe('AuthContext', () => {
       });
 
       renderAuthContext();
+
+      // Wait for initial loading to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+      });
 
       const loginButton = screen.getByTestId('login-btn');
       

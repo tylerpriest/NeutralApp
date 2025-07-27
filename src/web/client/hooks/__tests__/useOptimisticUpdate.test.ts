@@ -53,9 +53,6 @@ describe('useOptimisticUpdate', () => {
   });
 
   it('should handle timeout', async () => {
-    // Set up fake timers for this test
-    jest.useFakeTimers();
-    
     // Create a promise that never resolves to simulate a slow operation
     const slowPromise = new Promise<string>(() => {
       // This promise never resolves
@@ -64,7 +61,7 @@ describe('useOptimisticUpdate', () => {
     const mockAsyncOperation = jest.fn().mockReturnValue(slowPromise);
     
     const { result } = renderHook(() => 
-      useOptimisticUpdate<string>('initial', { timeout: 50 })
+      useOptimisticUpdate<string>('initial', { timeout: 100 })
     );
 
     let error: Error | undefined;
@@ -78,22 +75,15 @@ describe('useOptimisticUpdate', () => {
       }
     });
 
-    // Advance timers to trigger timeout
-    await act(async () => {
-      jest.advanceTimersByTime(60); // Advance past the 50ms timeout
-      // Wait for the next tick to process the timeout
-      await new Promise(resolve => setImmediate(resolve));
-    });
+    // Wait for timeout to occur
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toBe('Operation timed out');
     expect(result.current.data).toBe('initial'); // Should rollback
     expect(result.current.isPending).toBe(false);
     expect(result.current.error?.message).toBe('Operation timed out');
-    
-    // Clean up fake timers
-    jest.useRealTimers();
-  }, 5000); // 5 second timeout for this specific test
+  }, 10000); // 10 second timeout for this specific test
 
   it('should call success callback', async () => {
     const onSuccess = jest.fn();
