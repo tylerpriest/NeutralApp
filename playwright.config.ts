@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
+ * Comprehensive Playwright configuration for testing across all browsers and devices
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
@@ -14,7 +15,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'list',
+  reporter: [['list'], ['html', { open: 'never' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -28,46 +29,59 @@ export default defineConfig({
     
     /* Record video on failure */
     video: 'retain-on-failure',
-    
-    /* Default to headless mode for all projects */
-    headless: true,
   },
 
-  /* Configure projects for major browsers */
+  /* Configure projects for major browsers and devices */
   projects: [
-    // Debug project for development (headed mode for debugging)
-    {
-      name: 'debug-webkit',
-      use: { 
-        ...devices['Desktop Safari'],
-        headless: false, // Only webkit debug project uses headed mode
-        viewport: { width: 1280, height: 720 }
-      },
-    },
-    
-    // Standard browser projects (all headless)
+    /* Desktop Browsers */
     {
       name: 'chromium',
-      use: { 
-        ...devices['Desktop Chrome'],
-        headless: true, // Explicitly set headless
-      },
+      use: { ...devices['Desktop Chrome'] },
     },
-    
+
     {
       name: 'firefox',
-      use: { 
-        ...devices['Desktop Firefox'],
-        headless: true, // Explicitly set headless
-      },
+      use: { ...devices['Desktop Firefox'] },
     },
-    
+
     {
       name: 'webkit',
-      use: { 
-        ...devices['Desktop Safari'],
-        headless: true, // Explicitly set headless
-      },
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    /* Mobile Browsers */
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    },
+
+    /* Tablet Browsers */
+    {
+      name: 'Tablet Chrome',
+      use: { ...devices['iPad Pro'] },
+    },
+
+    /* Landscape Mobile */
+    {
+      name: 'Mobile Chrome Landscape',
+      use: { ...devices['Pixel 5 landscape'] },
+    },
+
+    /* Large Desktop */
+    {
+      name: 'Large Desktop',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } },
+    },
+
+    /* Small Desktop */
+    {
+      name: 'Small Desktop',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1024, height: 768 } },
     },
   ],
 
