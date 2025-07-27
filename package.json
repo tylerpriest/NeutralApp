@@ -4,10 +4,11 @@
   "description": "A domain-agnostic, ultra-modular application shell",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npm run build:server && npm run build:client",
+    "build": "npm run build:client",
     "build:server": "tsc",
     "build:client": "rm -rf dist/web/client && vite build",
-    "build:full": "npm run build && npm run build:client",
+    "vercel-build": "npm run build:client",
+    "build:full": "npm run build:server && npm run build:client",
     "build:production": "ts-node scripts/build-production.ts --env=production --optimize",
     "build:staging": "ts-node scripts/build-production.ts --env=staging --optimize",
     "build:analyze": "ts-node scripts/build-production.ts --env=production --optimize --analyze",

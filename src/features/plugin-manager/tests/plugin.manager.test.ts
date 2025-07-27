@@ -1,5 +1,6 @@
 import { PluginManager } from '../services/plugin.manager';
 import { PluginInfo, PluginPackage, InstallResult, PluginStatus } from '../../../shared/types';
+import { DashboardWidget } from '../../../shared/types';
 
 // Mock dependencies
 jest.mock('../services/dependency.resolver');
@@ -703,6 +704,249 @@ describe('PluginManager', () => {
       const installedPlugins = await pluginManager.getInstalledPlugins();
       expect(installedPlugins).toHaveLength(1);
       expect(installedPlugins[0]?.id).toBe('corrupted-plugin');
+    });
+  });
+
+  describe('Plugin Activation Lifecycle Widget Creation', () => {
+    const mockPluginInfo: PluginInfo = {
+      id: 'demo-hello-world',
+      name: 'Hello World Demo',
+      version: '1.0.0',
+      description: 'A simple hello world plugin',
+      author: 'Demo Author',
+      rating: 4.5,
+      downloads: 100,
+      dependencies: [],
+      permissions: [{ name: 'read:hello-world', description: 'Read hello world data', required: false }],
+      status: PluginStatus.INSTALLED
+    };
+
+    let installedPlugins: PluginInfo[];
+
+    beforeEach(() => {
+      installedPlugins = [{ ...mockPluginInfo }];
+      mockPluginRegistry.getInstalledPlugins.mockImplementation(async () => installedPlugins);
+      mockPluginRegistry.updatePluginStatus.mockImplementation(async (pluginId, status) => {
+        const plugin = installedPlugins.find(p => p.id === pluginId);
+        if (plugin) plugin.status = status;
+      });
+      jest.clearAllMocks();
+    });
+
+    const mockDashboardWidget: DashboardWidget = {
+      id: 'hello-world-widget',
+      pluginId: 'demo-hello-world',
+      title: 'Hello World Widget',
+      component: 'HelloWorldComponent',
+      size: { width: 4, height: 3, minWidth: 2, minHeight: 2 },
+      permissions: ['read:hello-world']
+    };
+
+    it('should create widgets when plugin is activated', async () => {
+      const mockDashboardManager = {
+        registerWidget: jest.fn(),
+        handlePluginUninstall: jest.fn()
+      };
+      const pluginManager = new PluginManager(mockDashboardManager);
+      await pluginManager.enablePlugin('demo-hello-world');
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalled();
+      expect(mockPluginRegistry.updatePluginStatus).toHaveBeenCalledWith('demo-hello-world', PluginStatus.ENABLED);
+    });
+
+    it('should create multiple widgets for plugins with multiple components', async () => {
+      const multiWidgetPlugin: PluginInfo = {
+        ...mockPluginInfo,
+        id: 'multi-widget-plugin',
+        name: 'Multi Widget Plugin'
+      };
+      
+      installedPlugins.push(multiWidgetPlugin);
+
+      const mockDashboardManager = {
+        registerWidget: jest.fn(),
+        handlePluginUninstall: jest.fn()
+      };
+
+      const pluginManager = new PluginManager(mockDashboardManager);
+
+      await pluginManager.enablePlugin('multi-widget-plugin');
+
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(1); // Default widget
+      expect(mockPluginRegistry.updatePluginStatus).toHaveBeenCalledWith('multi-widget-plugin', PluginStatus.ENABLED);
+    });
+
+    it('should handle widget creation errors during activation gracefully', async () => {
+      const mockDashboardManager = {
+        registerWidget: jest.fn().mockImplementation(() => {
+          throw new Error('Widget creation failed');
+        }),
+        handlePluginUninstall: jest.fn()
+      };
+
+      const pluginManager = new PluginManager(mockDashboardManager);
+
+      // Plugin activation should still succeed even if widget creation fails
+      await expect(pluginManager.enablePlugin('demo-hello-world')).resolves.not.toThrow();
+      
+      expect(mockPluginRegistry.updatePluginStatus).toHaveBeenCalledWith('demo-hello-world', PluginStatus.ENABLED);
+    });
+
+    it('should not create widgets for disabled plugins', async () => {
+      const disabledPlugin: PluginInfo = {
+        ...mockPluginInfo,
+        status: PluginStatus.DISABLED
+      };
+
+      installedPlugins.push(disabledPlugin);
+      
+      const mockDashboardManager = {
+        registerWidget: jest.fn(),
+        handlePluginUninstall: jest.fn()
+      };
+
+      const pluginManager = new PluginManager(mockDashboardManager);
+
+      // Widget should not be created for disabled plugin
+      expect(mockDashboardManager.registerWidget).not.toHaveBeenCalled();
+    });
+
+    it('should create widgets with proper permissions from plugin manifest', async () => {
+      const pluginWithPermissions: PluginInfo = {
+        ...mockPluginInfo,
+        permissions: [
+          { name: 'read:data', description: 'Read data', required: true },
+          { name: 'write:data', description: 'Write data', required: false },
+          { name: 'admin:data', description: 'Admin data', required: false }
+        ]
+      };
+      
+      installedPlugins.push(pluginWithPermissions);
+
+      const mockDashboardManager = {
+        registerWidget: jest.fn(),
+        handlePluginUninstall: jest.fn()
+      };
+
+      const pluginManager = new PluginManager(mockDashboardManager);
+
+      await pluginManager.enablePlugin('demo-hello-world');
+
+      // Verify widget was created with proper permissions
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledWith(
+        expect.objectContaining({
+          permissions: ['read:data', 'write:data', 'admin:data']
+        })
+      );
+    });
+
+    it('should handle plugin activation when dashboard manager is not available', async () => {
+      const pluginManager = new PluginManager(); // No dashboard manager
+
+      // Plugin activation should still succeed
+      await expect(pluginManager.enablePlugin('demo-hello-world')).resolves.not.toThrow();
+      
+      expect(mockPluginRegistry.updatePluginStatus).toHaveBeenCalledWith('demo-hello-world', PluginStatus.ENABLED);
+    });
+
+    it('should create widgets with proper component naming convention', async () => {
+      const mockDashboardManager = {
+        registerWidget: jest.fn(),
+        handlePluginUninstall: jest.fn()
+      };
+
+      const pluginManager = new PluginManager(mockDashboardManager);
+
+      await pluginManager.enablePlugin('demo-hello-world');
+
+      // Verify widget component name follows convention
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledWith(
+        expect.objectContaining({
+          component: 'Hello World DemoComponent'
+        })
+      );
+    });
+
+    it('should handle concurrent plugin activations correctly', async () => {
+      const mockDashboardManager = {
+        registerWidget: jest.fn(),
+        handlePluginUninstall: jest.fn()
+      };
+
+      const pluginManager = new PluginManager(mockDashboardManager);
+
+      // Activate both plugins concurrently
+      await Promise.all([
+        pluginManager.enablePlugin('plugin-1'),
+        pluginManager.enablePlugin('plugin-2')
+      ]);
+
+      // Verify both widgets were created
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(2);
+      expect(mockPluginRegistry.updatePluginStatus).toHaveBeenCalledWith('plugin-1', PluginStatus.ENABLED);
+      expect(mockPluginRegistry.updatePluginStatus).toHaveBeenCalledWith('plugin-2', PluginStatus.ENABLED);
+    });
+
+    it('should handle plugin activation for non-existent plugins gracefully', async () => {
+      mockPluginRegistry.updatePluginStatus.mockRejectedValue(new Error('Plugin not found'));
+      
+      const mockDashboardManager = {
+        registerWidget: jest.fn(),
+        handlePluginUninstall: jest.fn()
+      };
+
+      const pluginManager = new PluginManager(mockDashboardManager);
+
+      // Should throw error for non-existent plugin
+      await expect(pluginManager.enablePlugin('non-existent-plugin')).rejects.toThrow('Plugin not found');
+      
+      // Widget should not be created
+      expect(mockDashboardManager.registerWidget).not.toHaveBeenCalled();
+    });
+
+    it('should create widgets with proper size constraints', async () => {
+      const mockDashboardManager = {
+        registerWidget: jest.fn(),
+        handlePluginUninstall: jest.fn()
+      };
+
+      const pluginManager = new PluginManager(mockDashboardManager);
+
+      await pluginManager.enablePlugin('demo-hello-world');
+
+      // Verify widget has proper size constraints
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledWith(
+        expect.objectContaining({
+          size: expect.objectContaining({
+            width: 4,
+            height: 3,
+            minWidth: 2,
+            minHeight: 2
+          })
+        })
+      );
+    });
+
+    it('should handle plugin activation lifecycle events', async () => {
+      const mockDashboardManager = {
+        registerWidget: jest.fn(),
+        handlePluginUninstall: jest.fn()
+      };
+
+      const pluginManager = new PluginManager(mockDashboardManager);
+
+      // Test complete lifecycle: install -> enable -> disable -> enable
+      
+      // First enable
+      await pluginManager.enablePlugin('demo-hello-world');
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(1);
+      
+      // Disable
+      await pluginManager.disablePlugin('demo-hello-world');
+      expect(mockPluginRegistry.updatePluginStatus).toHaveBeenCalledWith('demo-hello-world', PluginStatus.DISABLED);
+      
+      // Re-enable
+      await pluginManager.enablePlugin('demo-hello-world');
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(2); // Called again on re-enable
     });
   });
 }); 

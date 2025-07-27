@@ -8,6 +8,8 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, 'dist/web/client'),
     emptyOutDir: true,
+    // Ensure assets are properly referenced
+    assetsDir: 'assets',
     // Ensure index.html is copied
     rollupOptions: {
       input: {

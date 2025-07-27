@@ -10,38 +10,39 @@
 ### Prompt
 [One paragraph that can be given to an AI agent as a prompt]
 
-### 1. User Stories (Required)
+## 🏗️ PHASE TWO
+### 1. User Stories
 - **1.1** **As a [user type]**, I want [goal/desire] so that [benefit/value]
 - **1.2** **As a [user type]**, I want [goal/desire] so that [benefit/value]
 - **1.3** **As a [user type]**, I want [goal/desire] so that [benefit/value]
 
-### 2. Technical Requirements (Required)
+### 2. Technical Requirements
 - **2.1** **[Requirement Category 1]**: [Specific technical requirement]
 - **2.2** **[Requirement Category 2]**: [Specific technical requirement]
 - **2.3** **[Requirement Category 3]**: [Specific technical requirement]
 
-### 3. Tasks (Required)
+### 3. Tasks
 - [ ] **3.1.1** [Task implementing requirement 2.1]
 - [ ] **3.1.2** [Additional task for requirement 2.1]
 - [ ] **3.2.1** [Task implementing requirement 2.2]
 - [ ] **3.3.1** [Task implementing requirement 2.3]
 
-### 4. Acceptance Criteria (Recommended)
+### 4. Acceptance Criteria
 - [ ] **4.1** WHEN [condition] THEN the system SHALL [behavior]
 - [ ] **4.2** WHEN [condition] THEN the system SHALL [behavior]
 - [ ] **4.3** WHEN [condition] THEN the system SHALL [behavior]
 
-### 5. Dependencies (Recommended)
+### 5. Dependencies
 - [ ] **5.1** [Prerequisite 1 - what must be in place first]
 - [ ] **5.2** [Prerequisite 2 - external services, packages, etc.]
 
-### 6. Success Metrics (Recommended)
+### 6. Success Metrics
 - **Performance**: [measurable performance criteria]
 - **Reliability**: [error rates, uptime requirements]
 - **User Experience**: [usability metrics]
 
 
-## 🏗️ PHASE TWO (Complex Features Only)
+## 🏗️ PHASE THREE (Complex Features Only)
 ### 7. Technical Design
 **Steering Integration:** [Reference to .kiro/steering/ files]
 

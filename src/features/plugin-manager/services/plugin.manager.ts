@@ -165,6 +165,9 @@ export class PluginManager implements IPluginManager {
     try {
       await this.pluginRegistry.updatePluginStatus(pluginId, PluginStatus.ENABLED);
       
+      // Create widgets for the activated plugin
+      await this.createWidgetsForActivatedPlugin(pluginId);
+      
       // TODO: Load plugin into sandbox and initialize
       console.log(`Plugin ${pluginId} enabled successfully`);
     } catch (error) {
@@ -357,6 +360,31 @@ export class PluginManager implements IPluginManager {
       console.log(`Registered widget for plugin: ${plugin.id}`);
     } catch (error) {
       console.error(`Failed to register widget for plugin ${plugin.id}:`, error);
+    }
+  }
+
+  private async createWidgetsForActivatedPlugin(pluginId: string): Promise<void> {
+    try {
+      // Get the plugin info to create widgets
+      const installedPlugins = await this.getInstalledPlugins();
+      const plugin = installedPlugins.find(p => p.id === pluginId);
+      
+      if (!plugin) {
+        console.warn(`Plugin ${pluginId} not found for widget creation`);
+        return;
+      }
+
+      // Only create widgets for enabled plugins
+      if (plugin.status !== PluginStatus.ENABLED) {
+        console.log(`Plugin ${pluginId} is not enabled, skipping widget creation`);
+        return;
+      }
+
+      // Create widgets for the activated plugin
+      this.registerPluginWidgets(plugin);
+    } catch (error) {
+      console.error(`Failed to create widgets for activated plugin ${pluginId}:`, error);
+      // Don't throw error to prevent plugin activation failure
     }
   }
 } 

@@ -64,7 +64,7 @@ Fix the plugin widget integration system so that when a plugin is installed, it 
     - Updated `loadPersistedPlugins()` to register widgets for enabled plugins on startup
   - **Tests**: Added comprehensive tests for plugin installation to widget registration integration (34/34 tests passing)
   - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite 100%, critical services operational)
-- [ ] **3.2.2** Implement widget creation in plugin activation lifecycle
+- [-] **3.2.2** Implement widget creation in plugin activation lifecycle
 - [ ] **3.2.3** Fix DashboardPage to display widgets from installed plugins
 - [ ] **3.3.1** Add plugin settings to SettingsService after installation
 - [ ] **3.3.2** Update SettingsPage to display plugin-specific settings
