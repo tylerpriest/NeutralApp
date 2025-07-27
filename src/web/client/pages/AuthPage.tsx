@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSession } from 'next-auth/react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AuthFormData {
@@ -19,8 +18,7 @@ interface AuthError {
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { data: session, status } = useSession();
-  const { login, register, resetPassword } = useAuth();
+  const { isAuthenticated, isLoading, login, register, resetPassword } = useAuth();
   const [mode, setMode] = useState<'login' | 'register' | 'reset'>('login');
   const [formData, setFormData] = useState<AuthFormData>({
     email: '',
@@ -30,16 +28,17 @@ const AuthPage: React.FC = () => {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState<AuthError[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
+    if (isAuthenticated && !isLoading) {
       const from = location.state?.from?.pathname || '/';
+      console.log('AuthPage: User authenticated, redirecting to:', from);
       navigate(from, { replace: true });
     }
-  }, [status, session, navigate, location]);
+  }, [isAuthenticated, isLoading, navigate, location]);
 
   const validateForm = (): boolean => {
     const newErrors: AuthError[] = [];
@@ -93,7 +92,7 @@ const AuthPage: React.FC = () => {
     //   return;
     // }
     
-    setIsLoading(true);
+    setIsSubmitting(true);
     setErrors([]);
     setSuccessMessage('');
 
@@ -106,12 +105,8 @@ const AuthPage: React.FC = () => {
           success = await login(formData.email, formData.password);
           console.log('AuthPage: Login result:', success);
           if (success) {
-            console.log('AuthPage: Login successful');
-            setSuccessMessage('Login successful! Redirecting...');
-            // Force redirect to dashboard for E2E tests
-            setTimeout(() => {
-              window.location.href = '/';
-            }, 100);
+            console.log('AuthPage: Login successful, redirect will happen automatically');
+            // The useEffect hook will handle the redirect when isAuthenticated becomes true
           } else {
             console.log('AuthPage: Login failed, showing error');
             setErrors([{ field: 'general', message: 'Invalid email or password' }]);
@@ -146,7 +141,7 @@ const AuthPage: React.FC = () => {
     } catch (error) {
       setErrors([{ field: 'general', message: 'Network error. Please try again.' }]);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -260,9 +255,9 @@ const AuthPage: React.FC = () => {
           <button
             type="submit"
             className="auth-button"
-            disabled={isLoading}
+            disabled={isSubmitting}
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <span className="loading-spinner">Loading...</span>
             ) : (
               <>

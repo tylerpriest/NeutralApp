@@ -1,10 +1,10 @@
 // NeutralApp Foundation Web Server
-import { SimpleWebServer } from './SimpleWebServer';
+import { WebServer } from './WebServer';
 
 async function startFoundationServer() {
   try {
     const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-    const webServer = new SimpleWebServer();
+    const webServer = new WebServer();
 
     await webServer.start(port);
     console.log('🏗️  NeutralApp Foundation Server Started');

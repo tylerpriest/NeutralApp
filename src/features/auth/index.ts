@@ -1,46 +1,17 @@
-// NextAuth.js Service and Interfaces
-import { NextAuthService } from './services/nextauth.service';
-export { NextAuthService } from './services/nextauth.service';
-export type { AuthUser, AuthResult, RegisterData } from './services/nextauth.service';
-export type { INextAuthService, IAuthFeature } from './interfaces/nextauth.interface';
+// Export JWT authentication service
+export { JWTAuthService } from './services/jwt.service';
 
-// Auth Feature Module
-export class AuthFeature {
-  private authService: NextAuthService;
-  private ready: boolean = false;
+// Export JWT authentication middleware
+export { JWTAuthMiddleware } from './middleware/auth.middleware';
 
-  constructor() {
-    this.authService = new NextAuthService();
-  }
+// Export JWT authentication routes
+export { JWTAuthRoutes } from './routes/auth.routes';
 
-  /**
-   * Initialize the auth feature
-   */
-  async initialize(): Promise<void> {
-    try {
-      // Check if NextAuth.js is available
-      await this.authService.getSession();
-      this.ready = true;
-    } catch (error) {
-      console.error('Auth feature initialization failed:', error);
-      this.ready = false;
-    }
-  }
-
-  /**
-   * Check if auth feature is ready
-   */
-  isReady(): boolean {
-    return this.ready;
-  }
-
-  /**
-   * Get the authentication service
-   */
-  getAuthService(): NextAuthService {
-    return this.authService;
-  }
-}
-
-// Default export
-export default AuthFeature; 
+// Export types
+export type { 
+  User, 
+  JWTPayload, 
+  TokenValidationResult, 
+  AuthenticationResult,
+  JWTAuthServiceInterface 
+} from './types/jwt.types'; 

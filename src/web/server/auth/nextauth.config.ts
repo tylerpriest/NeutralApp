@@ -47,13 +47,13 @@ export const authOptions: NextAuthOptions = {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(credentials.email)) {
           console.log('Invalid email format');
-          throw new Error('Please enter a valid email address');
+          return null; // Return null instead of throwing error
         }
 
         // Password validation
         if (credentials.password.length < 8) {
           console.log('Password too short');
-          throw new Error('Password must be at least 8 characters long');
+          return null; // Return null instead of throwing error
         }
 
         // For development/testing, accept specific test credentials
@@ -70,7 +70,7 @@ export const authOptions: NextAuthOptions = {
         // Reject invalid credentials
         if (credentials.password === 'wrongpassword' || credentials.email === 'invalid@example.com') {
           console.log('Invalid credentials rejected');
-          throw new Error('Invalid email or password');
+          return null; // Return null instead of throwing error
         }
 
         // For development, accept any valid email format with password123
@@ -109,6 +109,14 @@ export const authOptions: NextAuthOptions = {
         session.user.emailVerified = token.emailVerified;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      console.log('Redirect callback:', { url, baseUrl });
+      // Allow relative callback URLs
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      // Allow callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     }
   },
   pages: {

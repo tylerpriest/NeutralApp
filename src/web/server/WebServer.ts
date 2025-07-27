@@ -3,8 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
 import { SimpleAPIRouter } from './SimpleAPIRouter';
-import NextAuth from 'next-auth';
-import { authOptions } from './auth/nextauth.config';
+import { JWTAuthRoutes, JWTAuthMiddleware } from '../../features/auth';
 
 /**
  * WebServer class manages the Express.js application lifecycle
@@ -14,14 +13,14 @@ export class WebServer {
   private app: Express;
   private server: any;
   private apiRouter: SimpleAPIRouter;
-  private nextAuthHandler: any;
+  private authRoutes: JWTAuthRoutes;
+  private authMiddleware: JWTAuthMiddleware;
 
   constructor() {
     this.app = express();
     this.apiRouter = new SimpleAPIRouter();
-    console.log('Initializing NextAuth.js handler...');
-    this.nextAuthHandler = NextAuth(authOptions);
-    console.log('NextAuth.js handler initialized successfully');
+    this.authRoutes = new JWTAuthRoutes();
+    this.authMiddleware = new JWTAuthMiddleware();
     this.setupMiddleware();
     this.setupRoutes();
   }
@@ -94,17 +93,14 @@ export class WebServer {
       });
     });
 
-    // NextAuth.js API routes - handle all auth-related requests FIRST
-    this.app.use('/api/auth', (req: Request, res: Response, next: NextFunction) => {
-      console.log('NextAuth.js route called:', req.method, req.path);
-      return this.nextAuthHandler(req, res);
-    });
+    // JWT Authentication routes
+    this.app.use('/api/auth', this.authRoutes.getRouter());
 
     // Other API routes
     this.app.use('/api', this.apiRouter.getRouter());
 
-    // Serve static files from React build
-    const buildPath = path.join(__dirname, '../../client/build');
+    // Serve static files from React build (Vite output directory)
+    const buildPath = path.join(__dirname, '../../../src/dist/web/client');
     this.app.use(express.static(buildPath));
 
     // React app catch-all handler (for client-side routing)

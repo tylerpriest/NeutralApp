@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
 import { SimpleAPIRouter } from './SimpleAPIRouter';
+import NextAuth from 'next-auth';
+import { authOptions } from './auth/nextauth.config';
 
 /**
  * SimpleWebServer - A minimal web server for NeutralApp foundation
@@ -11,9 +13,13 @@ import { SimpleAPIRouter } from './SimpleAPIRouter';
 export class SimpleWebServer {
   private app: Express;
   private server: any;
+  private nextAuthHandler: any;
 
   constructor() {
     this.app = express();
+    console.log('Initializing NextAuth.js handler...');
+    this.nextAuthHandler = NextAuth(authOptions);
+    console.log('NextAuth.js handler initialized successfully');
     this.setupMiddleware();
     this.setupRoutes();
   }
@@ -133,6 +139,12 @@ export class SimpleWebServer {
           logging: 'API endpoints ready'
         }
       });
+    });
+
+    // NextAuth.js API routes - handle all auth-related requests FIRST
+    this.app.use('/api/auth', (req: Request, res: Response, next: NextFunction) => {
+      console.log('NextAuth.js route called:', req.method, req.path);
+      return this.nextAuthHandler(req, res);
     });
 
     // API routes

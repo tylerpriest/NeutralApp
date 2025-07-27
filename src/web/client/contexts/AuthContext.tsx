@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { signIn, signOut, useSession } from 'next-auth/react';
 
 interface User {
   id: string;
@@ -40,68 +39,61 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const { data: session, status } = useSession();
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [mockUser, setMockUser] = useState<User | null>(null);
 
+  // Check for existing token on mount
   useEffect(() => {
-    console.log('AuthContext: Session status changed:', { status, userId: session?.user?.id });
-    setIsLoading(status === 'loading');
-  }, [status, session]);
+    const checkAuth = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        try {
+          const response = await fetch('/api/auth/session', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data.user);
+          } else {
+            localStorage.removeItem('auth_token');
+          }
+        } catch (error) {
+          console.error('Session check failed:', error);
+          localStorage.removeItem('auth_token');
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log('AuthContext: Login attempt for:', email);
     
-    // Mock authentication for E2E tests and development
-    if (email === 'test@example.com' && password === 'password123') {
-      console.log('AuthContext: Mock login successful for test user');
-      const user = {
-        id: 'test-user-id',
-        email: email,
-        name: 'Test User',
-        emailVerified: new Date(),
-      };
-      setMockUser(user);
-      return true;
-    }
-    
-    // Mock authentication for any valid email format with password123
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (emailRegex.test(email) && password === 'password123') {
-      console.log('AuthContext: Mock login successful for development user');
-      const user = {
-        id: 'dev-user-id',
-        email: email,
-        name: email.split('@')[0],
-        emailVerified: new Date(),
-      };
-      setMockUser(user);
-      return true;
-    }
-    
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      console.log('AuthContext: SignIn result:', result);
-
-      if (result?.error) {
-        console.error('Login failed:', result.error);
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('auth_token', data.token);
+        setUser(data.user);
+        console.log('AuthContext: Login successful');
+        return true;
+      } else {
+        const error = await response.json();
+        console.error('Login failed:', error.error);
         return false;
       }
-
-      // If successful, wait a moment for session to update
-      if (result?.ok) {
-        console.log('AuthContext: Login successful, waiting for session update...');
-        // Give NextAuth.js time to update the session
-        await new Promise(resolve => setTimeout(resolve, 100));
-        return true;
-      }
-
-      return false;
     } catch (error) {
       console.error('Login failed:', error);
       return false;
@@ -110,44 +102,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      setMockUser(null);
-      await signOut({ redirect: false });
+      await fetch('/api/auth/signout', { method: 'POST' });
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout request failed:', error);
+    } finally {
+      localStorage.removeItem('auth_token');
+      setUser(null);
     }
   };
 
   const register = async (userData: RegisterData): Promise<boolean> => {
     console.log('AuthContext: Registration attempt for:', userData.email);
     
-    // Mock registration for E2E tests
-    if (userData.email === 'newuser@example.com' && userData.password === 'password123') {
-      console.log('AuthContext: Mock registration successful');
-      return true;
-    }
-    
     try {
       // For now, registration is the same as login
       // In a real app, you'd have a separate registration endpoint
-      const result = await signIn('credentials', {
-        email: userData.email,
-        password: userData.password,
-        redirect: false,
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: userData.email, 
+          password: userData.password 
+        }),
       });
 
-      if (result?.error) {
-        console.error('Registration failed:', result.error);
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('auth_token', data.token);
+        setUser(data.user);
+        return true;
+      } else {
+        const error = await response.json();
+        console.error('Registration failed:', error.error);
         return false;
       }
-
-      // If successful, wait a moment for session to update
-      if (result?.ok) {
-        // Give NextAuth.js time to update the session
-        await new Promise(resolve => setTimeout(resolve, 100));
-        return true;
-      }
-
-      return false;
     } catch (error) {
       console.error('Registration failed:', error);
       return false;
@@ -166,19 +156,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Use mock user if available, otherwise use NextAuth.js session
-  const currentUser = mockUser || session?.user || null;
-  const isAuthenticated = !!currentUser;
+  const isAuthenticated = !!user;
 
   console.log('AuthContext: Current state:', { 
-    mockUser: !!mockUser, 
-    sessionUser: !!session?.user, 
-    currentUser: !!currentUser, 
-    isAuthenticated 
+    user: !!user, 
+    isAuthenticated,
+    isLoading
   });
 
   const value: AuthContextType = {
-    user: currentUser,
+    user,
     isAuthenticated,
     isLoading,
     login,
