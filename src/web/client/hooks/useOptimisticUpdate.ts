@@ -42,15 +42,23 @@ export function useOptimisticUpdate<T>(
     }));
 
     try {
-      // Set timeout if specified
+      // Create the main operation promise
+      const operationPromise = asyncOperation();
+      
+      // Create timeout promise if specified
+      let timeoutPromise: Promise<never> | undefined;
       if (options.timeout) {
-        timeoutRef.current = setTimeout(() => {
-          throw new Error('Operation timed out');
-        }, options.timeout);
+        timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutRef.current = setTimeout(() => {
+            reject(new Error('Operation timed out'));
+          }, options.timeout);
+        });
       }
 
-      // Perform actual operation
-      const result = await asyncOperation();
+      // Race the operation against the timeout
+      const result = timeoutPromise 
+        ? await Promise.race([operationPromise, timeoutPromise])
+        : await operationPromise;
 
       // Clear timeout
       if (timeoutRef.current) {

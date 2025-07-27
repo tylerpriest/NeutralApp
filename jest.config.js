@@ -12,16 +12,25 @@ module.exports = {
     '/tests/e2e/'
   ],
   transform: {
-    '^.+\\\\.ts$': 'ts-jest',
-    '^.+\\\\.tsx$': 'ts-jest'
+    '^.+\\.ts$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+      useESM: false
+    }],
+    '^.+\\.tsx$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+      useESM: false
+    }]
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@supabase|isows|@supabase/realtime-js|@supabase/supabase-js|next-auth|jose|openid-client|@panva|oidc-token-hash|preact-render-to-string|uuid|@next-auth|@auth|@panva|oidc-token-hash|preact-render-to-string|uuid|@next-auth|@auth)/)'
+    'node_modules/(?!(@supabase|isows|@supabase/realtime-js|@supabase/supabase-js|next-auth|jose|openid-client|@panva|oidc-token-hash|preact-render-to-string|uuid|@next-auth|@auth)/)'
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/src/web/client/__mocks__/fileMock.js'
+    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/src/web/client/__mocks__/fileMock.js',
+    '^next-auth$': '<rootDir>/src/web/client/__mocks__/nextauth.mock.js',
+    '^jose$': '<rootDir>/src/web/client/__mocks__/jose.mock.js',
+    '^openid-client$': '<rootDir>/src/web/client/__mocks__/openid-client.mock.js'
   },
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -35,15 +44,24 @@ module.exports = {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  testTimeout: 10000,
+  testTimeout: 5000, // Reduced from 10000ms to 5000ms (5 seconds)
   globals: {
     'ts-jest': {
       tsconfig: 'tsconfig.json'
     }
   },
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testEnvironmentOptions: {
     url: 'http://localhost'
-  }
+  },
+  // Additional timeout settings
+  maxWorkers: 1, // Run tests sequentially to avoid resource conflicts
+  bail: 1, // Stop on first failure
+  verbose: true, // Show detailed output
+  // Force Jest to fail fast on timeouts
+  forceExit: true,
+  // Clear mocks between tests
+  clearMocks: true,
+  // Reset modules between tests
+  resetModules: true
 }; 

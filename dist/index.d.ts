@@ -1,13 +1,28 @@
+export * from './core';
 export * from './shared';
-export { NextAuthService, AuthFeature } from './features/auth';
-export { PluginManager, DependencyResolver, PluginEventBus, PluginStorageManager, PluginHealthMonitor, PluginVerifier, PluginTestManager, TestRunner, ContinuousTestingService } from './features/plugin-manager';
-export { NavigationManager, LayoutManager, DashboardManager, WidgetRegistry } from './features/ui-shell';
-export { SettingsService } from './features/settings';
-export { AdminDashboard, UserManager, SystemMonitor, SystemReportGenerator } from './features/admin';
-export { LoggingService, ErrorRecoveryService } from './features/error-reporter';
-export declare class NeutralApp {
-    constructor();
-    initialize(): Promise<void>;
-    start(): Promise<void>;
+export interface AppConfig {
+    port?: number;
+    environment?: 'development' | 'production' | 'test';
+    features?: {
+        auth?: boolean;
+        plugins?: boolean;
+        admin?: boolean;
+    };
 }
+export declare class NeutralApp {
+    private config;
+    private isInitialized;
+    constructor(config?: AppConfig);
+    initialize(): Promise<void>;
+    private registerCoreServices;
+    private initializeAuth;
+    private initializePluginManager;
+    private initializeAdmin;
+    start(): Promise<void>;
+    stop(): Promise<void>;
+    health(): Promise<any>;
+    get isStarted(): boolean;
+}
+export declare const neutralApp: NeutralApp;
+export default NeutralApp;
 //# sourceMappingURL=index.d.ts.map

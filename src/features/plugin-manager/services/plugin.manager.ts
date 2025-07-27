@@ -1,5 +1,6 @@
 import { IPluginManager } from '../interfaces/plugin.interface';
 import { PluginInfo, PluginPackage, InstallResult, PluginDependency, PluginStatus } from '../../../shared';
+import { PLUGIN_REGISTRY, discoverPlugins, getPluginInfo, validatePlugin } from '../../../plugins';
 
 export class PluginManager implements IPluginManager {
   private dependencyResolver: any;
@@ -38,7 +39,29 @@ export class PluginManager implements IPluginManager {
 
   async getAvailablePlugins(): Promise<PluginInfo[]> {
     try {
-      return await this.pluginRegistry.getAvailablePlugins();
+      // Get plugins from the modular plugin registry
+      const availablePluginIds = discoverPlugins();
+      const plugins: PluginInfo[] = [];
+
+      for (const pluginId of availablePluginIds) {
+        const pluginInfo = getPluginInfo(pluginId);
+        if (pluginInfo) {
+          plugins.push({
+            id: pluginInfo.id,
+            name: pluginInfo.name,
+            version: pluginInfo.version,
+            description: pluginInfo.description,
+            author: pluginInfo.author,
+            rating: 0,
+            downloads: 0,
+            dependencies: [],
+            permissions: [],
+            status: PluginStatus.AVAILABLE
+          });
+        }
+      }
+
+      return plugins;
     } catch (error) {
       console.error('Error fetching available plugins:', error);
       return [];
@@ -172,10 +195,37 @@ export class PluginManager implements IPluginManager {
 
   async downloadAndVerifyPlugin(pluginId: string): Promise<PluginPackage> {
     try {
-      // Download plugin package from registry
-      const pluginPackage = await this.downloadFromRegistry(pluginId);
-      
-      // Verify the downloaded package
+      // Validate plugin exists in modular registry
+      if (!validatePlugin(pluginId)) {
+        throw new Error(`Plugin ${pluginId} not found in registry`);
+      }
+
+      // Get plugin info from modular registry
+      const pluginInfo = getPluginInfo(pluginId);
+      if (!pluginInfo) {
+        throw new Error(`Plugin ${pluginId} information not available`);
+      }
+
+      // Create plugin package from modular registry
+      const pluginPackage: PluginPackage = {
+        id: pluginInfo.id,
+        version: pluginInfo.version,
+        code: `// Plugin loaded from modular registry: ${pluginId}`,
+        manifest: {
+          id: pluginInfo.id,
+          name: pluginInfo.name,
+          version: pluginInfo.version,
+          description: pluginInfo.description,
+          author: pluginInfo.author,
+          main: pluginInfo.entryPoint,
+          dependencies: [],
+          permissions: [],
+          api: []
+        },
+        signature: `modular-registry-${pluginId}`
+      };
+
+      // Verify the plugin package
       const signatureValid = await this.pluginVerifier.verifyPluginSignature(pluginPackage);
       if (!signatureValid) {
         throw new Error('Plugin verification failed: Invalid signature');
