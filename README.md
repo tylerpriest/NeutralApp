@@ -39,33 +39,77 @@ npm run dev
 ### Project Structure
 
 ```
-src/
-├── core/                    # Core infrastructure
-│   ├── event-bus/          # Event-driven communication system
-│   ├── dependency-injection/ # Service container and DI
-│   └── index.ts            # Core application lifecycle
-├── features/               # Feature-based modules
-│   ├── auth/               # Authentication services and interfaces
-│   ├── plugin-manager/     # Plugin management system
-│   ├── ui-shell/           # UI shell and navigation
-│   ├── settings/           # Settings management
-│   ├── admin/              # Admin dashboard
-│   └── error-reporter/     # Error handling and logging
-├── plugins/                # Plugin ecosystem
-│   ├── demo-hello-world/   # Example plugin
-│   └── index.ts            # Plugin registry and discovery
-├── shared/                 # Cross-feature utilities and types
-└── web/                    # Web application (client + server)
-    ├── client/             # React frontend
-    │   ├── __mocks__/      # Jest mocks for testing
-    │   ├── components/     # Reusable UI components
-    │   ├── pages/          # Page components
-    │   └── hooks/          # Custom React hooks
-    └── server/             # Express.js backend
-
-tests/
-├── e2e/                    # End-to-end tests (Playwright)
-└── setup.ts                # Test setup configuration
+NeutralApp/
+├── 📋 Documentation
+│   ├── README.md                 # Project introduction and quick start
+│   └── docs/
+│       ├── api/                  # API documentation
+│       ├── deployment/           # Deployment and operations guide
+│       └── guides/               # Development guides
+│
+├── ⚙️ Configuration
+│   ├── .cursor/                  # Cursor IDE rules and development notes
+│   │   ├── drafts/               # Draft specs/steering
+│   │   ├── internal-docs/        # Internal documentation
+│   │   ├── rules/                # Code quality and workflow rules
+│   │   └── SCRATCHPAD.md         # Development notes and current focus
+│   ├── .kiro/                    # Kiro AI assistant configuration
+│   │   ├── specs/                # Feature specifications and tasks
+│   │   └── steering/             # AI development guidelines
+│   └── .github/                  # GitHub workflows and templates
+│       
+├── 🏗️ Application Code
+│   ├── src/                      # Main application source code
+│   │   ├── core/                 # Core infrastructure
+│   │   │   ├── dependency-injection/ # Service container and DI
+│   │   │   ├── event-bus/        # Event-driven communication system
+│   │   │   └── index.ts          # Core application lifecycle
+│   │   ├── features/             # Feature-based modules
+│   │   │   ├── admin/            # Admin dashboard and system monitoring
+│   │   │   ├── auth/             # Authentication services and interfaces
+│   │   │   ├── error-reporter/   # Error handling and logging
+│   │   │   ├── plugin-manager/   # Plugin management system
+│   │   │   ├── settings/         # Settings management
+│   │   │   └── ui-shell/         # UI shell and navigation
+│   │   ├── plugins/              # Plugin ecosystem
+│   │   │   ├── demo-hello-world/ # Example plugin
+│   │   │   └── index.ts          # Plugin registry and discovery
+│   │   ├── shared/               # Cross-feature utilities and types
+│   │   ├── types/                # Global TypeScript types
+│   │   ├── web/                  # Web application (client + server)
+│   │   │   ├── client/           # React frontend
+│   │   │   │   ├── __mocks__/    # Jest mocks for testing
+│   │   │   │   ├── components/   # Reusable UI components
+│   │   │   │   ├── contexts/     # React contexts
+│   │   │   │   ├── hooks/        # Custom React hooks
+│   │   │   │   ├── pages/        # Page components
+│   │   │   │   ├── services/     # Client-side services
+│   │   │   │   ├── styles/       # Global styles
+│   │   │   │   ├── tests/        # Client integration tests
+│   │   │   │   ├── App.tsx       # Main React application
+│   │   │   │   ├── index.html    # HTML template
+│   │   │   │   └── index.tsx     # React entry point
+│   │   │   ├── server/           # Express.js backend
+│   │   │   │   ├── auth/         # Authentication server components
+│   │   │   │   ├── tests/        # Server tests
+│   │   │   │   ├── foundation.ts # Server foundation
+│   │   │   │   ├── index.ts      # Server entry point
+│   │   │   │   ├── SimpleAPIRouter.ts
+│   │   │   │   ├── SimpleWebServer.ts
+│   │   │   │   └── WebServer.ts
+│   │   │   └── shared/           # Web shared utilities
+│   │   └── index.ts              # Main application entry point
+│   └── client/                   # Legacy client directory (deprecated)
+│
+├── 🧪 Testing
+│   ├── tests/                    # Test suite
+│   │   ├── e2e/                  # End-to-end tests (Playwright)
+│   │   └── setup.ts              # Test setup configuration
+│   └── test-results/             # Test output and reports
+│
+└── 📦 Assets & Config
+    ├── uploads/                  # Static assets
+    └── [config files]            # Various configuration files
 ```
 
 ## 🔧 Development
