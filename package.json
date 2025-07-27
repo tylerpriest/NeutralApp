@@ -10,6 +10,7 @@
     "build:production": "ts-node scripts/build-production.ts --env=production --optimize",
     "build:staging": "ts-node scripts/build-production.ts --env=staging --optimize",
     "build:analyze": "ts-node scripts/build-production.ts --env=production --optimize --analyze",
+    "validate:env": "ts-node scripts/validate-env.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
