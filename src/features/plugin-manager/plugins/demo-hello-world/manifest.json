@@ -1,0 +1,41 @@
+{
+  "id": "demo-hello-world",
+  "name": "Hello World Demo",
+  "version": "1.0.0",
+  "description": "A simple demo plugin to validate the plugin system",
+  "author": "NeutralApp Team",
+  "entryPoint": "demo-hello-world.js",
+  "dependencies": [],
+  "permissions": [
+    "settings:read",
+    "settings:write",
+    "ui:widget:create",
+    "ui:widget:update"
+  ],
+  "settings": {
+    "greeting": {
+      "type": "string",
+      "default": "Hello World!",
+      "description": "Custom greeting message"
+    },
+    "showTimestamp": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show timestamp with greeting"
+    },
+    "refreshInterval": {
+      "type": "number",
+      "default": 5000,
+      "description": "Refresh interval in milliseconds"
+    }
+  },
+  "widgets": [
+    {
+      "id": "demo-hello-world-widget",
+      "title": "Hello World Demo",
+      "type": "custom",
+      "size": { "width": 2, "height": 1 },
+      "position": { "x": 0, "y": 0 }
+    }
+  ]
+} 
