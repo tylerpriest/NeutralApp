@@ -4,7 +4,6 @@ import { container } from './core/dependency-injection';
 
 // Core exports
 export * from './core';
-export * from './shared';
 
 // Application configuration
 export interface AppConfig {

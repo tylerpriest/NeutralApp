@@ -1,5 +1,4 @@
 export * from './core';
-export * from './shared';
 export interface AppConfig {
     port?: number;
     environment?: 'development' | 'production' | 'test';

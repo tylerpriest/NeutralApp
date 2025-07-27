@@ -20,7 +20,6 @@ const event_bus_1 = require("./core/event-bus");
 const dependency_injection_1 = require("./core/dependency-injection");
 // Core exports
 __exportStar(require("./core"), exports);
-__exportStar(require("./shared"), exports);
 // Default configuration
 const defaultConfig = {
     port: 3000,
