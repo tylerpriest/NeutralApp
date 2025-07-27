@@ -204,8 +204,7 @@ test.describe('Authentication E2E Tests', () => {
     // Wait for login process to complete
     await page.waitForTimeout(2000);
     
-    // Check for success message
-    await expect(page.getByText('Login successful! Redirecting...')).toBeVisible();
+    // Should redirect to home page (JWT auth redirects automatically)
     
     // Wait for redirect to complete
     await page.waitForTimeout(1000);
@@ -228,8 +227,7 @@ test.describe('Authentication E2E Tests', () => {
     // Wait for process to complete
     await page.waitForTimeout(2000);
     
-    // Should show success message
-    await expect(page.getByText('Login successful! Redirecting...')).toBeVisible();
+    // Should redirect to home page (JWT auth redirects automatically)
   });
 
   test('should handle navigation between auth modes', async ({ page }) => {

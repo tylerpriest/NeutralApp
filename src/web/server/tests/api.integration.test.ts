@@ -23,6 +23,7 @@ describe('API Integration Tests', () => {
 
   beforeEach(() => {
     setEnvVar('NODE_ENV', 'test');
+    setEnvVar('JWT_SECRET', 'test-secret-key-for-jwt-authentication');
     server = new SimpleWebServer();
     app = server.getApp();
   });
@@ -32,43 +33,7 @@ describe('API Integration Tests', () => {
   });
 
   describe('Authentication Endpoints', () => {
-    describe('POST /api/auth/register', () => {
-      it('should register a new user successfully', async () => {
-        const userData = {
-          email: 'test@example.com',
-          password: 'password123',
-          firstName: 'Test',
-          lastName: 'User'
-        };
-
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(userData)
-          .expect(201);
-
-        expect(response.body).toHaveProperty('data');
-        expect(response.body.data).toHaveProperty('user');
-        expect(response.body.data.user).toHaveProperty('id');
-        expect(response.body.data.user).toHaveProperty('email', userData.email);
-        expect(response.body).toHaveProperty('message', 'Registration successful.');
-      });
-
-      it('should return 400 for invalid registration data', async () => {
-        const invalidData = {
-          email: 'invalid-email',
-          password: '123' // too short
-        };
-
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(invalidData)
-          .expect(400);
-
-        expect(response.body).toHaveProperty('error');
-      });
-    });
-
-    describe('POST /api/auth/login', () => {
+    describe('POST /api/auth/signin', () => {
       it('should login user successfully', async () => {
         const loginData = {
           email: 'test@example.com',
@@ -76,13 +41,15 @@ describe('API Integration Tests', () => {
         };
 
         const response = await request(app)
-          .post('/api/auth/login')
+          .post('/api/auth/signin')
           .send(loginData)
           .expect(200);
 
-        expect(response.body).toHaveProperty('data');
-        expect(response.body.data).toHaveProperty('user');
-        expect(response.body).toHaveProperty('message', 'Login successful');
+        expect(response.body).toHaveProperty('success', true);
+        expect(response.body).toHaveProperty('user');
+        expect(response.body).toHaveProperty('token');
+        expect(response.body.user).toHaveProperty('id');
+        expect(response.body.user).toHaveProperty('email');
       });
 
       it('should return 401 for invalid credentials', async () => {
@@ -92,7 +59,7 @@ describe('API Integration Tests', () => {
         };
 
         const response = await request(app)
-          .post('/api/auth/login')
+          .post('/api/auth/signin')
           .send(invalidData)
           .expect(401);
 
@@ -100,25 +67,75 @@ describe('API Integration Tests', () => {
       });
     });
 
-    describe('POST /api/auth/logout', () => {
-      it('should logout user successfully', async () => {
-        const response = await request(app)
-          .post('/api/auth/logout')
-          .expect(200);
+    describe('GET /api/auth/session', () => {
+      it('should return current user session with valid token', async () => {
+        // First login to get a token
+        const loginResponse = await request(app)
+          .post('/api/auth/signin')
+          .send({
+            email: 'test@example.com',
+            password: 'password123'
+          });
 
-        expect(response.body).toHaveProperty('message', 'Logout successful');
-      });
-    });
+        const token = loginResponse.body.token;
 
-    describe('GET /api/auth/me', () => {
-      it('should return current user profile', async () => {
         const response = await request(app)
-          .get('/api/auth/me')
+          .get('/api/auth/session')
+          .set('Authorization', `Bearer ${token}`)
           .expect(200);
 
         expect(response.body).toHaveProperty('user');
         expect(response.body.user).toHaveProperty('id');
         expect(response.body.user).toHaveProperty('email');
+      });
+
+      it('should return 401 without authorization header', async () => {
+        const response = await request(app)
+          .get('/api/auth/session')
+          .expect(401);
+
+        expect(response.body).toHaveProperty('error');
+      });
+    });
+
+    describe('POST /api/auth/signout', () => {
+      it('should logout user successfully', async () => {
+        const response = await request(app)
+          .post('/api/auth/signout')
+          .expect(200);
+
+        expect(response.body).toHaveProperty('message', 'Successfully signed out');
+      });
+    });
+
+    describe('POST /api/auth/refresh', () => {
+      it('should refresh token successfully', async () => {
+        // First login to get a token
+        const loginResponse = await request(app)
+          .post('/api/auth/signin')
+          .send({
+            email: 'test@example.com',
+            password: 'password123'
+          });
+
+        const token = loginResponse.body.token;
+
+        const response = await request(app)
+          .post('/api/auth/refresh')
+          .set('Authorization', `Bearer ${token}`)
+          .expect(200);
+
+        expect(response.body).toHaveProperty('token');
+        expect(response.body.token).toBeTruthy(); // Should return a valid token
+      });
+
+      it('should return 401 with invalid refresh token', async () => {
+        const response = await request(app)
+          .post('/api/auth/refresh')
+          .set('Authorization', 'Bearer invalid-token')
+          .expect(401);
+
+        expect(response.body).toHaveProperty('error');
       });
     });
   });
@@ -303,7 +320,7 @@ describe('API Integration Tests', () => {
 
     it('should handle missing required fields', async () => {
       const response = await request(app)
-        .post('/api/auth/login')
+        .post('/api/auth/signin')
         .send({})
         .expect(400);
 

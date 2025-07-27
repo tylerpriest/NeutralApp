@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
 import { SimpleAPIRouter } from './SimpleAPIRouter';
+import { JWTAuthRoutes } from '../../features/auth';
 
 /**
  * SimpleWebServer - A minimal web server for NeutralApp foundation
@@ -11,9 +12,11 @@ import { SimpleAPIRouter } from './SimpleAPIRouter';
 export class SimpleWebServer {
   private app: Express;
   private server: any;
+  private authRoutes: JWTAuthRoutes;
 
   constructor() {
     this.app = express();
+    this.authRoutes = new JWTAuthRoutes();
     console.log('Initializing JWT authentication...');
     this.setupMiddleware();
     this.setupRoutes();
@@ -136,8 +139,8 @@ export class SimpleWebServer {
       });
     });
 
-    // JWT authentication routes are handled by the main WebServer.ts
-    // This server is for static file serving and basic API endpoints
+    // JWT Authentication routes
+    this.app.use('/api/auth', this.authRoutes.getRouter());
 
     // API routes
     const apiRouter = new SimpleAPIRouter();

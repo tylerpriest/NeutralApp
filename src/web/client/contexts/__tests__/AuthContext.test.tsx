@@ -260,8 +260,10 @@ describe('AuthContext', () => {
         ok: true,
         json: jest.fn().mockResolvedValue({
           success: true,
-          user: { id: '2', email: 'test@example.com', name: 'Test User' },
-          token: 'new-jwt-token'
+          data: {
+            user: { id: '2', email: 'test@example.com', name: 'Test User' },
+            token: 'new-jwt-token'
+          }
         })
       };
       mockFetch.mockResolvedValueOnce(mockResponse);

@@ -173,7 +173,7 @@ test_authentication() {
     log_info "Testing authentication..."
     
     # Test authentication endpoints
-    local auth_endpoints=("/api/auth/me" "/api/auth/login" "/api/auth/logout")
+    local auth_endpoints=("/api/auth/session" "/api/auth/signin" "/api/auth/signout")
     local failed_auth=0
     
     for endpoint in "${auth_endpoints[@]}"; do
