@@ -15,15 +15,15 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NeutralApp = exports.ErrorRecoveryService = exports.LoggingService = exports.SystemReportGenerator = exports.SystemMonitor = exports.UserManager = exports.AdminDashboard = exports.SettingsService = exports.WidgetRegistry = exports.DashboardManager = exports.LayoutManager = exports.NavigationManager = exports.ContinuousTestingService = exports.TestRunner = exports.PluginTestManager = exports.PluginVerifier = exports.PluginHealthMonitor = exports.PluginStorageManager = exports.PluginEventBus = exports.DependencyResolver = exports.PluginManager = exports.SessionManager = exports.AuthenticationService = void 0;
+exports.NeutralApp = exports.ErrorRecoveryService = exports.LoggingService = exports.SystemReportGenerator = exports.SystemMonitor = exports.UserManager = exports.AdminDashboard = exports.SettingsService = exports.WidgetRegistry = exports.DashboardManager = exports.LayoutManager = exports.NavigationManager = exports.ContinuousTestingService = exports.TestRunner = exports.PluginTestManager = exports.PluginVerifier = exports.PluginHealthMonitor = exports.PluginStorageManager = exports.PluginEventBus = exports.DependencyResolver = exports.PluginManager = exports.AuthFeature = exports.NextAuthService = void 0;
 // Shared Infrastructure (exported first to avoid conflicts)
 __exportStar(require("./shared"), exports);
 // TODO: Add core exports when event bus and DI are implemented
 // export * from './core';
 // Feature Module Service Exports (avoiding interface conflicts with shared types)
 var auth_1 = require("./features/auth");
-Object.defineProperty(exports, "AuthenticationService", { enumerable: true, get: function () { return auth_1.AuthenticationService; } });
-Object.defineProperty(exports, "SessionManager", { enumerable: true, get: function () { return auth_1.SessionManager; } });
+Object.defineProperty(exports, "NextAuthService", { enumerable: true, get: function () { return auth_1.NextAuthService; } });
+Object.defineProperty(exports, "AuthFeature", { enumerable: true, get: function () { return auth_1.AuthFeature; } });
 var plugin_manager_1 = require("./features/plugin-manager");
 Object.defineProperty(exports, "PluginManager", { enumerable: true, get: function () { return plugin_manager_1.PluginManager; } });
 Object.defineProperty(exports, "DependencyResolver", { enumerable: true, get: function () { return plugin_manager_1.DependencyResolver; } });

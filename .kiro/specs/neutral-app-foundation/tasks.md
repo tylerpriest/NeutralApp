@@ -266,7 +266,7 @@
   - [-] 13.1 Set up production build and deployment
     - [x] 13.1.1 Configure production build optimization and asset bundling
     - [x] 13.1.2 Set up environment variable management for different environments
-    - [ ] 13.1.3 Create deployment scripts and CI/CD pipeline configuration
+    - [x] 13.1.3 Create deployment scripts and CI/CD pipeline configuration
     - [ ] 13.1.4 Implement health checks and monitoring for production
     - [ ] 13.1.5 Write deployment verification and rollback procedures
     - _Requirements: 10_
