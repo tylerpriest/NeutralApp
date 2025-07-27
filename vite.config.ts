@@ -6,10 +6,13 @@ export default defineConfig({
   plugins: [react()],
   root: 'src/web/client',
   build: {
-    outDir: '../../dist/web/client',
+    outDir: path.resolve(__dirname, 'dist/web/client'),
     emptyOutDir: true,
-    // Production optimizations
+    // Ensure index.html is copied
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'src/web/client/index.html')
+      },
       output: {
         manualChunks: {
           // Vendor chunks for better caching
@@ -25,7 +28,8 @@ export default defineConfig({
         },
         entryFileNames: 'js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.');
+          const name = assetInfo.name || 'asset';
+          const info = name.split('.');
           const ext = info[info.length - 1];
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
             return `img/[name]-[hash][extname]`;

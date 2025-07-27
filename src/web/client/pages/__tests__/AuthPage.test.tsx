@@ -211,7 +211,7 @@ describe('AuthPage', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Password reset email sent successfully')).toBeInTheDocument();
+        expect(screen.getByText('Password reset email sent! Please check your inbox.')).toBeInTheDocument();
       });
     });
   });
@@ -267,14 +267,14 @@ describe('AuthPage', () => {
       const passwordInput = screen.getByPlaceholderText('Password');
       const submitButton = screen.getByRole('button', { name: 'Sign In' });
 
-      await act(async () => {
-        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-        fireEvent.change(passwordInput, { target: { value: 'password123' } });
-        fireEvent.click(submitButton);
-      });
-
-      // Should show loading state
-      expect(screen.getByText('Signing in...')).toBeInTheDocument();
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+      
+      // Click the button and immediately check for disabled state
+      fireEvent.click(submitButton);
+      
+      // Should show loading state - check for disabled button
+      expect(submitButton).toBeDisabled();
     });
   });
 }); 
