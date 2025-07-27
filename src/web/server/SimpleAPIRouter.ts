@@ -98,6 +98,74 @@ export class SimpleAPIRouter {
       }
     });
 
+    // Mock authentication endpoints for testing
+    this.router.post('/auth/register', async (req: Request, res: Response) => {
+      try {
+        const { email, password, firstName, lastName } = req.body;
+        
+        if (!email || !password) {
+          return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        // Mock user creation for testing
+        const mockUser = {
+          id: '1',
+          email,
+          name: `${firstName || ''} ${lastName || ''}`.trim() || email,
+          firstName,
+          lastName
+        };
+
+        return res.status(201).json({
+          success: true,
+          data: { user: mockUser }
+        });
+      } catch (error) {
+        console.error('Registration error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+    this.router.post('/auth/login', async (req: Request, res: Response) => {
+      try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+          return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        // Mock authentication for testing
+        const mockUser = {
+          id: '1',
+          email,
+          name: email.split('@')[0],
+          firstName: email.split('@')[0],
+          lastName: 'User'
+        };
+
+        return res.json({
+          success: true,
+          data: { user: mockUser }
+        });
+      } catch (error) {
+        console.error('Login error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+    this.router.post('/auth/logout', async (req: Request, res: Response) => {
+      try {
+        // Mock logout for testing
+        return res.json({
+          success: true,
+          message: 'Logout successful'
+        });
+      } catch (error) {
+        console.error('Logout error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
     // User profile endpoint
     this.router.get('/auth/me', async (req: Request, res: Response) => {
       try {

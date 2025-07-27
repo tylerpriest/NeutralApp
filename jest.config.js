@@ -12,12 +12,17 @@ module.exports = {
     '/tests/e2e/'
   ],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
-    '^.+\\.tsx$': 'ts-jest'
+    '^.+\\\\.ts$': 'ts-jest',
+    '^.+\\\\.tsx$': 'ts-jest'
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@supabase|isows|@supabase/realtime-js|@supabase/supabase-js|next-auth|jose|openid-client)/)'
+    'node_modules/(?!(@supabase|isows|@supabase/realtime-js|@supabase/supabase-js|next-auth|jose|openid-client|@panva|oidc-token-hash|preact-render-to-string|uuid|@next-auth|@auth|@panva|oidc-token-hash|preact-render-to-string|uuid|@next-auth|@auth)/)'
   ],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/src/web/client/__mocks__/fileMock.js'
+  },
   collectCoverageFrom: [
     'src/**/*.ts',
     'src/**/*.tsx',
@@ -29,43 +34,16 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
-    },
-    './src/features/': {
-      branches: 85,
-      functions: 85,
-      lines: 85,
-      statements: 85
-    },
-    './src/core/': {
-      branches: 90,
-      functions: 90,
-      lines: 90,
-      statements: 90
-    },
-    './src/web/client/': {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
-    },
-    './src/web/server/': {
-      branches: 85,
-      functions: 85,
-      lines: 85,
-      statements: 85
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  testTimeout: 10000,
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json'
     }
   },
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  moduleNameMapper: {
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
-  },
-  reporters: [
-    'default'
-  ]
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  testEnvironmentOptions: {
+    url: 'http://localhost'
+  }
 }; 

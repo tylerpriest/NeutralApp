@@ -26,7 +26,13 @@ describe('Header', () => {
     jest.clearAllMocks();
     // Mock default auth state
     mockUseAuth.mockReturnValue({
-      user: { id: '1', email: 'test@example.com', firstName: 'Test', lastName: 'User' },
+      user: { 
+        id: '1', 
+        email: 'test@example.com', 
+        name: 'Test User',
+        firstName: 'Test', 
+        lastName: 'User' 
+      },
       isAuthenticated: true,
       isLoading: false,
       logout: jest.fn(),

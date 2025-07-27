@@ -55,6 +55,7 @@ export function useOptimisticUpdate<T>(
       // Clear timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
       }
 
       // Update with actual result
@@ -71,6 +72,7 @@ export function useOptimisticUpdate<T>(
       // Clear timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
       }
 
       const errorObj = error instanceof Error ? error : new Error(String(error));
@@ -105,11 +107,15 @@ export function useOptimisticUpdate<T>(
     originalDataRef.current = initialState;
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = undefined;
     }
   }, [initialState]);
 
+  // Ensure we always return a valid object
   return {
-    ...state,
+    isPending: state.isPending,
+    error: state.error,
+    data: state.data,
     updateOptimistically,
     reset
   };
@@ -231,6 +237,7 @@ export function useOptimisticList<T>(
     originalItemsRef.current = initialItems;
   }, [initialItems]);
 
+  // Ensure we always return a valid object
   return {
     items,
     isPending,
