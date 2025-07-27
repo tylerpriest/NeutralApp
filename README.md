@@ -4,7 +4,7 @@ A domain-agnostic, ultra-modular application shell designed to serve as the foun
 
 ## 🏗️ Architecture
 
-NeutralApp follows a plugin-first architecture where:
+NeutralApp follows a **modular feature-based architecture** where:
 - **Core System**: Provides authentication, settings, plugin management, UI shell, admin dashboard, error handling, and testing framework
 - **Plugin System**: All business logic lives in plugins with secure API access and sandboxed execution
 - **Fail-Safe Design**: Graceful degradation when plugins fail, core always remains available
@@ -40,26 +40,33 @@ npm run dev
 
 ```
 src/
-├── types/           # Core type definitions and interfaces
-├── interfaces/      # Service interface definitions
-├── services/        # Core service implementations (to be added)
-├── plugins/         # Plugin system implementation (to be added)
-├── ui/             # UI shell components (to be added)
-└── index.ts        # Main application entry point
+├── core/           # Core infrastructure (event bus, dependency injection)
+├── features/       # Feature-based modules
+│   ├── auth/       # Authentication services and interfaces
+│   ├── plugin-manager/ # Plugin management system
+│   ├── ui-shell/   # UI shell and navigation
+│   ├── settings/   # Settings management
+│   ├── admin/      # Admin dashboard
+│   └── error-reporter/ # Error handling and logging
+├── shared/         # Cross-feature utilities and types
+└── web/           # Web application (client + server)
+    ├── client/    # React frontend
+    └── server/    # Express.js backend
 
 tests/
-├── interfaces/     # Interface contract tests
-├── types/         # Type definition tests
-└── setup.ts       # Test setup configuration
+├── e2e/          # End-to-end tests (Playwright)
+└── setup.ts      # Test setup configuration
 ```
 
 ## 🔧 Development
 
 ### Available Scripts
 
-- `npm test` - Run test suite
+- `npm test` - Run test suite (Jest)
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:coverage` - Generate coverage report
+- `npm run test:e2e` - Run end-to-end tests (Playwright)
+- `npm run test:visual` - Run visual regression tests
 - `npm run build` - Build TypeScript to JavaScript
 - `npm run dev` - Start development server
 - `npm run lint` - Run ESLint
@@ -67,11 +74,12 @@ tests/
 
 ### Testing
 
-The project uses Jest with TypeScript for testing. Tests are organized by:
-- **Interface Tests**: Validate service interface contracts
-- **Type Tests**: Validate type definitions and enums
-- **Integration Tests**: Test cross-component interactions (to be added)
-- **Plugin Tests**: Test plugin functionality and security (to be added)
+The project uses a comprehensive testing strategy:
+- **Unit Tests**: Jest with React Testing Library for components
+- **Integration Tests**: API and service integration testing
+- **E2E Tests**: Playwright for full user journey testing
+- **Visual Regression**: Automated UI consistency testing
+- **Performance Tests**: Load time and bundle size monitoring
 
 Current test coverage targets:
 - Core Services: 90% minimum
@@ -85,15 +93,19 @@ NeutralApp prioritizes security through:
 - **Plugin Sandboxing**: Each plugin operates in isolation
 - **API Restrictions**: Plugins only access explicitly exposed APIs
 - **Security Monitoring**: Violation logging and prevention
-- **Session Management**: Secure authentication with Supabase
+- **Session Management**: Secure authentication with NextAuth.js
 - **Input Validation**: Comprehensive validation at all boundaries
 
 ## 📚 Documentation
 
-- [Design Document](.kiro/specs/neutral-app/design.md) - Comprehensive architecture and design decisions
-- [Requirements](.kiro/specs/neutral-app/requirements.md) - Detailed functional requirements
-- [Tasks](.kiro/specs/neutral-app/tasks.md) - Implementation plan and task breakdown
-- [Product Overview](.kiro/steering/product.md) - High-level product vision
+This project follows a structured documentation hierarchy:
+
+- **[README.md](README.md)** - Project overview, getting started, basic usage
+- **[Requirements](.kiro/specs/neutral-app-foundation/requirements.md)** - Detailed functional requirements
+- **[Design](.kiro/specs/neutral-app-foundation/design.md)** - Architecture and design decisions
+- **[Tasks](.kiro/specs/neutral-app-foundation/tasks.md)** - Implementation plan and task breakdown
+- **[Steering Guidelines](.kiro/steering/)** - Implementation guidelines and coding standards
+- **[Development Rules](.cursor/rules/)** - Development process and workflow rules
 
 ## 🤝 Contributing
 
@@ -109,6 +121,7 @@ MIT License - see LICENSE file for details
 
 ## 🔗 Links
 
-- [Supabase Documentation](https://supabase.com/docs) - Authentication provider
+- [NextAuth.js Documentation](https://next-auth.js.org/) - Authentication provider
 - [Jest Documentation](https://jestjs.io/docs/getting-started) - Testing framework
+- [Playwright Documentation](https://playwright.dev/) - E2E testing framework
 - [TypeScript Documentation](https://www.typescriptlang.org/docs/) - Language reference 

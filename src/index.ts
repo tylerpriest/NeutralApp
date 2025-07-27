@@ -7,8 +7,8 @@ export * from './shared';
 
 // Feature Module Service Exports (avoiding interface conflicts with shared types)
 export { 
-  AuthenticationService, 
-  SessionManager 
+  NextAuthService,
+  AuthFeature
 } from './features/auth';
 
 export { 
