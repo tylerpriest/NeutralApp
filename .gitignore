@@ -113,3 +113,8 @@ temp/
 **/test.gif
 **/test.svg 
 .vercel
+
+# Configuration files (contain sensitive data)
+config/
+config/environments/
+config/*.json
