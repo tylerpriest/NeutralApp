@@ -1,9 +1,12 @@
 // NeutralApp Foundation Web Server
 import { WebServer } from './WebServer';
+import { env } from '../../shared/utils/environment-manager';
 
 async function startFoundationServer() {
   try {
-    const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+    // Load environment configuration
+    const config = env.getConfig();
+    const port = config.PORT;
     const webServer = new WebServer();
 
     await webServer.start(port);

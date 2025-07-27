@@ -18,6 +18,7 @@ export interface EnvironmentConfig {
   NEXTAUTH_URL: string;
   NEXTAUTH_SECRET: string;
   AUTH_SECRET: string;
+  JWT_SECRET: string;
   
   // Logging Configuration
   LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
@@ -219,6 +220,7 @@ export class EnvironmentManager {
       NEXTAUTH_URL: 'http://localhost:3000',
       NEXTAUTH_SECRET: 'default-secret-key',
       AUTH_SECRET: 'default-auth-secret',
+      JWT_SECRET: 'default-jwt-secret-key',
       LOG_LEVEL: 'info',
       LOG_FORMAT: 'dev',
       ENABLE_DEBUG_MODE: false,

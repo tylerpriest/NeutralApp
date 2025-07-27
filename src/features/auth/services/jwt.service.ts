@@ -6,6 +6,7 @@ import {
   AuthenticationResult,
   JWTAuthServiceInterface 
 } from '../types/jwt.types';
+import { env } from '../../../shared/utils/environment-manager';
 
 export class JWTAuthService implements JWTAuthServiceInterface {
   private readonly jwtSecret: string;
@@ -19,7 +20,7 @@ export class JWTAuthService implements JWTAuthServiceInterface {
   };
 
   constructor() {
-    const secret = process.env.JWT_SECRET;
+    const secret = env.get('JWT_SECRET');
     if (!secret) {
       throw new Error('JWT_SECRET not configured');
     }
