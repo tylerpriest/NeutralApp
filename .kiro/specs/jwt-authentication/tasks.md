@@ -110,10 +110,9 @@
 ### Phase 5: Documentation and Finalization
 
 #### Task 5.1: Update Documentation
-- [ ] **5.1.1** Update API documentation for JWT endpoints
-- [ ] **5.1.2** Update authentication guide
-- [ ] **5.1.3** Update deployment documentation
-- [ ] **5.1.4** Add JWT authentication troubleshooting guide
+- [ ] **5.1.1** Update API documentation for JWT endpoints if applicable
+- [ ] **5.1.2** Update authentication guide if applicable
+- [ ] **5.1.3** Update deployment documentation if applicable
 
 #### Task 5.2: Code Quality
 - [ ] **5.2.1** Run TypeScript compilation check

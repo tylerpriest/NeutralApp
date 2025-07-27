@@ -1,5 +1,5 @@
 // NeutralApp Foundation Web Server
-import { SimpleWebServer } from './SimpleWebServer';
+import { WebServer } from './WebServer';
 
 /**
  * Foundation server entry point
@@ -8,7 +8,7 @@ import { SimpleWebServer } from './SimpleWebServer';
 async function startFoundationServer() {
   try {
     const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-    const webServer = new SimpleWebServer();
+    const webServer = new WebServer();
     
     await webServer.start(port);
     
@@ -16,6 +16,7 @@ async function startFoundationServer() {
     console.log(`🚀 Server: http://localhost:${port}`);
     console.log(`💚 Health: http://localhost:${port}/health`);
     console.log(`📡 API Status: http://localhost:${port}/api/status`);
+    console.log(`🔐 Auth: JWT authentication available`);
     console.log(`📋 Features: Modular architecture complete`);
     console.log(`🔧 Next: React application layer`);
     
