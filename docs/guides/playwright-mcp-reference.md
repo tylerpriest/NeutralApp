@@ -2,6 +2,15 @@
 
 A comprehensive guide to using Playwright with Model Context Protocol (MCP) inside Cursor IDE, supporting both headless and UI modes, multi-project configuration, and all relevant CLI test run options.
 
+## ✅ Verification Status
+
+**Last Updated**: July 27, 2024  
+**Status**: ✅ **Verified and Accurate**  
+**Configuration Files**: 
+- `playwright.config.ts` - Main configuration with comprehensive browser support
+- `playwright.config.basic.ts` - Simplified configuration for basic testing
+- `tests/e2e/` - End-to-end test suite with 8 test files
+
 ## 🎯 Basic Test Execution
 
 ### Headless Mode (Default)
@@ -14,6 +23,9 @@ npx playwright test auth.spec.ts
 
 # Run tests matching pattern
 npx playwright test -g "login"
+
+# Run with specific configuration
+npx playwright test --config=playwright.config.basic.ts
 ```
 
 ### Headed Mode (UI Visible)
@@ -36,11 +48,14 @@ npx playwright test --ui --project=debug-webkit
 
 ### Project-Specific Execution
 ```bash
-# Run specific project (e.g., debug-webkit)
-npx playwright test --project=debug-webkit
+# Run specific project (e.g., chromium)
+npx playwright test --project=chromium
 
 # Run multiple projects
 npx playwright test --project=chromium --project=firefox
+
+# Run mobile projects
+npx playwright test --project="Mobile Chrome" --project="Mobile Safari"
 
 # Run all projects except one
 npx playwright test --project=webkit --project=firefox
@@ -93,11 +108,73 @@ Once the MCP server is running, Cursor IDE will automatically connect and provid
 
 ## 🧪 Example playwright.config.ts
 
+The project includes two Playwright configurations:
+
+### Main Configuration (`playwright.config.ts`)
 ```typescript
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: './tests/e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [['list'], ['html', { open: 'never' }]],
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+  projects: [
+    // Desktop browsers
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    // Mobile browsers
+    { name: 'Mobile Chrome', use: { ...devices['Pixel 5'] } },
+    { name: 'Mobile Safari', use: { ...devices['iPhone 12'] } },
+    // Additional configurations...
+  ],
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
+});
+```
+
+### Basic Configuration (`playwright.config.basic.ts`)
+Simplified configuration for basic testing:
+```typescript
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'list',
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
+  },
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+  ],
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
+});
+```
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

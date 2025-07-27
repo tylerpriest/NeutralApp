@@ -180,7 +180,13 @@ NeutralApp prioritizes security through:
 
 This project follows a structured documentation hierarchy:
 
+### **User Documentation**
 - **[README.md](README.md)** - Project overview, getting started, basic usage
+- **[API Reference](docs/api/)** - Plugin API documentation and interfaces
+- **[Development Guides](docs/guides/)** - Plugin development tutorials and examples
+- **[Deployment Documentation](docs/deployment/)** - Complete deployment and operations guide
+
+### **Project Documentation**
 - **[Requirements](.kiro/specs/COMPLETED/neutral-app-foundation/requirements.md)** - Detailed functional requirements
 - **[Design](.kiro/specs/COMPLETED/neutral-app-foundation/design.md)** - Architecture and design decisions
 - **[Tasks](.kiro/specs/COMPLETED/neutral-app-foundation/tasks.md)** - Implementation plan and task breakdown
