@@ -49,6 +49,10 @@ global.IntersectionObserver = class IntersectionObserver {
 // Global timeout configurations
 jest.setTimeout(10000); // 10 seconds default timeout for all tests
 
+// Set up environment variables for tests
+process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
+process.env.NODE_ENV = 'test';
+
 // Note: Individual timeouts are handled by Jest's testTimeout configuration
 
 // Note: Fetch timeout is handled by individual tests using jest.mock() 

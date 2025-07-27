@@ -186,11 +186,11 @@ Current test coverage targets:
 - **Express Backend**: Full server implementation
   - WebServer with static file serving
   - API router with comprehensive endpoints
-  - Authentication integration with NextAuth.js
+  - Authentication integration with JWT
   - Health monitoring and logging
 
 ### ✅ **Feature Modules**
-- **Authentication**: NextAuth.js integration with custom interfaces
+- **Authentication**: JWT-based authentication with custom interfaces
 - **Plugin Manager**: Plugin lifecycle management and verification
 - **UI Shell**: Navigation, layout management, and widget system
 - **Settings**: User and system settings management
@@ -216,7 +216,7 @@ NeutralApp prioritizes security through:
 - **Plugin Sandboxing**: Each plugin operates in isolation
 - **API Restrictions**: Plugins only access explicitly exposed APIs
 - **Security Monitoring**: Violation logging and prevention
-- **Session Management**: Secure authentication with NextAuth.js
+- **Session Management**: Secure JWT-based authentication
 - **Input Validation**: Comprehensive validation at all boundaries
 - **Plugin Verification**: Manifest validation and signature checking
 

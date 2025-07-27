@@ -50,13 +50,7 @@ test.describe('Authentication E2E Tests', () => {
     // Wait for login process to complete
     await page.waitForTimeout(2000);
     
-    // Check for success message
-    await expect(page.getByText('Login successful! Redirecting...')).toBeVisible();
-    
-    // Wait for redirect to complete
-    await page.waitForTimeout(1000);
-    
-    // Should redirect to dashboard/home page
+    // Should redirect to dashboard/home page (JWT auth redirects automatically)
     await expect(page).toHaveURL('/');
   });
 
@@ -71,13 +65,7 @@ test.describe('Authentication E2E Tests', () => {
     // Wait for login process to complete
     await page.waitForTimeout(2000);
     
-    // Check for success message
-    await expect(page.getByText('Login successful! Redirecting...')).toBeVisible();
-    
-    // Wait for redirect to complete
-    await page.waitForTimeout(1000);
-    
-    // Should redirect to dashboard/home page
+    // Should redirect to dashboard/home page (JWT auth redirects automatically)
     await expect(page).toHaveURL('/');
   });
 
@@ -117,11 +105,8 @@ test.describe('Authentication E2E Tests', () => {
     // Wait for registration process to complete
     await page.waitForTimeout(2000);
     
-    // Check for success message
-    await expect(page.getByText('Registration successful! Please check your email for verification.')).toBeVisible();
-    
-    // Should switch back to login form
-    await expect(page.getByText('Welcome back! Please sign in to continue')).toBeVisible();
+    // Should redirect to dashboard/home page (JWT registration auto-logs in)
+    await expect(page).toHaveURL('/');
   });
 
   test('should handle registration with mismatched passwords', async ({ page }) => {
