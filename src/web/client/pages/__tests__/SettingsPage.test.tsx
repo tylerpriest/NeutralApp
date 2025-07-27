@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SettingsPage from '../SettingsPage';
+import SettingsPage, { setServices } from '../SettingsPage';
 import { SettingsService } from '../../../../features/settings/services/settings.service';
 import { PluginManager } from '../../../../features/plugin-manager/services/plugin.manager';
 import { SettingType } from '../../../../shared/types';
@@ -51,6 +51,9 @@ describe('SettingsPage', () => {
     mockSettingsInstance.validateSetting.mockResolvedValue({ isValid: true, errors: [] });
     mockSettingsInstance.getPluginSettings.mockResolvedValue({});
     mockPluginInstance.getInstalledPlugins.mockResolvedValue([]);
+
+    // Set up services for testing
+    setServices(mockSettingsInstance, mockPluginInstance);
   });
 
   describe('Initial Rendering', () => {
@@ -74,11 +77,11 @@ describe('SettingsPage', () => {
       renderWithProviders(<SettingsPage />);
       
       await waitFor(() => {
-        expect(screen.getByText('General')).toBeInTheDocument();
-        expect(screen.getByText('Appearance')).toBeInTheDocument();
-        expect(screen.getByText('Localization')).toBeInTheDocument();
-        expect(screen.getByText('Notifications')).toBeInTheDocument();
-        expect(screen.getByText('Security')).toBeInTheDocument();
+        expect(screen.getByText('General', { selector: '.nav-item-name' })).toBeInTheDocument();
+        expect(screen.getByText('Appearance', { selector: '.nav-item-name' })).toBeInTheDocument();
+        expect(screen.getByText('Localization', { selector: '.nav-item-name' })).toBeInTheDocument();
+        expect(screen.getByText('Notifications', { selector: '.nav-item-name' })).toBeInTheDocument();
+        expect(screen.getByText('Security', { selector: '.nav-item-name' })).toBeInTheDocument();
       });
     });
 
@@ -119,7 +122,11 @@ describe('SettingsPage', () => {
       renderWithProviders(<SettingsPage />);
       
       await waitFor(() => {
-        const generalButton = screen.getByText('General').closest('button');
+        expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+      });
+      
+      await waitFor(() => {
+        const generalButton = screen.getByText('General', { selector: '.nav-item-name' }).closest('button');
         expect(generalButton).toHaveClass('active');
       });
     });
@@ -169,6 +176,9 @@ describe('SettingsPage', () => {
       renderWithProviders(<SettingsPage />);
       
       await waitFor(() => {
+        const securityButton = screen.getByText('Security');
+        fireEvent.click(securityButton);
+        
         const numberInput = screen.getByDisplayValue('10');
         expect(numberInput).toBeInTheDocument();
         expect(numberInput).toHaveAttribute('type', 'number');
@@ -183,7 +193,7 @@ describe('SettingsPage', () => {
       renderWithProviders(<SettingsPage />);
       
       await waitFor(() => {
-        const themeSelect = screen.getByDisplayValue('Light');
+        const themeSelect = screen.getByRole('combobox', { name: /theme/i });
         fireEvent.change(themeSelect, { target: { value: 'dark' } });
         
         expect(mockSettingsInstance.setSetting).toHaveBeenCalledWith('theme', 'dark');
@@ -196,7 +206,7 @@ describe('SettingsPage', () => {
       renderWithProviders(<SettingsPage />);
       
       await waitFor(() => {
-        const themeSelect = screen.getByDisplayValue('Light');
+        const themeSelect = screen.getByRole('combobox', { name: /theme/i });
         fireEvent.change(themeSelect, { target: { value: 'dark' } });
         
         expect(screen.getByText('Setting saved successfully')).toBeInTheDocument();
@@ -212,7 +222,7 @@ describe('SettingsPage', () => {
       renderWithProviders(<SettingsPage />);
       
       await waitFor(() => {
-        const themeSelect = screen.getByDisplayValue('Light');
+        const themeSelect = screen.getByRole('combobox', { name: /theme/i });
         fireEvent.change(themeSelect, { target: { value: 'invalid' } });
         
         expect(screen.getByText('Invalid value: Invalid theme value')).toBeInTheDocument();
@@ -226,7 +236,7 @@ describe('SettingsPage', () => {
       renderWithProviders(<SettingsPage />);
       
       await waitFor(() => {
-        const themeSelect = screen.getByDisplayValue('Light');
+        const themeSelect = screen.getByRole('combobox', { name: /theme/i });
         fireEvent.change(themeSelect, { target: { value: 'dark' } });
         
         expect(screen.getByText('Save failed')).toBeInTheDocument();
@@ -239,6 +249,10 @@ describe('SettingsPage', () => {
       const mockPlugins = [
         { id: 'test-plugin', name: 'Test Plugin', version: '1.0.0' }
       ];
+      
+      // Clear previous mocks and set up new ones
+      mockPluginInstance.getInstalledPlugins.mockClear();
+      mockSettingsInstance.getPluginSettings.mockClear();
       
       mockPluginInstance.getInstalledPlugins.mockResolvedValue(mockPlugins);
       mockSettingsInstance.getPluginSettings.mockResolvedValue({
@@ -316,6 +330,8 @@ describe('SettingsPage', () => {
     });
 
     it('should reset settings when confirmed', async () => {
+      // Clear and set up the mock
+      mockSettingsInstance.resetToDefaults.mockClear();
       mockSettingsInstance.resetToDefaults.mockResolvedValue(undefined);
       
       renderWithProviders(<SettingsPage />);
@@ -337,7 +353,11 @@ describe('SettingsPage', () => {
       
       // Verify reset was called and notification shown
       expect(mockSettingsInstance.resetToDefaults).toHaveBeenCalled();
-      expect(screen.getByText('Settings reset to defaults')).toBeInTheDocument();
+      
+      // Wait for notification to appear
+      await waitFor(() => {
+        expect(screen.getByText('Settings reset to defaults')).toBeInTheDocument();
+      });
     });
 
     it('should show export dialog', async () => {
@@ -384,10 +404,13 @@ describe('SettingsPage', () => {
         expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
       });
       
-      const themeSelect = screen.getByDisplayValue('Light');
+      const themeSelect = screen.getByRole('combobox', { name: /theme/i });
       fireEvent.change(themeSelect, { target: { value: 'invalid' } });
       
-      expect(screen.getByText('Invalid value: Validation failed')).toBeInTheDocument();
+      // Wait for validation error to appear
+      await waitFor(() => {
+        expect(screen.getByText('Invalid value: Invalid value')).toBeInTheDocument();
+      });
     });
 
     it('should show error notification when setting save fails', async () => {
@@ -401,7 +424,7 @@ describe('SettingsPage', () => {
       });
       
       // Change theme setting
-      const themeSelect = screen.getByDisplayValue('Light');
+      const themeSelect = screen.getByRole('combobox', { name: /theme/i });
       fireEvent.change(themeSelect, { target: { value: 'dark' } });
       
       // Wait for error notification

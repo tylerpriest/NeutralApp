@@ -17,7 +17,7 @@ const Header: React.FC = () => {
         <div className="header-right">
           <div className="user-menu">
             <span className="user-name">
-              {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email || 'User'}
+              {user?.name || user?.email || 'User'}
             </span>
             <button className="logout-button" onClick={handleLogout}>
               Logout

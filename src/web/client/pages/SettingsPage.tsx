@@ -4,9 +4,15 @@ import { PluginManager } from '../../../features/plugin-manager/services/plugin.
 import { Settings, SettingType, ValidationResult } from '../../../shared/types';
 import './SettingsPage.css';
 
-// Initialize services
-const settingsService = new SettingsService();
-const pluginManager = new PluginManager();
+// Initialize services - these can be overridden for testing
+let settingsService = new SettingsService();
+let pluginManager = new PluginManager();
+
+// Export for testing
+export const setServices = (settings: SettingsService, plugins: PluginManager) => {
+  settingsService = settings;
+  pluginManager = plugins;
+};
 
 interface SettingGroup {
   id: string;
@@ -161,27 +167,30 @@ const SettingsPage: React.FC = () => {
       const installedPlugins = await pluginManager.getInstalledPlugins();
       const pluginGroups: SettingGroup[] = [];
 
+      if (!installedPlugins || !Array.isArray(installedPlugins)) {
+        return [];
+      }
+
       for (const plugin of installedPlugins) {
         const pluginSettings = await settingsService.getPluginSettings(plugin.id);
         
-        if (Object.keys(pluginSettings).length > 0) {
-          const settings: SettingItem[] = Object.entries(pluginSettings).map(([key, value]) => ({
-            key,
-            label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-            description: `Setting for ${plugin.name}`,
-            type: typeof value === 'boolean' ? SettingType.BOOLEAN : 
-                   typeof value === 'number' ? SettingType.NUMBER : SettingType.STRING,
-            value,
-            category: 'plugin'
-          }));
+        // Create plugin group even if no settings exist yet
+        const settings: SettingItem[] = Object.entries(pluginSettings || {}).map(([key, value]) => ({
+          key,
+          label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+          description: `Setting for ${plugin.name}`,
+          type: typeof value === 'boolean' ? SettingType.BOOLEAN : 
+                 typeof value === 'number' ? SettingType.NUMBER : SettingType.STRING,
+          value,
+          category: 'plugin'
+        }));
 
-          pluginGroups.push({
-            id: `plugin-${plugin.id}`,
-            name: plugin.name,
-            description: `Settings for ${plugin.name}`,
-            settings
-          });
-        }
+        pluginGroups.push({
+          id: `plugin-${plugin.id}`,
+          name: plugin.name,
+          description: `Settings for ${plugin.name}`,
+          settings
+        });
       }
 
       return pluginGroups;
@@ -311,6 +320,7 @@ const SettingsPage: React.FC = () => {
               className="setting-input"
               value={setting.value}
               onChange={(e) => handleChange(e.target.value)}
+              aria-label={setting.label}
             >
               {setting.options.map(option => (
                 <option key={option.value} value={option.value}>

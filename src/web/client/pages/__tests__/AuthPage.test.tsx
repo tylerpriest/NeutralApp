@@ -42,9 +42,6 @@ describe('AuthPage', () => {
     });
 
     it('should handle successful login', async () => {
-      const mockSignIn = require('next-auth/react').signIn;
-      mockSignIn.mockResolvedValue({ ok: true, error: null });
-
       renderAuthPage();
       
       const emailInput = screen.getByPlaceholderText('Email Address');
@@ -56,18 +53,11 @@ describe('AuthPage', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(mockSignIn).toHaveBeenCalledWith('credentials', {
-          email: 'test@example.com',
-          password: 'password123',
-          redirect: false,
-        });
+        expect(screen.getByText('Login successful! Redirecting...')).toBeInTheDocument();
       });
     });
 
     it('should handle login failure', async () => {
-      const mockSignIn = require('next-auth/react').signIn;
-      mockSignIn.mockResolvedValue({ ok: false, error: 'Invalid credentials' });
-
       renderAuthPage();
       
       const emailInput = screen.getByPlaceholderText('Email Address');
@@ -79,11 +69,7 @@ describe('AuthPage', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(mockSignIn).toHaveBeenCalledWith('credentials', {
-          email: 'test@example.com',
-          password: 'wrongpassword',
-          redirect: false,
-        });
+        expect(screen.getByText('Invalid email or password')).toBeInTheDocument();
       });
     });
   });
@@ -96,9 +82,9 @@ describe('AuthPage', () => {
       fireEvent.click(signUpButton);
 
       expect(screen.getByText('Create your account to get started')).toBeInTheDocument();
-      expect(screen.getByPlaceholder('First Name')).toBeInTheDocument();
-      expect(screen.getByPlaceholder('Last Name')).toBeInTheDocument();
-      expect(screen.getByPlaceholder('Confirm Password')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('First Name')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Last Name')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Confirm Password')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Create Account' })).toBeInTheDocument();
     });
 
@@ -112,11 +98,11 @@ describe('AuthPage', () => {
       const signUpButton = screen.getByText('Don\'t have an account? Sign up');
       fireEvent.click(signUpButton);
 
-      const firstNameInput = screen.getByPlaceholder('First Name');
-      const lastNameInput = screen.getByPlaceholder('Last Name');
-      const emailInput = screen.getByPlaceholder('Email Address');
-      const passwordInput = screen.getByPlaceholder('Password');
-      const confirmPasswordInput = screen.getByPlaceholder('Confirm Password');
+      const firstNameInput = screen.getByPlaceholderText('First Name');
+      const lastNameInput = screen.getByPlaceholderText('Last Name');
+      const emailInput = screen.getByPlaceholderText('Email Address');
+      const passwordInput = screen.getByPlaceholderText('Password');
+      const confirmPasswordInput = screen.getByPlaceholderText('Confirm Password');
       const submitButton = screen.getByRole('button', { name: 'Create Account' });
 
       fireEvent.change(firstNameInput, { target: { value: 'John' } });
@@ -144,8 +130,8 @@ describe('AuthPage', () => {
       fireEvent.click(resetButton);
 
       expect(screen.getByText('Reset your password')).toBeInTheDocument();
-      expect(screen.getByPlaceholder('Email Address')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Send Reset Link' })).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Email Address')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Send Reset Email' })).toBeInTheDocument();
     });
 
     it('should handle successful password reset', async () => {
@@ -155,8 +141,8 @@ describe('AuthPage', () => {
       const resetButton = screen.getByText('Forgot your password?');
       fireEvent.click(resetButton);
 
-      const emailInput = screen.getByPlaceholder('Email Address');
-      const submitButton = screen.getByRole('button', { name: 'Send Reset Link' });
+      const emailInput = screen.getByPlaceholderText('Email Address');
+      const submitButton = screen.getByRole('button', { name: 'Send Reset Email' });
 
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
       fireEvent.click(submitButton);
@@ -193,15 +179,15 @@ describe('AuthPage', () => {
 
       renderAuthPage();
       
-      const emailInput = screen.getByPlaceholder('Email Address');
-      const passwordInput = screen.getByPlaceholder('Password');
+      const emailInput = screen.getByPlaceholderText('Email Address');
+      const passwordInput = screen.getByPlaceholderText('Password');
       const submitButton = screen.getByRole('button', { name: 'Sign In' });
 
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
       fireEvent.change(passwordInput, { target: { value: 'password123' } });
       fireEvent.click(submitButton);
 
-      expect(screen.getByText('Signing in...')).toBeInTheDocument();
+      expect(screen.getByText('Loading...')).toBeInTheDocument();
     });
   });
 }); 

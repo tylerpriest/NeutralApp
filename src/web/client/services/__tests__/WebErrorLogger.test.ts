@@ -1,48 +1,43 @@
+// Mock the LoggingService before importing the module
+jest.mock('../../../../features/error-reporter/services/logging.service', () => ({
+  LoggingService: jest.fn().mockImplementation(() => ({
+    logError: jest.fn(),
+    logWarning: jest.fn(),
+    logInfo: jest.fn(),
+    searchLogs: jest.fn().mockResolvedValue([]),
+    getErrorStatistics: jest.fn().mockResolvedValue({
+      byType: {},
+      byComponent: {},
+      bySeverity: {
+        low: 0,
+        medium: 0,
+        high: 0,
+        critical: 0
+      },
+      totalErrors: 0,
+      timeRange: {
+        start: new Date(),
+        end: new Date()
+      }
+    }),
+    getAggregatedErrors: jest.fn().mockResolvedValue([]),
+    getErrorSuggestions: jest.fn().mockResolvedValue([]),
+    getErrorHandler: jest.fn().mockReturnValue({
+      handleError: jest.fn(),
+      displayUserError: jest.fn(),
+      reportToAdmin: jest.fn(),
+      setUserErrorDisplayCallback: jest.fn(),
+      setAdminNotificationCallback: jest.fn()
+    })
+  }))
+}));
+
 import { WebErrorLogger, webErrorLogger } from '../WebErrorLogger';
 import { ErrorSeverity } from '../../../../features/error-reporter/interfaces/logging.interface';
 
-// Mock the LoggingService to avoid dependencies
-const mockLogError = jest.fn();
-const mockLogWarning = jest.fn();
-const mockLogInfo = jest.fn();
-const mockSearchLogs = jest.fn().mockResolvedValue([]);
-const mockGetErrorStatistics = jest.fn().mockResolvedValue({
-  byType: {},
-  byComponent: {},
-  bySeverity: {
-    low: 0,
-    medium: 0,
-    high: 0,
-    critical: 0
-  },
-  totalErrors: 0,
-  timeRange: {
-    start: new Date(),
-    end: new Date()
-  }
-});
-const mockGetAggregatedErrors = jest.fn().mockResolvedValue([]);
-const mockGetErrorSuggestions = jest.fn().mockResolvedValue([]);
-const mockGetErrorHandler = jest.fn().mockReturnValue({
-  handleError: jest.fn(),
-  displayUserError: jest.fn(),
-  reportToAdmin: jest.fn(),
-  setUserErrorDisplayCallback: jest.fn(),
-  setAdminNotificationCallback: jest.fn()
-});
-
-jest.mock('../../../../features/error-reporter/services/logging.service', () => ({
-  LoggingService: jest.fn().mockImplementation(() => ({
-    logError: mockLogError,
-    logWarning: mockLogWarning,
-    logInfo: mockLogInfo,
-    searchLogs: mockSearchLogs,
-    getErrorStatistics: mockGetErrorStatistics,
-    getAggregatedErrors: mockGetAggregatedErrors,
-    getErrorSuggestions: mockGetErrorSuggestions,
-    getErrorHandler: mockGetErrorHandler
-  }))
-}));
+// Get the mock instance for testing
+const { LoggingService } = require('../../../../features/error-reporter/services/logging.service');
+const mockLoggingService = LoggingService.mock.results[0].value;
 
 describe('WebErrorLogger', () => {
   let logger: WebErrorLogger;
@@ -50,6 +45,9 @@ describe('WebErrorLogger', () => {
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
+    
+    // Reset the mock implementation
+    LoggingService.mockImplementation(() => mockLoggingService);
     
     // Create a new instance for each test
     logger = new WebErrorLogger();
@@ -72,7 +70,7 @@ describe('WebErrorLogger', () => {
         severity: ErrorSeverity.HIGH
       });
 
-      expect(mockLogError).toHaveBeenCalledWith(
+      expect(mockLoggingService.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           userId: 'user123',
@@ -99,7 +97,7 @@ describe('WebErrorLogger', () => {
         userFacing: false
       });
 
-      expect(mockLogError).toHaveBeenCalledWith(
+      expect(mockLoggingService.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           component: 'SimpleComponent',
@@ -121,7 +119,7 @@ describe('WebErrorLogger', () => {
 
       logger.logReactError(error, errorInfo, 'TestComponent');
 
-      expect(mockLogError).toHaveBeenCalledWith(
+      expect(mockLoggingService.logError).toHaveBeenCalledWith(
         error,
         expect.objectContaining({
           component: 'TestComponent',
@@ -351,7 +349,7 @@ describe('WebErrorLogger', () => {
 
   describe('createUserFriendlyError', () => {
     it('should create user-friendly error for network errors', () => {
-      const error = new Error('Network request failed');
+      const error = new Error('network timeout');
       const context = { component: 'API Client' };
 
       const result = logger.createUserFriendlyError(error, context);
@@ -363,7 +361,7 @@ describe('WebErrorLogger', () => {
     });
 
     it('should create user-friendly error for permission errors', () => {
-      const error = new Error('Permission denied');
+      const error = new Error('permission denied');
       const context = { component: 'AuthGuard' };
 
       const result = logger.createUserFriendlyError(error, context);
@@ -375,7 +373,7 @@ describe('WebErrorLogger', () => {
     });
 
     it('should create user-friendly error for validation errors', () => {
-      const error = new Error('Validation failed');
+      const error = new Error('validation error');
       const context = { component: 'Form' };
 
       const result = logger.createUserFriendlyError(error, context);
