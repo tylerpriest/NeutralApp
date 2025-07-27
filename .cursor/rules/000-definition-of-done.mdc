@@ -27,15 +27,18 @@ actions:
       Follow this process for all development tasks using Kiro's spec structure:
       
       **Step 1: 📋 Ensure Spec Foundation Exists**
-      - Verify `.kiro/specs/{feature_name}/requirements.md` exists with EARS format requirements
-      - Verify `.kiro/specs/{feature_name}/design.md` exists with architecture and components
-      - Verify `.kiro/specs/{feature_name}/tasks.md` exists with numbered task breakdown
+      - Check for either:
+        a) Separate spec files: `.kiro/specs/{feature_name}/requirements.md`, `.kiro/specs/{feature_name}/design.md`, `.kiro/specs/{feature_name}/tasks.md`
+        b) Single comprehensive spec file: `.kiro/specs/{feature_name}.md`
+      - Verify EARS format requirements are present (either in requirements.md or the comprehensive spec)
+      - Verify architecture and components are documented (either in design.md or the comprehensive spec)
+      - Verify numbered task breakdown exists (either in tasks.md or the comprehensive spec)
       - Review `.kiro/steering/` files for project standards and architecture guidelines
       
       **Step 2: 🎯 Identify Current Task**
-      - Reference specific task from tasks.md file
-      - Update task status to in progress with [-] in tasks.md
-      - Ensure task references specific requirements from requirements.md
+      - Reference specific task from tasks.md file or comprehensive spec file
+      - Update task status to in progress with [-] in tasks.md or comprehensive spec
+      - Ensure task references specific requirements from requirements.md or comprehensive spec
       - Check task has not already been completed even if not marked completed
       
       **Step 3: ✅ Write Tests First (TDD)**
@@ -45,7 +48,7 @@ actions:
       
       **Step 4: 🏗 Implement Minimal Code**
       - Build only what's needed to pass the tests for this specific task
-      - Follow the design patterns outlined in design.md
+      - Follow the design patterns outlined in design.md or comprehensive spec
       - Follow modular feature-based architecture from `.kiro/steering/structure.md`
       - Implement proper error handling and logging per `.kiro/steering/quality.md`
       
@@ -104,19 +107,19 @@ actions:
       **Step 6: 📚 Update Documentation**
       - Update any relevant README
       - Update all tasks that have been completed 
-      - Update specs files in `.kiro/specs/` if applicable
+      - Update specs files in `.kiro/specs/` if applicable (either individual files or comprehensive spec)
       - Update API documentation if applicable
       - Add code comments for complex logic
       - Update steering files in `.kiro/steering/` if patterns changed
       
       **Step 7: 📌 Update Task Status**
-      - Mark current task as completed with [x] in tasks.md
-      - Update tasks.md with any implementation notes
+      - Mark current task as completed with [x] in tasks.md or comprehensive spec
+      - Update tasks.md or comprehensive spec with any implementation notes
       - Verify task requirements are fully satisfied
       
       **Step 8: 🔄 Prepare for Next Task**
       - Commit changes with conventional commit format
-      - Identify next task in tasks.md 
+      - Identify next task in tasks.md or comprehensive spec
       - Continue on to next task and repeat the process
       - Keep going until all tasks are completed
 
@@ -128,7 +131,7 @@ actions:
       🚫 **KIRO DEFINITION OF DONE NOT MET**
       
       Cannot mark as complete until all steps are verified:
-      1. Spec foundation exists (requirements.md, design.md, tasks.md) and steering reviewed
+      1. Spec foundation exists (requirements.md, design.md, tasks.md OR comprehensive spec file) and steering reviewed
       2. Current task identified and marked in_progress
       3. Tests written first (TDD approach)
       4. Minimal implementation completed following steering guidelines
@@ -147,7 +150,7 @@ actions:
     message: |
       ### Kiro Definition of Done Checklist
       
-      - [ ] 1. 📋 Spec foundation verified (.kiro/specs/{feature}/requirements.md, design.md, tasks.md)
+      - [ ] 1. 📋 Spec foundation verified (.kiro/specs/{feature}/requirements.md, design.md, tasks.md OR comprehensive spec file)
       - [ ] 1.1. 🎯 Steering guidelines reviewed (.kiro/steering/ for architecture and quality standards)
       - [ ] 2. 🎯 Current task identified and status set to in progress
       - [ ] 4. ✅ Tests written first (TDD approach)
