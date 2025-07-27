@@ -16,7 +16,7 @@ module.exports = {
     '^.+\\.tsx$': 'ts-jest'
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@supabase|isows|@supabase/realtime-js|@supabase/supabase-js)/)'
+    'node_modules/(?!(@supabase|isows|@supabase/realtime-js|@supabase/supabase-js|next-auth|jose|openid-client)/)'
   ],
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -35,10 +35,37 @@ module.exports = {
       functions: 80,
       lines: 80,
       statements: 80
+    },
+    './src/features/': {
+      branches: 85,
+      functions: 85,
+      lines: 85,
+      statements: 85
+    },
+    './src/core/': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90
+    },
+    './src/web/client/': {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    },
+    './src/web/server/': {
+      branches: 85,
+      functions: 85,
+      lines: 85,
+      statements: 85
     }
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
-  }
+  },
+  reporters: [
+    'default'
+  ]
 }; 
