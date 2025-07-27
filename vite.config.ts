@@ -79,7 +79,7 @@ export default defineConfig({
   },
   // Performance optimizations
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'next-auth'],
+            include: ['react', 'react-dom', 'react-router-dom'],
     exclude: ['@playwright/test'],
   },
   // Enable source maps for development

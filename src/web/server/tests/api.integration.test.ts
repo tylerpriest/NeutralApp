@@ -1,18 +1,9 @@
 import request from 'supertest';
 import express from 'express';
 
-// Mock Supabase modules
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(),
-  SupabaseClient: jest.fn()
-}));
+// Supabase removed - using JWT authentication
 
-// Mock NextAuth.js to avoid ES module issues
-jest.mock('next-auth', () => ({
-  __esModule: true,
-  default: jest.fn(),
-  getServerSession: jest.fn()
-}));
+// NextAuth removed - using JWT authentication
 
 import { SimpleWebServer } from '../SimpleWebServer';
 import { SimpleAPIRouter } from '../SimpleAPIRouter';

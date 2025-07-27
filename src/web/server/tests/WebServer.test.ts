@@ -3,12 +3,7 @@ import express from 'express';
 import { WebServer } from '../WebServer';
 import { SimpleWebServer } from '../SimpleWebServer';
 
-// Mock NextAuth.js to avoid ES module issues
-jest.mock('next-auth', () => ({
-  __esModule: true,
-  default: jest.fn(),
-  getServerSession: jest.fn()
-}));
+// NextAuth removed - using JWT authentication
 
 // Mock the SimpleAPIRouter
 jest.mock('../SimpleAPIRouter', () => ({

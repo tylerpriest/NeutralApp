@@ -35,7 +35,7 @@ export class SimpleAPIRouter {
         status: 'operational',
         timestamp: new Date().toISOString(),
         features: {
-          auth: 'NextAuth.js authentication available',
+          auth: 'JWT authentication available',
           plugins: 'Plugin management API endpoints available', 
           settings: 'Settings API endpoints available',
           admin: 'Admin dashboard API endpoints available',

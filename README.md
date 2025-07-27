@@ -267,7 +267,7 @@ MIT License - see LICENSE file for details
 
 ## 🔗 Links
 
-- [NextAuth.js Documentation](https://next-auth.js.org/) - Authentication provider
+- [JWT Authentication](https://jwt.io/) - JSON Web Token authentication
 - [Jest Documentation](https://jestjs.io/docs/getting-started) - Testing framework
 - [Playwright Documentation](https://playwright.dev/) - E2E testing framework
 - [TypeScript Documentation](https://www.typescriptlang.org/docs/) - Language reference 

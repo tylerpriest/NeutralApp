@@ -22,13 +22,13 @@ module.exports = {
     }]
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@supabase|isows|@supabase/realtime-js|@supabase/supabase-js|next-auth|jose|openid-client|@panva|oidc-token-hash|preact-render-to-string|uuid|@next-auth|@auth)/)'
+    'node_modules/(?!(jose|openid-client|@panva|oidc-token-hash|preact-render-to-string|uuid)/)'
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/src/web/client/__mocks__/fileMock.js',
-    '^next-auth$': '<rootDir>/src/web/client/__mocks__/nextauth.mock.js',
+          // NextAuth removed - using JWT authentication
     '^jose$': '<rootDir>/src/web/client/__mocks__/jose.mock.js',
     '^openid-client$': '<rootDir>/src/web/client/__mocks__/openid-client.mock.js'
   },
