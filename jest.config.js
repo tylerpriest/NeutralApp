@@ -41,7 +41,7 @@ module.exports = {
     '!src/**/*.spec.ts',
     '!src/**/*.spec.tsx'
   ],
-  coverageDirectory: 'coverage',
+  coverageDirectory: 'test-results/coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 5000, // Reduced from 10000ms to 5000ms (5 seconds)
