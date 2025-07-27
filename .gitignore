@@ -37,16 +37,18 @@ pids/
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Test results and artifacts (consolidated)
+test-results/
+test-results/.last-run.json
+tests/e2e/visual-regression.spec.ts-snapshots/
+
+# Legacy test result directories (kept for backward compatibility)
 coverage/
+playwright-report/
 *.lcov
 
 # nyc test coverage
 .nyc_output
-
-# Test results and artifacts
-test-results/
-test-results/.last-run.json
 
 # Dependency directories
 jspm_packages/
