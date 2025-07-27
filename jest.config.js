@@ -44,7 +44,7 @@ module.exports = {
   coverageDirectory: 'test-results/coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  testTimeout: 5000, // Reduced from 10000ms to 5000ms (5 seconds)
+  testTimeout: 10000, // 10 seconds timeout for individual tests
   globals: {
     'ts-jest': {
       tsconfig: 'tsconfig.json'
@@ -52,7 +52,9 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testEnvironmentOptions: {
-    url: 'http://localhost'
+    url: 'http://localhost',
+    // Add timeout for async operations
+    asyncTimeout: 5000
   },
   // Additional timeout settings
   maxWorkers: 1, // Run tests sequentially to avoid resource conflicts

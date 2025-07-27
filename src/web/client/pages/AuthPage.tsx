@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -31,14 +31,18 @@ const AuthPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Memoize the redirect path to prevent infinite loops
+  const redirectPath = useMemo(() => {
+    return location.state?.from?.pathname || '/';
+  }, [location.state?.from?.pathname]);
+
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      const from = location.state?.from?.pathname || '/';
-      console.log('AuthPage: User authenticated, redirecting to:', from);
-      navigate(from, { replace: true });
+      console.log('AuthPage: User authenticated, redirecting to:', redirectPath);
+      navigate(redirectPath, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, location]);
+  }, [isAuthenticated, isLoading, navigate, redirectPath]);
 
   const validateForm = (): boolean => {
     const newErrors: AuthError[] = [];

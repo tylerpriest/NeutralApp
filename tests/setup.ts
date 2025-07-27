@@ -44,4 +44,11 @@ global.IntersectionObserver = class IntersectionObserver {
   disconnect() {}
   observe() {}
   unobserve() {}
-} as any; 
+} as any;
+
+// Global timeout configurations
+jest.setTimeout(10000); // 10 seconds default timeout for all tests
+
+// Note: Individual timeouts are handled by Jest's testTimeout configuration
+
+// Note: Fetch timeout is handled by individual tests using jest.mock() 

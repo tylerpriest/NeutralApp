@@ -17,39 +17,39 @@
 - [x] **1.2.4** Write unit tests for middleware
 
 #### Task 1.3: Authentication Routes
-- [ ] **1.3.1** Implement POST /api/auth/signin endpoint
-- [ ] **1.3.2** Implement GET /api/auth/session endpoint
-- [ ] **1.3.3** Implement POST /api/auth/signout endpoint
-- [ ] **1.3.4** Add proper error handling and validation
-- [ ] **1.3.5** Write integration tests for auth routes
+- [x] **1.3.1** Implement POST /api/auth/signin endpoint
+- [x] **1.3.2** Implement GET /api/auth/session endpoint
+- [x] **1.3.3** Implement POST /api/auth/signout endpoint
+- [x] **1.3.4** Add proper error handling and validation
+- [x] **1.3.5** Write integration tests for auth routes
 
 #### Task 1.4: Server Integration
-- [ ] **1.4.1** Integrate JWT routes into WebServer.ts
-- [ ] **1.4.2** Add JWT middleware to protected routes
-- [ ] **1.4.3** Configure CORS for frontend communication
-- [ ] **1.4.4** Test server integration
+- [x] **1.4.1** Integrate JWT routes into WebServer.ts
+- [x] **1.4.2** Add JWT middleware to protected routes
+- [x] **1.4.3** Configure CORS for frontend communication
+- [x] **1.4.4** Test server integration
 
 ### Phase 2: Frontend Implementation
 
 #### Task 2.1: JWT Auth Context
-- [ ] **2.1.1** Create JWTAuthContext with JWT state management
-- [ ] **2.1.2** Implement localStorage token storage
-- [ ] **2.1.3** Add automatic token inclusion in API requests
-- [ ] **2.1.4** Implement token refresh logic
+- [x] **2.1.1** Create JWTAuthContext with JWT state management
+- [x] **2.1.2** Implement localStorage token storage
+- [x] **2.1.3** Add automatic token inclusion in API requests
+- [x] **2.1.4** Implement token refresh logic
 - [ ] **2.1.5** Write unit tests for AuthContext
 
 #### Task 2.2: JWT Auth Guard
-- [ ] **2.2.1** Create JWTAuthGuard component
-- [ ] **2.2.2** Implement route protection logic
-- [ ] **2.2.3** Add redirect logic for unauthenticated users
-- [ ] **2.2.4** Handle loading states during authentication
-- [ ] **2.2.5** Write unit tests for AuthGuard
+- [x] **2.2.1** Create JWTAuthGuard component
+- [x] **2.2.2** Implement route protection logic
+- [x] **2.2.3** Add redirect logic for unauthenticated users
+- [x] **2.2.4** Handle loading states during authentication
+- [x] **2.2.5** Write unit tests for AuthGuard
 
 #### Task 2.3: Authentication UI
-- [ ] **2.3.1** Create JWTAuthPage component
-- [ ] **2.3.2** Implement login form with validation
-- [ ] **2.3.3** Add error handling and user feedback
-- [ ] **2.3.4** Style authentication page
+- [x] **2.3.1** Create JWTAuthPage component
+- [x] **2.3.2** Implement login form with validation
+- [x] **2.3.3** Add error handling and user feedback
+- [x] **2.3.4** Style authentication page
 - [ ] **2.3.5** Write unit tests for AuthPage
 
 #### Task 2.4: App Integration
@@ -129,7 +129,7 @@
 
 ## Current Task Status
 
-**Current Task**: 1.1.1 - Create JWT service with token generation and validation
+**Current Task**: 2.1.5 - Write unit tests for AuthContext
 **Status**: In Progress [-]
 
 ## Dependencies
