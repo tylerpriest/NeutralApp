@@ -10,7 +10,7 @@ on:
 env:
   NODE_VERSION: '18'
   DOCKER_IMAGE_NAME: neutral-app
-  DOCKER_REGISTRY: your-registry.com # Change this to your registry
+  DOCKER_REGISTRY: ghcr.io # GitHub Container Registry
 
 jobs:
   build_and_push:
@@ -31,6 +31,9 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Create test results directory
+      run: mkdir -p test-results
+
     - name: Run tests
       run: npm run test:unified
       env:
@@ -46,8 +49,8 @@ jobs:
       uses: docker/login-action@v3
       with:
         registry: ${{ env.DOCKER_REGISTRY }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Extract metadata
       id: meta
@@ -105,8 +108,11 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Create test results directory
+      run: mkdir -p test-results
+
     - name: Run full test suite
-      run: npm run test:all
+      run: npm run test:unified
       env:
         CI: true
 
@@ -120,8 +126,8 @@ jobs:
       uses: docker/login-action@v3
       with:
         registry: ${{ env.DOCKER_REGISTRY }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Extract metadata
       id: meta

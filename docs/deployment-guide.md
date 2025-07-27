@@ -307,6 +307,27 @@ docker stats
 4. **Monitor Production**: Set up monitoring and alerting
 5. **Document Procedures**: Create runbooks for common operations
 
+## Vercel Deployment
+
+NeutralApp is also deployed to Vercel for serverless hosting:
+
+- **Production URL**: https://neutral-r0f9n892x-tyler-priests-projects.vercel.app
+- **Status**: ✅ Successfully deployed and responding
+- **Documentation**: See [Vercel Deployment Guide](vercel-deployment.md)
+
+### Quick Vercel Commands
+
+```bash
+# Deploy to Vercel
+npm run vercel:deploy
+
+# Local development with Vercel
+npm run vercel:dev
+
+# Build for Vercel
+npm run vercel:build
+```
+
 ## Support
 
 For deployment issues or questions:
