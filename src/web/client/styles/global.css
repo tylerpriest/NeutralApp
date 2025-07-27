@@ -354,6 +354,80 @@ body {
   font-size: var(--font-size-small);
 }
 
+/* Demo Credentials Box Styles */
+.demo-credentials-box {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--spacing-md);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.demo-credentials-title {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-large);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.demo-credentials-subtitle {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-gray-medium);
+  font-size: var(--font-size-small);
+}
+
+.demo-credentials-content {
+  margin-bottom: var(--spacing-md);
+}
+
+.demo-credential-item {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-gray-very-light);
+  border-radius: var(--spacing-xs);
+  border-left: 3px solid var(--color-primary);
+}
+
+.demo-credential-item:last-child {
+  margin-bottom: 0;
+}
+
+.demo-credential-item strong {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.credential-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.credential-details span {
+  font-size: var(--font-size-small);
+  color: var(--color-gray-medium);
+}
+
+.credential-details code {
+  background-color: var(--color-white);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+.demo-credentials-note {
+  margin: 0;
+  text-align: center;
+  color: var(--color-gray-medium);
+  font-style: italic;
+}
+
 /* Dashboard Styles */
 .dashboard-content {
   max-width: var(--max-content-width);
@@ -473,5 +547,22 @@ body {
   
   .auth-title {
     font-size: 1.5rem;
+  }
+  
+  .demo-credentials-box {
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+  }
+  
+  .demo-credentials-title {
+    font-size: var(--font-size-base);
+  }
+  
+  .demo-credential-item {
+    padding: var(--spacing-sm);
+  }
+  
+  .credential-details {
+    font-size: 0.9rem;
   }
 } 

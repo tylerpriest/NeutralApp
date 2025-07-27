@@ -72,6 +72,18 @@ describe('AuthPage', () => {
         expect(screen.getByText('Invalid email or password')).toBeInTheDocument();
       });
     });
+
+    it('should display demo credentials box in login mode', () => {
+      renderAuthPage();
+      
+      expect(screen.getByText('Demo Credentials')).toBeInTheDocument();
+      expect(screen.getByText('Use these credentials for testing:')).toBeInTheDocument();
+      expect(screen.getByText('Test User:')).toBeInTheDocument();
+      expect(screen.getByText('Development User:')).toBeInTheDocument();
+      expect(screen.getByText('test@example.com')).toBeInTheDocument();
+      expect(screen.getByText('password123')).toBeInTheDocument();
+      expect(screen.getByText('any-valid-email@example.com')).toBeInTheDocument();
+    });
   });
 
   describe('Register Mode', () => {
@@ -169,6 +181,27 @@ describe('AuthPage', () => {
       const signInButton = screen.getByText('Already have an account? Sign in');
       fireEvent.click(signInButton);
       expect(screen.getByText('Welcome back! Please sign in to continue')).toBeInTheDocument();
+    });
+
+    it('should hide demo credentials box in non-login modes', () => {
+      renderAuthPage();
+      
+      // Demo credentials should be visible in login mode
+      expect(screen.getByText('Demo Credentials')).toBeInTheDocument();
+      
+      // Switch to register mode - demo credentials should be hidden
+      const signUpButton = screen.getByText('Don\'t have an account? Sign up');
+      fireEvent.click(signUpButton);
+      expect(screen.queryByText('Demo Credentials')).not.toBeInTheDocument();
+      
+      // Switch to reset mode - demo credentials should be hidden
+      const signInButton = screen.getByText('Already have an account? Sign in');
+      fireEvent.click(signInButton);
+      expect(screen.getByText('Demo Credentials')).toBeInTheDocument();
+      
+      const resetButton = screen.getByText('Forgot your password?');
+      fireEvent.click(resetButton);
+      expect(screen.queryByText('Demo Credentials')).not.toBeInTheDocument();
     });
   });
 

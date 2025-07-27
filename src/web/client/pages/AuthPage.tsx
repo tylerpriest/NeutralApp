@@ -308,6 +308,33 @@ const AuthPage: React.FC = () => {
             </button>
           )}
         </div>
+
+        {/* Demo Credentials Box - Only show in login mode */}
+        {mode === 'login' && (
+          <div className="demo-credentials-box">
+            <h3 className="demo-credentials-title">Demo Credentials</h3>
+            <p className="demo-credentials-subtitle">Use these credentials for testing:</p>
+            <div className="demo-credentials-content">
+              <div className="demo-credential-item">
+                <strong>Test User:</strong>
+                <div className="credential-details">
+                  <span>Email: <code>test@example.com</code></span>
+                  <span>Password: <code>password123</code></span>
+                </div>
+              </div>
+              <div className="demo-credential-item">
+                <strong>Development User:</strong>
+                <div className="credential-details">
+                  <span>Email: <code>any-valid-email@example.com</code></span>
+                  <span>Password: <code>password123</code></span>
+                </div>
+              </div>
+            </div>
+            <p className="demo-credentials-note">
+              <small>💡 These are demo credentials for testing purposes only.</small>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
