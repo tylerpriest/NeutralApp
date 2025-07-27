@@ -54,7 +54,7 @@ Fix the plugin widget integration system so that when a plugin is installed, it 
     - Added automatic data directory creation and error handling
   - **Tests**: Added comprehensive tests for persistence functionality (30/30 tests passing)
   - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite 100%, critical services operational)
-- [ ] **3.2.1** Connect plugin installation to DashboardManager widget registration
+- [-] **3.2.1** Connect plugin installation to DashboardManager widget registration
 - [ ] **3.2.2** Implement widget creation in plugin activation lifecycle
 - [ ] **3.2.3** Fix DashboardPage to display widgets from installed plugins
 - [ ] **3.3.1** Add plugin settings to SettingsService after installation

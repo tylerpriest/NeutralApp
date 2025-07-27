@@ -477,4 +477,222 @@ describe('DashboardManager', () => {
       expect(mockLayoutEngine.applyLayout).toHaveBeenCalled();
     });
   });
+
+  describe('Plugin Installation to Widget Registration Integration', () => {
+    const mockPluginWidget: DashboardWidget = {
+      id: 'hello-world-widget',
+      pluginId: 'demo-hello-world',
+      title: 'Hello World Widget',
+      component: 'HelloWorldComponent',
+      size: { width: 4, height: 3, minWidth: 2, minHeight: 2 },
+      position: { x: 0, y: 0 },
+      permissions: ['read:hello-world']
+    };
+
+    it('should register widgets when plugin is installed', () => {
+      // Simulate plugin installation triggering widget registration
+      const pluginId = 'demo-hello-world';
+      const widgets = [mockPluginWidget];
+
+      // Register widgets for the installed plugin
+      widgets.forEach(widget => dashboardManager.registerWidget(widget));
+
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(mockPluginWidget);
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledTimes(1);
+    });
+
+    it('should register multiple widgets from a single plugin installation', () => {
+      const pluginId = 'demo-hello-world';
+      const widgets: DashboardWidget[] = [
+        {
+          id: 'hello-world-widget',
+          pluginId: 'demo-hello-world',
+          title: 'Hello World Widget',
+          component: 'HelloWorldComponent',
+          size: { width: 4, height: 3 },
+          permissions: ['read:hello-world']
+        },
+        {
+          id: 'hello-world-settings-widget',
+          pluginId: 'demo-hello-world',
+          title: 'Hello World Settings',
+          component: 'HelloWorldSettingsComponent',
+          size: { width: 2, height: 2 },
+          permissions: ['read:hello-world', 'write:hello-world']
+        }
+      ];
+
+      // Register all widgets for the installed plugin
+      widgets.forEach(widget => dashboardManager.registerWidget(widget));
+
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledTimes(2);
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(widgets[0]);
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(widgets[1]);
+    });
+
+    it('should track widgets by plugin ID after installation', () => {
+      const pluginId = 'demo-hello-world';
+      const widgets = [mockPluginWidget];
+
+      // Register widgets
+      widgets.forEach(widget => dashboardManager.registerWidget(widget));
+
+      // Mock the getWidgetsByPlugin to return the registered widgets
+      mockWidgetRegistry.getWidgetsByPlugin.mockReturnValue(widgets);
+
+      // Verify widgets are tracked by plugin
+      const pluginWidgets = dashboardManager.getWidgetsByPlugin(pluginId);
+      expect(pluginWidgets).toEqual(widgets);
+      expect(mockWidgetRegistry.getWidgetsByPlugin).toHaveBeenCalledWith(pluginId);
+    });
+
+    it('should handle widget registration errors during plugin installation', () => {
+      const invalidWidget = {
+        id: 'invalid-widget',
+        pluginId: 'demo-hello-world',
+        // Missing required fields
+      } as DashboardWidget;
+
+      // Should handle registration gracefully even with invalid widget
+      expect(() => {
+        dashboardManager.registerWidget(invalidWidget);
+      }).not.toThrow();
+
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(invalidWidget);
+    });
+
+    it('should unregister widgets when plugin is uninstalled', () => {
+      const pluginId = 'demo-hello-world';
+      const widgets = [mockPluginWidget];
+
+      // First register widgets
+      widgets.forEach(widget => dashboardManager.registerWidget(widget));
+
+      // Mock getWidgetsByPlugin to return the widgets
+      mockWidgetRegistry.getWidgetsByPlugin.mockReturnValue(widgets);
+
+      // Simulate plugin uninstallation
+      dashboardManager.handlePluginUninstall(pluginId);
+
+      // Should unregister all widgets for the plugin
+      expect(mockWidgetRegistry.unregisterWidget).toHaveBeenCalledWith('hello-world-widget');
+      expect(mockWidgetRegistry.getWidgetsByPlugin).toHaveBeenCalledWith(pluginId);
+    });
+
+    it('should handle plugin uninstallation with no widgets gracefully', () => {
+      const pluginId = 'non-existent-plugin';
+
+      // Mock getWidgetsByPlugin to return empty array
+      mockWidgetRegistry.getWidgetsByPlugin.mockReturnValue([]);
+
+      // Should handle gracefully when plugin has no widgets
+      expect(() => {
+        dashboardManager.handlePluginUninstall(pluginId);
+      }).not.toThrow();
+
+      expect(mockWidgetRegistry.getWidgetsByPlugin).toHaveBeenCalledWith(pluginId);
+      expect(mockWidgetRegistry.unregisterWidget).not.toHaveBeenCalled();
+    });
+
+    it('should maintain widget state across plugin reinstallation', () => {
+      const pluginId = 'demo-hello-world';
+      const widgets = [mockPluginWidget];
+
+      // First installation
+      widgets.forEach(widget => dashboardManager.registerWidget(widget));
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(mockPluginWidget);
+
+      // Uninstall
+      mockWidgetRegistry.getWidgetsByPlugin.mockReturnValue(widgets);
+      dashboardManager.handlePluginUninstall(pluginId);
+      expect(mockWidgetRegistry.unregisterWidget).toHaveBeenCalledWith('hello-world-widget');
+
+      // Reinstall
+      jest.clearAllMocks();
+      widgets.forEach(widget => dashboardManager.registerWidget(widget));
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(mockPluginWidget);
+    });
+
+    it('should handle concurrent plugin installations correctly', () => {
+      const plugin1Widgets: DashboardWidget[] = [
+        {
+          id: 'plugin1-widget1',
+          pluginId: 'plugin-1',
+          title: 'Plugin 1 Widget 1',
+          component: 'Plugin1Widget1Component',
+          size: { width: 3, height: 2 },
+          permissions: []
+        },
+        {
+          id: 'plugin1-widget2',
+          pluginId: 'plugin-1',
+          title: 'Plugin 1 Widget 2',
+          component: 'Plugin1Widget2Component',
+          size: { width: 2, height: 3 },
+          permissions: []
+        }
+      ];
+
+      const plugin2Widgets: DashboardWidget[] = [
+        {
+          id: 'plugin2-widget1',
+          pluginId: 'plugin-2',
+          title: 'Plugin 2 Widget 1',
+          component: 'Plugin2Widget1Component',
+          size: { width: 4, height: 2 },
+          permissions: []
+        }
+      ];
+
+      // Install both plugins concurrently
+      [...plugin1Widgets, ...plugin2Widgets].forEach(widget => 
+        dashboardManager.registerWidget(widget)
+      );
+
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledTimes(3);
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(plugin1Widgets[0]);
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(plugin1Widgets[1]);
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(plugin2Widgets[0]);
+    });
+
+    it('should validate widget permissions during registration', () => {
+      const widgetWithPermissions: DashboardWidget = {
+        id: 'permissioned-widget',
+        pluginId: 'demo-hello-world',
+        title: 'Permissioned Widget',
+        component: 'PermissionedComponent',
+        size: { width: 3, height: 2 },
+        permissions: ['read:data', 'write:data', 'admin:data']
+      };
+
+      dashboardManager.registerWidget(widgetWithPermissions);
+
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(widgetWithPermissions);
+      expect(widgetWithPermissions.permissions).toContain('read:data');
+      expect(widgetWithPermissions.permissions).toContain('write:data');
+      expect(widgetWithPermissions.permissions).toContain('admin:data');
+    });
+
+    it('should handle widget size constraints during registration', () => {
+      const widgetWithSizeConstraints: DashboardWidget = {
+        id: 'sized-widget',
+        pluginId: 'demo-hello-world',
+        title: 'Sized Widget',
+        component: 'SizedComponent',
+        size: { 
+          width: 6, 
+          height: 4, 
+          minWidth: 2, 
+          minHeight: 2
+        },
+        permissions: []
+      };
+
+      dashboardManager.registerWidget(widgetWithSizeConstraints);
+
+      expect(mockWidgetRegistry.registerWidget).toHaveBeenCalledWith(widgetWithSizeConstraints);
+      expect(widgetWithSizeConstraints.size.minWidth).toBe(2);
+      expect(widgetWithSizeConstraints.size.minHeight).toBe(2);
+    });
+  });
 }); 

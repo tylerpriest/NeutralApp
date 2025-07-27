@@ -10,7 +10,6 @@ This directory contains all deployment-related documentation for NeutralApp.
 
 ### CI/CD & Automation
 - **[CI/CD Setup](ci-cd-setup.md)** - GitHub Actions workflows and continuous integration/deployment setup
-- **[Vercel Deployment](vercel-deployment.md)** - Serverless deployment configuration and procedures
 
 ### Operations
 - **[Rollback Procedures](rollback-procedures.md)** - Detailed procedures for rolling back deployments to previous versions
@@ -19,9 +18,8 @@ This directory contains all deployment-related documentation for NeutralApp.
 
 1. **First Time Setup**: Start with [Deployment Guide](deployment-guide.md)
 2. **CI/CD Configuration**: Follow [CI/CD Setup](ci-cd-setup.md)
-3. **Vercel Deployment**: See [Vercel Deployment](vercel-deployment.md)
-4. **Verification**: Use [Deployment Verification](deployment-verification.md)
-5. **Emergency Rollback**: Follow [Rollback Procedures](rollback-procedures.md)
+3. **Verification**: Use [Deployment Verification](deployment-verification.md)
+4. **Emergency Rollback**: Follow [Rollback Procedures](rollback-procedures.md)
 
 ## 📋 Deployment Checklist
 
