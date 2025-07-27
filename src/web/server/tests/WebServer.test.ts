@@ -3,6 +3,13 @@ import express from 'express';
 import { WebServer } from '../WebServer';
 import { SimpleWebServer } from '../SimpleWebServer';
 
+// Mock NextAuth.js to avoid ES module issues
+jest.mock('next-auth', () => ({
+  __esModule: true,
+  default: jest.fn(),
+  getServerSession: jest.fn()
+}));
+
 // Mock the SimpleAPIRouter
 jest.mock('../SimpleAPIRouter', () => ({
   SimpleAPIRouter: jest.fn().mockImplementation(() => ({
@@ -10,20 +17,45 @@ jest.mock('../SimpleAPIRouter', () => ({
   }))
 }));
 
+// Helper function to safely set environment variables
+const setEnvVar = (key: string, value: string) => {
+  Object.defineProperty(process.env, key, {
+    value,
+    writable: true,
+    configurable: true
+  });
+};
+
+// Helper function to safely delete environment variables
+const deleteEnvVar = (key: string) => {
+  delete (process.env as any)[key];
+};
+
 describe('WebServer', () => {
   let webServer: WebServer;
   let simpleWebServer: SimpleWebServer;
+  let originalNodeEnv: string | undefined;
 
   beforeEach(() => {
-    // Clear environment variables
-    delete process.env.NODE_ENV;
-    delete process.env.ALLOWED_ORIGINS;
+    // Store original NODE_ENV
+    originalNodeEnv = process.env.NODE_ENV;
+    
+    // Clear environment variables safely
+    deleteEnvVar('NODE_ENV');
+    deleteEnvVar('ALLOWED_ORIGINS');
     
     webServer = new WebServer();
     simpleWebServer = new SimpleWebServer();
   });
 
   afterEach(async () => {
+    // Restore original NODE_ENV
+    if (originalNodeEnv) {
+      setEnvVar('NODE_ENV', originalNodeEnv);
+    } else {
+      deleteEnvVar('NODE_ENV');
+    }
+    
     // Clean up any running servers
     try {
       await webServer.stop();
@@ -140,7 +172,7 @@ describe('WebServer', () => {
     });
 
     it('should not expose error details in production', async () => {
-      process.env.NODE_ENV = 'production';
+      setEnvVar('NODE_ENV', 'production');
       const app = webServer.getApp();
       
       // Add a route that throws an error
@@ -210,7 +242,7 @@ describe('WebServer', () => {
 
   describe('CORS Configuration', () => {
     it('should allow all origins in development', async () => {
-      process.env.NODE_ENV = 'development';
+      setEnvVar('NODE_ENV', 'development');
       const app = webServer.getApp();
       
       const response = await request(app)
@@ -222,8 +254,8 @@ describe('WebServer', () => {
     });
 
     it('should respect ALLOWED_ORIGINS in production', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.ALLOWED_ORIGINS = 'http://allowed.com,https://secure.com';
+      setEnvVar('NODE_ENV', 'production');
+      setEnvVar('ALLOWED_ORIGINS', 'http://allowed.com,https://secure.com');
       const app = webServer.getApp();
       
       const response = await request(app)
@@ -235,8 +267,8 @@ describe('WebServer', () => {
     });
 
     it('should reject unauthorized origins in production', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.ALLOWED_ORIGINS = 'http://allowed.com';
+      setEnvVar('NODE_ENV', 'production');
+      setEnvVar('ALLOWED_ORIGINS', 'http://allowed.com');
       
       // Create a new WebServer instance with production environment
       const productionWebServer = new WebServer();
@@ -291,8 +323,8 @@ describe('SimpleWebServer', () => {
   let server: SimpleWebServer;
 
   beforeEach(() => {
-    delete process.env.NODE_ENV;
-    delete process.env.ALLOWED_ORIGINS;
+    deleteEnvVar('NODE_ENV');
+    deleteEnvVar('ALLOWED_ORIGINS');
     server = new SimpleWebServer();
   });
 

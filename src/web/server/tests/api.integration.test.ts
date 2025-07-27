@@ -7,18 +7,31 @@ jest.mock('@supabase/supabase-js', () => ({
   SupabaseClient: jest.fn()
 }));
 
+// Mock NextAuth.js to avoid ES module issues
+jest.mock('next-auth', () => ({
+  __esModule: true,
+  default: jest.fn(),
+  getServerSession: jest.fn()
+}));
+
 import { SimpleWebServer } from '../SimpleWebServer';
 import { SimpleAPIRouter } from '../SimpleAPIRouter';
 
+// Helper function to safely set environment variables
+const setEnvVar = (key: string, value: string) => {
+  Object.defineProperty(process.env, key, {
+    value,
+    writable: true,
+    configurable: true
+  });
+};
+
 describe('API Integration Tests', () => {
   let server: SimpleWebServer;
-  let app: express.Application;
+  let app: any;
 
-  beforeAll(async () => {
-    // Set up test environment
-    process.env.NODE_ENV = 'test';
-    delete process.env.SUPABASE_URL;
-    
+  beforeEach(() => {
+    setEnvVar('NODE_ENV', 'test');
     server = new SimpleWebServer();
     app = server.getApp();
   });

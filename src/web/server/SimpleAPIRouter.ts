@@ -98,6 +98,24 @@ export class SimpleAPIRouter {
       }
     });
 
+    // User profile endpoint
+    this.router.get('/auth/me', async (req: Request, res: Response) => {
+      try {
+        const session = await getServerSession(req, res, authOptions);
+        if (session) {
+          res.json({
+            success: true,
+            data: { user: session.user }
+          });
+        } else {
+          res.status(401).json({ error: 'Not authenticated' });
+        }
+      } catch (error) {
+        console.error('User profile check error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
     // Plugin routes
     this.setupPluginRoutes();
     

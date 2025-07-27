@@ -8,26 +8,63 @@ jest.mock('@supabase/supabase-js', () => ({
   SupabaseClient: jest.fn()
 }));
 
+// Mock NextAuth.js to avoid ES module issues
+jest.mock('next-auth', () => ({
+  __esModule: true,
+  default: jest.fn(),
+  getServerSession: jest.fn()
+}));
+
 import { SimpleWebServer } from '../SimpleWebServer';
 
-describe('Static Asset Delivery Tests', () => {
-  let server: SimpleWebServer;
-  let app: express.Application;
+// Helper function to safely set environment variables
+const setEnvVar = (key: string, value: string) => {
+  Object.defineProperty(process.env, key, {
+    value,
+    writable: true,
+    configurable: true
+  });
+};
 
-  beforeAll(async () => {
+// Helper function to safely delete environment variables
+const deleteEnvVar = (key: string) => {
+  delete (process.env as any)[key];
+};
+
+describe('Static Assets', () => {
+  let server: SimpleWebServer;
+  let app: any;
+  let originalNodeEnv: string | undefined;
+
+  beforeEach(() => {
+    // Store original NODE_ENV
+    originalNodeEnv = process.env.NODE_ENV;
+    
+    // Clear environment variables safely
+    deleteEnvVar('NODE_ENV');
     server = new SimpleWebServer();
     app = server.getApp();
   });
 
-  afterAll(async () => {
-    await server.stop();
+  afterEach(async () => {
+    // Restore original NODE_ENV
+    if (originalNodeEnv) {
+      setEnvVar('NODE_ENV', originalNodeEnv);
+    } else {
+      deleteEnvVar('NODE_ENV');
+    }
+    
+    try {
+      await server.stop();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
   });
 
   describe('Asset Caching Headers', () => {
     it('should set appropriate cache headers for JavaScript files in production', async () => {
       // Mock production environment
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      setEnvVar('NODE_ENV', 'production');
 
       const testServer = new SimpleWebServer();
       const testApp = testServer.getApp();
@@ -58,13 +95,12 @@ describe('Static Asset Delivery Tests', () => {
         fs.unlinkSync(testJsPath);
         await testServer.stop();
       } finally {
-        process.env.NODE_ENV = originalEnv;
+        deleteEnvVar('NODE_ENV');
       }
     });
 
     it('should set appropriate cache headers for CSS files in production', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      setEnvVar('NODE_ENV', 'production');
 
       const testServer = new SimpleWebServer();
       const testApp = testServer.getApp();
@@ -92,13 +128,12 @@ describe('Static Asset Delivery Tests', () => {
         fs.unlinkSync(testCssPath);
         await testServer.stop();
       } finally {
-        process.env.NODE_ENV = originalEnv;
+        deleteEnvVar('NODE_ENV');
       }
     });
 
     it('should set appropriate cache headers for image files in production', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      setEnvVar('NODE_ENV', 'production');
 
       const testServer = new SimpleWebServer();
       const testApp = testServer.getApp();
@@ -126,13 +161,12 @@ describe('Static Asset Delivery Tests', () => {
         fs.unlinkSync(testImagePath);
         await testServer.stop();
       } finally {
-        process.env.NODE_ENV = originalEnv;
+        deleteEnvVar('NODE_ENV');
       }
     });
 
     it('should set no-cache headers for HTML files in production', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      setEnvVar('NODE_ENV', 'production');
 
       const testServer = new SimpleWebServer();
       const testApp = testServer.getApp();
@@ -147,13 +181,12 @@ describe('Static Asset Delivery Tests', () => {
 
         await testServer.stop();
       } finally {
-        process.env.NODE_ENV = originalEnv;
+        deleteEnvVar('NODE_ENV');
       }
     });
 
     it('should not set aggressive cache headers in development', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      setEnvVar('NODE_ENV', 'development');
 
       const testServer = new SimpleWebServer();
       const testApp = testServer.getApp();
@@ -181,7 +214,7 @@ describe('Static Asset Delivery Tests', () => {
         fs.unlinkSync(testJsPath);
         await testServer.stop();
       } finally {
-        process.env.NODE_ENV = originalEnv;
+        deleteEnvVar('NODE_ENV');
       }
     });
   });

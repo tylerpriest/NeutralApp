@@ -115,7 +115,7 @@ export class WebServer {
       }
       
       // Serve React app for all other routes
-      res.sendFile(path.join(buildPath, 'index.html'));
+      return res.sendFile(path.join(buildPath, 'index.html'));
     });
   }
 
