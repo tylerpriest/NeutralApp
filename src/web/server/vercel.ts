@@ -39,5 +39,6 @@ export default async function handler(req: any, res: any) {
   } catch (error) {
     console.error('❌ Serverless handler error:', error);
     res.status(500).json({ error: 'Internal server error' });
+    return Promise.resolve();
   }
 } 

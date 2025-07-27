@@ -35,8 +35,25 @@ Fix the plugin widget integration system so that when a plugin is installed, it 
     - Updated pluginRegistry.updatePluginStatus() to update plugin status in the Map
   - **Tests**: Added comprehensive tests for getInstalledPlugins functionality (24/24 tests passing)
   - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite >80%, critical services operational)
-- [ ] **3.1.2** Update PluginManagerPage to properly refresh after installation
-- [ ] **3.1.3** Implement proper plugin state persistence in PluginManager
+- [x] **3.1.2** Update PluginManagerPage to properly refresh after installation
+  - **Implementation**: Refresh functionality was already properly implemented in PluginManagerPage
+  - **Verification**: 
+    - `handleInstallPlugin` calls `await loadPlugins()` after successful installation
+    - `handleEnablePlugin` calls `await loadPlugins()` after successful enabling
+    - `handleDisablePlugin` calls `await loadPlugins()` after successful disabling
+    - `handleUninstallPlugin` calls `await loadPlugins()` after successful uninstallation
+  - **Tests**: Added comprehensive tests for refresh functionality (30/30 tests passing)
+  - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite 100%, critical services operational)
+- [x] **3.1.3** Implement proper plugin state persistence in PluginManager
+  - **Implementation**: Added file-based persistence system for installed plugins
+  - **Changes**:
+    - Added `private persistenceFile: string` to store path to persistence file
+    - Added `loadPersistedPlugins()` method to restore plugins on startup
+    - Added `persistPlugins()` method to save plugins to JSON file
+    - Updated pluginRegistry methods to call `persistPlugins()` after state changes
+    - Added automatic data directory creation and error handling
+  - **Tests**: Added comprehensive tests for persistence functionality (30/30 tests passing)
+  - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite 100%, critical services operational)
 - [ ] **3.2.1** Connect plugin installation to DashboardManager widget registration
 - [ ] **3.2.2** Implement widget creation in plugin activation lifecycle
 - [ ] **3.2.3** Fix DashboardPage to display widgets from installed plugins

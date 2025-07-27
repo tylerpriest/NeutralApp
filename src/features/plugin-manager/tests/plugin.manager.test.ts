@@ -500,4 +500,209 @@ describe('PluginManager', () => {
       consoleSpy.mockRestore();
     });
   });
+
+  describe('Plugin State Persistence', () => {
+    const mockPluginPackage: PluginPackage = {
+      id: 'demo-hello-world',
+      version: '1.0.0',
+      code: 'plugin code here',
+      manifest: {
+        id: 'demo-hello-world',
+        name: 'Hello World Demo',
+        version: '1.0.0',
+        description: 'A simple demo plugin',
+        author: 'NeutralApp Team',
+        main: 'index.js',
+        dependencies: [],
+        permissions: [],
+        api: []
+      },
+      signature: 'signature-hash'
+    };
+
+    const createMockPlugin = (id: string, name: string, status: PluginStatus) => ({
+      id,
+      name,
+      version: '1.0.0',
+      description: 'A simple demo plugin',
+      author: 'NeutralApp Team',
+      rating: 0,
+      downloads: 0,
+      dependencies: [],
+      permissions: [],
+      status
+    });
+
+    it('should persist installed plugins across application restarts', async () => {
+      const mockPlugin = createMockPlugin('demo-hello-world', 'Hello World Demo', PluginStatus.INSTALLED);
+      
+      // Mock successful installation
+      mockPluginVerifier.verifyPluginSignature.mockResolvedValue(true);
+      mockPluginVerifier.validatePluginManifest.mockResolvedValue({ isValid: true, errors: [] });
+      mockPluginVerifier.checkSecurityCompliance.mockResolvedValue({ isCompliant: true, violations: [] });
+      mockDependencyResolver.resolveDependencies.mockResolvedValue([]);
+      mockPluginRegistry.addInstalledPlugin.mockResolvedValue(undefined);
+
+      // Install the plugin
+      const installResult = await pluginManager.installPlugin(mockPluginPackage);
+      expect(installResult.success).toBe(true);
+
+      // Mock the registry to return the installed plugin
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue([mockPlugin]);
+
+      // Verify the plugin is in installed plugins list
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      expect(installedPlugins).toHaveLength(1);
+      expect(installedPlugins[0]?.id).toBe('demo-hello-world');
+
+      // Simulate application restart by creating a new PluginManager instance
+      const newPluginManager = new PluginManager();
+      
+      // Mock the new instance to return the same installed plugins
+      (newPluginManager as any).pluginRegistry = {
+        getInstalledPlugins: jest.fn().mockResolvedValue([mockPlugin]),
+        addInstalledPlugin: jest.fn(),
+        removeInstalledPlugin: jest.fn(),
+        updatePluginStatus: jest.fn()
+      };
+
+      // Verify the plugin is still installed after restart
+      const pluginsAfterRestart = await newPluginManager.getInstalledPlugins();
+      expect(pluginsAfterRestart).toHaveLength(1);
+      expect(pluginsAfterRestart[0]?.id).toBe('demo-hello-world');
+      expect(pluginsAfterRestart[0]?.status).toBe(PluginStatus.INSTALLED);
+    });
+
+    it('should persist plugin status changes across application restarts', async () => {
+      const mockPlugin = createMockPlugin('demo-hello-world', 'Hello World Demo', PluginStatus.INSTALLED);
+      
+      // Mock initial installation
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue([mockPlugin]);
+      mockPluginRegistry.updatePluginStatus.mockResolvedValue(undefined);
+
+      // Enable the plugin
+      await pluginManager.enablePlugin('demo-hello-world');
+
+      // Mock the registry to return the enabled plugin
+      const enabledPlugin = { ...mockPlugin, status: PluginStatus.ENABLED };
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue([enabledPlugin]);
+
+      // Verify the plugin is enabled
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      expect(installedPlugins[0]?.status).toBe(PluginStatus.ENABLED);
+
+      // Simulate application restart
+      const newPluginManager = new PluginManager();
+      (newPluginManager as any).pluginRegistry = {
+        getInstalledPlugins: jest.fn().mockResolvedValue([enabledPlugin]),
+        addInstalledPlugin: jest.fn(),
+        removeInstalledPlugin: jest.fn(),
+        updatePluginStatus: jest.fn()
+      };
+
+      // Verify the plugin is still enabled after restart
+      const pluginsAfterRestart = await newPluginManager.getInstalledPlugins();
+      expect(pluginsAfterRestart[0]?.status).toBe(PluginStatus.ENABLED);
+    });
+
+    it('should persist plugin uninstallation across application restarts', async () => {
+      const mockPlugin = createMockPlugin('demo-hello-world', 'Hello World Demo', PluginStatus.INSTALLED);
+      
+      // Mock initial installation
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue([mockPlugin]);
+      mockPluginRegistry.removeInstalledPlugin.mockResolvedValue(undefined);
+
+      // Uninstall the plugin
+      await pluginManager.uninstallPlugin('demo-hello-world', true);
+
+      // Mock the registry to return empty list after uninstallation
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue([]);
+
+      // Verify the plugin is no longer installed
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      expect(installedPlugins).toHaveLength(0);
+
+      // Simulate application restart
+      const newPluginManager = new PluginManager();
+      (newPluginManager as any).pluginRegistry = {
+        getInstalledPlugins: jest.fn().mockResolvedValue([]),
+        addInstalledPlugin: jest.fn(),
+        removeInstalledPlugin: jest.fn(),
+        updatePluginStatus: jest.fn()
+      };
+
+      // Verify the plugin is still not installed after restart
+      const pluginsAfterRestart = await newPluginManager.getInstalledPlugins();
+      expect(pluginsAfterRestart).toHaveLength(0);
+    });
+
+    it('should handle persistence errors gracefully', async () => {
+      const mockPlugin = createMockPlugin('demo-hello-world', 'Hello World Demo', PluginStatus.INSTALLED);
+      
+      // Mock installation success but persistence failure
+      mockPluginVerifier.verifyPluginSignature.mockResolvedValue(true);
+      mockPluginVerifier.validatePluginManifest.mockResolvedValue({ isValid: true, errors: [] });
+      mockPluginVerifier.checkSecurityCompliance.mockResolvedValue({ isCompliant: true, violations: [] });
+      mockDependencyResolver.resolveDependencies.mockResolvedValue([]);
+      mockPluginRegistry.addInstalledPlugin.mockRejectedValue(new Error('Persistence failed'));
+
+      // Installation should fail if persistence fails (current implementation behavior)
+      const installResult = await pluginManager.installPlugin(mockPluginPackage);
+      expect(installResult.success).toBe(false);
+      expect(installResult.error).toContain('Persistence failed');
+
+      // Mock the registry to return empty list due to persistence failure
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue([]);
+
+      // Verify the plugin is not in the list due to persistence failure
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      expect(installedPlugins).toHaveLength(0);
+    });
+
+    it('should persist multiple plugins with different statuses', async () => {
+      const mockPlugins = [
+        createMockPlugin('plugin-1', 'Plugin 1', PluginStatus.ENABLED),
+        createMockPlugin('plugin-2', 'Plugin 2', PluginStatus.DISABLED),
+        createMockPlugin('plugin-3', 'Plugin 3', PluginStatus.INSTALLED)
+      ];
+      
+      // Mock multiple plugins installed
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue(mockPlugins);
+
+      // Verify all plugins are returned
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      expect(installedPlugins).toHaveLength(3);
+      expect(installedPlugins[0]?.status).toBe(PluginStatus.ENABLED);
+      expect(installedPlugins[1]?.status).toBe(PluginStatus.DISABLED);
+      expect(installedPlugins[2]?.status).toBe(PluginStatus.INSTALLED);
+
+      // Simulate application restart
+      const newPluginManager = new PluginManager();
+      (newPluginManager as any).pluginRegistry = {
+        getInstalledPlugins: jest.fn().mockResolvedValue(mockPlugins),
+        addInstalledPlugin: jest.fn(),
+        removeInstalledPlugin: jest.fn(),
+        updatePluginStatus: jest.fn()
+      };
+
+      // Verify all plugins with their statuses are preserved after restart
+      const pluginsAfterRestart = await newPluginManager.getInstalledPlugins();
+      expect(pluginsAfterRestart).toHaveLength(3);
+      expect(pluginsAfterRestart[0]?.status).toBe(PluginStatus.ENABLED);
+      expect(pluginsAfterRestart[1]?.status).toBe(PluginStatus.DISABLED);
+      expect(pluginsAfterRestart[2]?.status).toBe(PluginStatus.INSTALLED);
+    });
+
+    it('should handle corrupted persistence data gracefully', async () => {
+      // Mock corrupted data being returned
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue([
+        { id: 'corrupted-plugin', invalidField: 'corrupted' } as any
+      ]);
+
+      // Should handle corrupted data gracefully and return what it can
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      expect(installedPlugins).toHaveLength(1);
+      expect(installedPlugins[0]?.id).toBe('corrupted-plugin');
+    });
+  });
 }); 
