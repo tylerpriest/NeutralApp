@@ -4,60 +4,96 @@ import { PLUGIN_REGISTRY, discoverPlugins, getPluginInfo, validatePlugin } from 
 import * as fs from 'fs';
 import * as path from 'path';
 
+// Define interfaces for dependency injection
+interface IPluginRegistry {
+  getAvailablePlugins(): Promise<PluginInfo[]>;
+  getInstalledPlugins(): Promise<PluginInfo[]>;
+  addInstalledPlugin(plugin: PluginInfo): Promise<void>;
+  removeInstalledPlugin(pluginId: string, cleanupData?: boolean): Promise<void>;
+  updatePluginStatus(pluginId: string, status: PluginStatus): Promise<void>;
+}
+
+interface IPluginVerifier {
+  verifyPluginSignature(pluginPackage: PluginPackage): Promise<boolean>;
+  validatePluginManifest(manifest: any): Promise<{ isValid: boolean; errors: string[] }>;
+  checkSecurityCompliance(pluginPackage: PluginPackage): Promise<{ isCompliant: boolean; violations: string[] }>;
+}
+
+interface IDependencyResolver {
+  resolveDependencies(pluginId: string): Promise<PluginDependency[]>;
+  checkDependencyConflicts(dependencies: PluginDependency[]): Promise<string[]>;
+  getInstallOrder(dependencies: PluginDependency[]): Promise<string[]>;
+}
+
+interface IDashboardManager {
+  registerWidget(widget: DashboardWidget): void;
+  handlePluginUninstall(pluginId: string): void;
+}
+
 export class PluginManager implements IPluginManager {
-  private dependencyResolver: any;
-  private pluginVerifier: any;
-  private pluginRegistry: any;
+  private dependencyResolver: IDependencyResolver;
+  private pluginVerifier: IPluginVerifier;
+  private pluginRegistry: IPluginRegistry;
   private pluginSandbox: any;
   private installedPlugins: Map<string, PluginInfo> = new Map();
   private readonly persistenceFile: string;
-  private dashboardManager: any; // Will be injected
+  private dashboardManager?: IDashboardManager;
 
-  constructor(dashboardManager?: any) {
+  constructor(
+    pluginRegistry?: IPluginRegistry,
+    pluginVerifier?: IPluginVerifier,
+    dependencyResolver?: IDependencyResolver,
+    dashboardManager?: IDashboardManager
+  ) {
     // Initialize persistence file path
     this.persistenceFile = path.join(process.cwd(), 'data', 'installed-plugins.json');
     
-    // Set dashboard manager if provided
+    // Inject dependencies or use defaults
+    this.pluginRegistry = pluginRegistry || this.createDefaultPluginRegistry();
+    this.pluginVerifier = pluginVerifier || this.createDefaultPluginVerifier();
+    this.dependencyResolver = dependencyResolver || this.createDefaultDependencyResolver();
     this.dashboardManager = dashboardManager;
-    
-    // Initialize plugin management components
-    this.initializeComponents();
     
     // Load persisted plugins on startup
     this.loadPersistedPlugins();
   }
 
-  private initializeComponents(): void {
-    // These will be properly injected or initialized
-    // For now, provide basic implementations
-    this.dependencyResolver = {
-      resolveDependencies: async (pluginId: string) => [],
-      checkDependencyConflicts: async (dependencies: PluginDependency[]) => [],
-      getInstallOrder: async (dependencies: PluginDependency[]) => []
-    };
-
-    this.pluginVerifier = {
-      verifyPluginSignature: async (pluginPackage: PluginPackage) => true,
-      validatePluginManifest: async (manifest: any) => ({ isValid: true, errors: [] }),
-      checkSecurityCompliance: async (pluginPackage: PluginPackage) => ({ isCompliant: true, violations: [] })
-    };
-
-    this.pluginRegistry = {
+  private createDefaultPluginRegistry(): IPluginRegistry {
+    return {
       getAvailablePlugins: async () => [],
       getInstalledPlugins: async () => Array.from(this.installedPlugins.values()),
       addInstalledPlugin: async (plugin: PluginInfo) => {
         this.installedPlugins.set(plugin.id, plugin);
+        await this.savePersistedPlugins();
       },
       removeInstalledPlugin: async (pluginId: string, cleanupData?: boolean) => {
         this.installedPlugins.delete(pluginId);
+        await this.savePersistedPlugins();
       },
       updatePluginStatus: async (pluginId: string, status: PluginStatus) => {
         const plugin = this.installedPlugins.get(pluginId);
         if (plugin) {
           plugin.status = status;
           this.installedPlugins.set(pluginId, plugin);
+          await this.savePersistedPlugins();
         }
       }
+    };
+  }
+
+  private createDefaultPluginVerifier(): IPluginVerifier {
+    return {
+      verifyPluginSignature: async (pluginPackage: PluginPackage) => true,
+      validatePluginManifest: async (manifest: any) => ({ isValid: true, errors: [] }),
+      checkSecurityCompliance: async (pluginPackage: PluginPackage) => ({ isCompliant: true, violations: [] })
+    };
+  }
+
+  private createDefaultDependencyResolver(): IDependencyResolver {
+    return {
+      resolveDependencies: async (pluginId: string) => [],
+      checkDependencyConflicts: async (dependencies: PluginDependency[]) => [],
+      getInstallOrder: async (dependencies: PluginDependency[]) => []
     };
   }
 
@@ -355,7 +391,6 @@ export class PluginManager implements IPluginManager {
         size: { width: 4, height: 3, minWidth: 2, minHeight: 2 },
         permissions: plugin.permissions.map(p => p.name)
       };
-
       this.dashboardManager.registerWidget(widget);
       console.log(`Registered widget for plugin: ${plugin.id}`);
     } catch (error) {
@@ -387,4 +422,4 @@ export class PluginManager implements IPluginManager {
       // Don't throw error to prevent plugin activation failure
     }
   }
-} 
+}
