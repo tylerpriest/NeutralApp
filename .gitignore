@@ -19,6 +19,7 @@ build/
 # IDE files
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 
@@ -42,6 +43,10 @@ coverage/
 
 # nyc test coverage
 .nyc_output
+
+# Test results and artifacts
+test-results/
+test-results/.last-run.json
 
 # Dependency directories
 jspm_packages/
@@ -97,4 +102,12 @@ jspm_packages/
 
 # Temporary folders
 tmp/
-temp/ 
+temp/
+
+# Temporary test files
+**/test.css
+**/test.png
+**/test.jpg
+**/test.jpeg
+**/test.gif
+**/test.svg 
