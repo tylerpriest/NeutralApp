@@ -1,6 +1,8 @@
 import { IPluginManager } from '../interfaces/plugin.interface';
-import { PluginInfo, PluginPackage, InstallResult, PluginDependency, PluginStatus } from '../../../shared';
+import { PluginInfo, PluginPackage, InstallResult, PluginDependency, PluginStatus, DashboardWidget } from '../../../shared';
 import { PLUGIN_REGISTRY, discoverPlugins, getPluginInfo, validatePlugin } from '../../../plugins';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class PluginManager implements IPluginManager {
   private dependencyResolver: any;
@@ -8,10 +10,21 @@ export class PluginManager implements IPluginManager {
   private pluginRegistry: any;
   private pluginSandbox: any;
   private installedPlugins: Map<string, PluginInfo> = new Map();
+  private readonly persistenceFile: string;
+  private dashboardManager: any; // Will be injected
 
-  constructor() {
+  constructor(dashboardManager?: any) {
+    // Initialize persistence file path
+    this.persistenceFile = path.join(process.cwd(), 'data', 'installed-plugins.json');
+    
+    // Set dashboard manager if provided
+    this.dashboardManager = dashboardManager;
+    
     // Initialize plugin management components
     this.initializeComponents();
+    
+    // Load persisted plugins on startup
+    this.loadPersistedPlugins();
   }
 
   private initializeComponents(): void {
@@ -131,6 +144,9 @@ export class PluginManager implements IPluginManager {
 
       await this.pluginRegistry.addInstalledPlugin(pluginInfo);
 
+      // Register widgets for the newly installed plugin
+      this.registerPluginWidgets(pluginInfo);
+
       return {
         success: true,
         pluginId: pluginPackage.id,
@@ -175,6 +191,11 @@ export class PluginManager implements IPluginManager {
       
       // Remove from sandbox if loaded
       // TODO: Unload from sandbox
+      
+      // Unregister widgets for the plugin before removing from registry
+      if (this.dashboardManager) {
+        this.dashboardManager.handlePluginUninstall(pluginId);
+      }
       
       // Remove from registry
       await this.pluginRegistry.removeInstalledPlugin(pluginId, cleanupData || false);
@@ -282,5 +303,60 @@ export class PluginManager implements IPluginManager {
       },
       signature: 'mock-signature'
     };
+  }
+
+  private async loadPersistedPlugins(): Promise<void> {
+    try {
+      if (fs.existsSync(this.persistenceFile)) {
+        const data = fs.readFileSync(this.persistenceFile, 'utf8');
+        const persistedPlugins: PluginInfo[] = JSON.parse(data);
+        for (const plugin of persistedPlugins) {
+          await this.pluginRegistry.addInstalledPlugin(plugin);
+          // Register widgets for persisted plugins if dashboard manager is available
+          if (this.dashboardManager && plugin.status === PluginStatus.ENABLED) {
+            this.registerPluginWidgets(plugin);
+          }
+        }
+        console.log(`Loaded ${persistedPlugins.length} persisted plugins.`);
+      } else {
+        console.log('No persisted plugins found.');
+      }
+    } catch (error) {
+      console.error('Error loading persisted plugins:', error);
+    }
+  }
+
+  private async savePersistedPlugins(): Promise<void> {
+    try {
+      const data = JSON.stringify(Array.from(this.installedPlugins.values()), null, 2);
+      fs.writeFileSync(this.persistenceFile, data);
+      console.log('Persisted installed plugins to:', this.persistenceFile);
+    } catch (error) {
+      console.error('Error saving persisted plugins:', error);
+    }
+  }
+
+  private registerPluginWidgets(plugin: PluginInfo): void {
+    if (!this.dashboardManager) {
+      console.warn('DashboardManager not available for widget registration');
+      return;
+    }
+
+    try {
+      // Create default widget for the plugin
+      const widget: DashboardWidget = {
+        id: `${plugin.id}-widget`,
+        pluginId: plugin.id,
+        title: `${plugin.name} Widget`,
+        component: `${plugin.name}Component`,
+        size: { width: 4, height: 3, minWidth: 2, minHeight: 2 },
+        permissions: plugin.permissions.map(p => p.name)
+      };
+
+      this.dashboardManager.registerWidget(widget);
+      console.log(`Registered widget for plugin: ${plugin.id}`);
+    } catch (error) {
+      console.error(`Failed to register widget for plugin ${plugin.id}:`, error);
+    }
   }
 } 
