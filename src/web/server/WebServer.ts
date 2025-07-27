@@ -100,7 +100,11 @@ export class WebServer {
     this.app.use('/api', this.apiRouter.getRouter());
 
     // Serve static files from React build (Vite output directory)
-    const buildPath = path.join(__dirname, '../../../src/dist/web/client');
+    // Handle both development and production paths
+    const buildPath = process.env.NODE_ENV === 'production' 
+      ? path.join(__dirname, '../client')
+      : path.join(__dirname, '../../../src/dist/web/client');
+    
     this.app.use(express.static(buildPath));
 
     // React app catch-all handler (for client-side routing)
@@ -111,7 +115,9 @@ export class WebServer {
       }
       
       // Serve React app for all other routes
-      return res.sendFile(path.join(buildPath, 'index.html'));
+      const indexPath = path.join(buildPath, 'index.html');
+      console.log(`Serving React app from: ${indexPath}`);
+      return res.sendFile(indexPath);
     });
   }
 

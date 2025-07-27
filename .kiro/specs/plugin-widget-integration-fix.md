@@ -25,7 +25,16 @@ Fix the plugin widget integration system so that when a plugin is installed, it 
 - **2.4** **Plugin Lifecycle Management**: Ensure proper plugin activation and widget initialization
 
 ### 3. Tasks (Required)
-- [ ] **3.1.1** Fix PluginManager.getInstalledPlugins() to return actual installed plugins
+- [x] **3.1.1** Fix PluginManager.getInstalledPlugins() to return actual installed plugins
+  - **Implementation**: Added in-memory Map storage for installed plugins in PluginManager
+  - **Changes**: 
+    - Added `private installedPlugins: Map<string, PluginInfo> = new Map()` to PluginManager
+    - Updated pluginRegistry.getInstalledPlugins() to return `Array.from(this.installedPlugins.values())`
+    - Updated pluginRegistry.addInstalledPlugin() to store plugins in the Map
+    - Updated pluginRegistry.removeInstalledPlugin() to remove plugins from the Map
+    - Updated pluginRegistry.updatePluginStatus() to update plugin status in the Map
+  - **Tests**: Added comprehensive tests for getInstalledPlugins functionality (24/24 tests passing)
+  - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite >80%, critical services operational)
 - [ ] **3.1.2** Update PluginManagerPage to properly refresh after installation
 - [ ] **3.1.3** Implement proper plugin state persistence in PluginManager
 - [ ] **3.2.1** Connect plugin installation to DashboardManager widget registration

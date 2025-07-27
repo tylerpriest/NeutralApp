@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "dist/web/server/index.js",
+      "src": "dist/web/server/vercel.js",
       "use": "@vercel/node"
     },
     {
@@ -13,15 +13,31 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "dist/web/server/index.js"
+      "dest": "dist/web/server/vercel.js"
     },
     {
       "src": "/health",
-      "dest": "dist/web/server/index.js"
+      "dest": "dist/web/server/vercel.js"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "dist/web/client/js/$1"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "dist/web/client/css/$1"
+    },
+    {
+      "src": "/img/(.*)",
+      "dest": "dist/web/client/img/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "dist/web/client/assets/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "dist/web/client/$1"
+      "dest": "dist/web/client/index.html"
     }
   ],
   "env": {

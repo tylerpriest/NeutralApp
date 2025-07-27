@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "npm run build:server && npm run build:client",
-    "build:server": "tsc",
+    "build:server": "tsc && npm run build:vercel",
+    "build:vercel": "tsc src/web/server/vercel.ts --outDir dist/web/server --target es2020 --module commonjs",
     "build:client": "rm -rf dist/web/client && vite build",
     "build:full": "npm run build && npm run build:client",
     "build:production": "ts-node scripts/build-production.ts --env=production --optimize",
@@ -28,6 +29,7 @@
     "verify:performance": "./scripts/verify-performance.sh",
     "verify:security": "./scripts/verify-security.sh",
     "verify:all": "./scripts/verify-deployment.sh && ./scripts/verify-performance.sh && ./scripts/verify-security.sh",
+    "verify:vercel": "./scripts/verify-vercel-deployment.sh",
     "rollback": "./scripts/rollback.sh",
     "smoke:tests": "./scripts/smoke-tests.sh",
     "test": "jest --testTimeout=10000 --maxWorkers=1 --bail=1 --forceExit --detectOpenHandles",

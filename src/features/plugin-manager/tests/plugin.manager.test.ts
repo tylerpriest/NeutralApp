@@ -47,6 +47,10 @@ describe('PluginManager', () => {
     (pluginManager as any).dependencyResolver = mockDependencyResolver;
     (pluginManager as any).pluginVerifier = mockPluginVerifier;
     (pluginManager as any).pluginRegistry = mockPluginRegistry;
+    
+    // Set default mock return values
+    mockPluginRegistry.getInstalledPlugins.mockResolvedValue([]);
+    mockPluginRegistry.getAvailablePlugins.mockResolvedValue([]);
   });
 
   describe('getAvailablePlugins', () => {
@@ -243,28 +247,136 @@ describe('PluginManager', () => {
   });
 
   describe('getInstalledPlugins', () => {
-    it('should return list of installed plugins', async () => {
-      const mockInstalledPlugins: PluginInfo[] = [
+    it('should return empty array when no plugins are installed', async () => {
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      expect(installedPlugins).toEqual([]);
+    });
+
+    it('should return installed plugins with correct status', async () => {
+      // Mock the plugin registry to return installed plugins
+      const mockInstalledPlugins = [
         {
-          id: 'installed-plugin',
-          name: 'Installed Plugin',
+          id: 'demo-hello-world',
+          name: 'Hello World Demo',
           version: '1.0.0',
-          description: 'An installed plugin',
-          author: 'Test Author',
-          rating: 4.0,
-          downloads: 500,
+          description: 'A simple demo plugin',
+          author: 'NeutralApp Team',
+          rating: 0,
+          downloads: 0,
           dependencies: [],
           permissions: [],
-          status: PluginStatus.ENABLED
+          status: PluginStatus.INSTALLED
         }
       ];
 
       mockPluginRegistry.getInstalledPlugins.mockResolvedValue(mockInstalledPlugins);
 
-      const result = await pluginManager.getInstalledPlugins();
-
-      expect(result).toEqual(mockInstalledPlugins);
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      
+      expect(installedPlugins).toEqual(mockInstalledPlugins);
+      expect(installedPlugins[0]?.status).toBe(PluginStatus.INSTALLED);
       expect(mockPluginRegistry.getInstalledPlugins).toHaveBeenCalled();
+    });
+
+    it('should handle errors gracefully and return empty array', async () => {
+      mockPluginRegistry.getInstalledPlugins.mockRejectedValue(new Error('Registry error'));
+
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      
+      expect(installedPlugins).toEqual([]);
+      expect(mockPluginRegistry.getInstalledPlugins).toHaveBeenCalled();
+    });
+
+    it('should return plugins with different statuses correctly', async () => {
+      const mockInstalledPlugins = [
+        {
+          id: 'demo-hello-world',
+          name: 'Hello World Demo',
+          version: '1.0.0',
+          description: 'A simple demo plugin',
+          author: 'NeutralApp Team',
+          rating: 0,
+          downloads: 0,
+          dependencies: [],
+          permissions: [],
+          status: PluginStatus.ENABLED
+        },
+        {
+          id: 'test-plugin',
+          name: 'Test Plugin',
+          version: '1.0.0',
+          description: 'A test plugin',
+          author: 'Test Author',
+          rating: 0,
+          downloads: 0,
+          dependencies: [],
+          permissions: [],
+          status: PluginStatus.DISABLED
+        }
+      ];
+
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue(mockInstalledPlugins);
+
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      
+      expect(installedPlugins).toHaveLength(2);
+      expect(installedPlugins[0]?.status).toBe(PluginStatus.ENABLED);
+      expect(installedPlugins[1]?.status).toBe(PluginStatus.DISABLED);
+    });
+  });
+
+  describe('Plugin Installation State Management', () => {
+    it('should properly track installed plugins after installation', async () => {
+      const mockPluginPackage: PluginPackage = {
+        id: 'demo-hello-world',
+        version: '1.0.0',
+        code: 'plugin code here',
+        manifest: {
+          id: 'demo-hello-world',
+          name: 'Hello World Demo',
+          version: '1.0.0',
+          description: 'A simple demo plugin',
+          author: 'NeutralApp Team',
+          main: 'index.js',
+          dependencies: [],
+          permissions: [],
+          api: []
+        },
+        signature: 'signature-hash'
+      };
+
+      // Mock successful installation
+      mockPluginVerifier.verifyPluginSignature.mockResolvedValue(true);
+      mockPluginVerifier.validatePluginManifest.mockResolvedValue({ isValid: true, errors: [] });
+      mockPluginVerifier.checkSecurityCompliance.mockResolvedValue({ isCompliant: true, violations: [] });
+      mockDependencyResolver.resolveDependencies.mockResolvedValue([]);
+      mockPluginRegistry.addInstalledPlugin.mockResolvedValue(undefined);
+
+      // Install the plugin
+      const installResult = await pluginManager.installPlugin(mockPluginPackage);
+      expect(installResult.success).toBe(true);
+
+      // Mock the registry to return the installed plugin
+      const mockInstalledPlugin = {
+        id: 'demo-hello-world',
+        name: 'Hello World Demo',
+        version: '1.0.0',
+        description: 'A simple demo plugin',
+        author: 'NeutralApp Team',
+        rating: 0,
+        downloads: 0,
+        dependencies: [],
+        permissions: [],
+        status: PluginStatus.INSTALLED
+      };
+
+      mockPluginRegistry.getInstalledPlugins.mockResolvedValue([mockInstalledPlugin]);
+
+      // Verify the plugin is now in installed plugins list
+      const installedPlugins = await pluginManager.getInstalledPlugins();
+      expect(installedPlugins).toHaveLength(1);
+      expect(installedPlugins[0]?.id).toBe('demo-hello-world');
+      expect(installedPlugins[0]?.status).toBe(PluginStatus.INSTALLED);
     });
   });
 

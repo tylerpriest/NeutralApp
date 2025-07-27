@@ -7,6 +7,7 @@ export class PluginManager implements IPluginManager {
   private pluginVerifier: any;
   private pluginRegistry: any;
   private pluginSandbox: any;
+  private installedPlugins: Map<string, PluginInfo> = new Map();
 
   constructor() {
     // Initialize plugin management components
@@ -30,10 +31,20 @@ export class PluginManager implements IPluginManager {
 
     this.pluginRegistry = {
       getAvailablePlugins: async () => [],
-      getInstalledPlugins: async () => [],
-      addInstalledPlugin: async (plugin: PluginInfo) => {},
-      removeInstalledPlugin: async (pluginId: string, cleanupData: boolean) => {},
-      updatePluginStatus: async (pluginId: string, status: PluginStatus) => {}
+      getInstalledPlugins: async () => Array.from(this.installedPlugins.values()),
+      addInstalledPlugin: async (plugin: PluginInfo) => {
+        this.installedPlugins.set(plugin.id, plugin);
+      },
+      removeInstalledPlugin: async (pluginId: string, cleanupData?: boolean) => {
+        this.installedPlugins.delete(pluginId);
+      },
+      updatePluginStatus: async (pluginId: string, status: PluginStatus) => {
+        const plugin = this.installedPlugins.get(pluginId);
+        if (plugin) {
+          plugin.status = status;
+          this.installedPlugins.set(pluginId, plugin);
+        }
+      }
     };
   }
 
