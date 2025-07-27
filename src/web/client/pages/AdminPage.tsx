@@ -62,6 +62,7 @@ const AdminPage: React.FC = () => {
     
     return () => {
       systemMonitor.destroy();
+      // Cleanup monitoring interval will be handled by the component unmount
     };
   }, []);
 

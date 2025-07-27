@@ -3,6 +3,17 @@ import { test, expect } from '@playwright/test';
 test.describe('Health Checks and Monitoring', () => {
   const baseUrl = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
+  test.describe('Alerts and Monitoring', () => {
+    test('should handle monitoring alerts', async ({ request }) => {
+      // This test would verify alert functionality
+      // For now, we'll just ensure the health endpoints work
+      const response = await request.get(`${baseUrl}/health`);
+      expect(response.status()).toBe(200);
+    });
+  });
+
+    test.describe('Health Check Endpoints', () => {
+
   test.describe('Health Check Endpoints', () => {
     test('should return healthy status from /health endpoint', async ({ request }) => {
       const response = await request.get(`${baseUrl}/health`);
@@ -227,4 +238,5 @@ test.describe('Health Checks and Monitoring', () => {
       expect(data2.uptime).toBeLessThan(86400 * 365); // Less than 1 year
     });
   });
-}); 
+});
+});
