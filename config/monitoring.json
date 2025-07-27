@@ -50,6 +50,29 @@
       "webhookUrl": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
       "channel": "#alerts"
     },
+    "deployment": {
+      "verification": {
+        "enabled": false,
+        "webhookUrl": "https://hooks.slack.com/services/YOUR/DEPLOYMENT/WEBHOOK",
+        "channel": "#deployments",
+        "templates": {
+          "verification_success": "✅ Deployment verification completed successfully for {environment}",
+          "verification_failure": "❌ Deployment verification failed for {environment}",
+          "rollback_success": "🔄 Rollback completed successfully for {environment} to version {version}",
+          "rollback_failure": "🚨 Rollback failed for {environment} to version {version}"
+        }
+      },
+      "rollback": {
+        "enabled": false,
+        "webhookUrl": "https://hooks.slack.com/services/YOUR/ROLLBACK/WEBHOOK",
+        "channel": "#rollbacks",
+        "templates": {
+          "rollback_started": "🔄 Rollback started for {environment} to version {version}",
+          "rollback_completed": "✅ Rollback completed for {environment} to version {version}",
+          "rollback_failed": "🚨 Rollback failed for {environment} to version {version}"
+        }
+      }
+    },
     "severity": {
       "critical": {
         "immediate": true,
@@ -127,6 +150,34 @@
     "performance": {
       "enabled": true,
       "tracking": ["loadTime", "memoryUsage", "errorRate"]
+    }
+  },
+  "deployment": {
+    "verification": {
+      "enabled": true,
+      "interval": 300000,
+      "timeout": 60,
+      "checks": [
+        "application_health",
+        "database_connection",
+        "api_endpoints",
+        "performance_metrics",
+        "ssl_certificates",
+        "dns_resolution",
+        "load_balancer",
+        "cdn_status"
+      ]
+    },
+    "rollback": {
+      "enabled": true,
+      "autoRollback": true,
+      "maxAttempts": 3,
+      "threshold": 0.8,
+      "verification": {
+        "healthCheckAfterRollback": true,
+        "smokeTestAfterRollback": true,
+        "performanceCheckAfterRollback": true
+      }
     }
   }
 } 

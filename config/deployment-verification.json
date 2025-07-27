@@ -1,0 +1,204 @@
+{
+  "verification": {
+    "healthCheckTimeout": 30,
+    "maxResponseTime": 500,
+    "minSuccessRate": 0.95,
+    "retryAttempts": 3,
+    "retryDelay": 5,
+    "endpoints": [
+      "/health",
+      "/api/health",
+      "/api/status"
+    ],
+    "checks": [
+      "application_health",
+      "database_connection",
+      "api_endpoints",
+      "performance_metrics",
+      "ssl_certificates",
+      "dns_resolution",
+      "load_balancer",
+      "cdn_status"
+    ]
+  },
+  "rollback": {
+    "autoRollback": true,
+    "maxRollbackAttempts": 3,
+    "rollbackThreshold": 0.8,
+    "versionManagement": {
+      "keepVersions": 5,
+      "cleanupOldVersions": true,
+      "backupBeforeRollback": true
+    },
+    "verification": {
+      "healthCheckAfterRollback": true,
+      "smokeTestAfterRollback": true,
+      "performanceCheckAfterRollback": true
+    }
+  },
+  "notifications": {
+    "enabled": true,
+    "channels": {
+      "email": {
+        "enabled": false,
+        "recipients": ["admin@neutralapp.com", "devops@neutralapp.com"],
+        "templates": {
+          "verification_success": "Deployment verification completed successfully for {environment}",
+          "verification_failure": "Deployment verification failed for {environment}",
+          "rollback_success": "Rollback completed successfully for {environment} to version {version}",
+          "rollback_failure": "Rollback failed for {environment} to version {version}"
+        }
+      },
+      "slack": {
+        "enabled": false,
+        "webhookUrl": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+        "channel": "#deployments",
+        "templates": {
+          "verification_success": "✅ Deployment verification completed successfully for {environment}",
+          "verification_failure": "❌ Deployment verification failed for {environment}",
+          "rollback_success": "🔄 Rollback completed successfully for {environment} to version {version}",
+          "rollback_failure": "🚨 Rollback failed for {environment} to version {version}"
+        }
+      },
+      "webhook": {
+        "enabled": false,
+        "url": "https://your-webhook-endpoint.com/deployments",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer YOUR_WEBHOOK_TOKEN"
+        }
+      }
+    },
+    "severity": {
+      "critical": {
+        "immediate": true,
+        "retry": false,
+        "escalation": true
+      },
+      "error": {
+        "immediate": true,
+        "retry": true,
+        "escalation": false
+      },
+      "warning": {
+        "immediate": false,
+        "retry": true,
+        "escalation": false
+      },
+      "info": {
+        "immediate": false,
+        "retry": false,
+        "escalation": false
+      }
+    }
+  },
+  "performance": {
+    "thresholds": {
+      "maxResponseTime": 500,
+      "minThroughput": 10,
+      "maxErrorRate": 0.05,
+      "maxConcurrentUsers": 100
+    },
+    "loadTesting": {
+      "enabled": true,
+      "duration": 300,
+      "concurrency": 50,
+      "rampUpTime": 60
+    },
+    "monitoring": {
+      "enabled": true,
+      "interval": 60,
+      "metrics": [
+        "response_time",
+        "throughput",
+        "error_rate",
+        "cpu_usage",
+        "memory_usage"
+      ]
+    }
+  },
+  "security": {
+    "checks": {
+      "sslCertificate": true,
+      "securityHeaders": true,
+      "corsPolicy": true,
+      "contentSecurityPolicy": true,
+      "hstsHeaders": true
+    },
+    "scanning": {
+      "enabled": true,
+      "tools": [
+        "ssl_labs",
+        "security_headers",
+        "csp_validator"
+      ],
+      "frequency": "on_deploy"
+    }
+  },
+  "environments": {
+    "staging": {
+      "url": "https://staging.neutralapp.com",
+      "verification": {
+        "enabled": true,
+        "timeout": 30,
+        "retries": 2
+      },
+      "rollback": {
+        "enabled": true,
+        "autoRollback": true
+      }
+    },
+    "production": {
+      "url": "https://neutralapp.com",
+      "verification": {
+        "enabled": true,
+        "timeout": 60,
+        "retries": 3
+      },
+      "rollback": {
+        "enabled": true,
+        "autoRollback": true
+      }
+    }
+  },
+  "reporting": {
+    "enabled": true,
+    "format": "markdown",
+    "includeMetrics": true,
+    "includeLogs": true,
+    "retention": {
+      "days": 30,
+      "maxReports": 100
+    },
+    "templates": {
+      "verification": "verification-report-{environment}-{timestamp}.md",
+      "rollback": "rollback-report-{environment}-{timestamp}.md",
+      "performance": "performance-report-{environment}-{timestamp}.md",
+      "security": "security-report-{environment}-{timestamp}.md"
+    }
+  },
+  "integration": {
+    "ci_cd": {
+      "github_actions": {
+        "enabled": true,
+        "workflow": "deploy.yml",
+        "steps": [
+          "verify-deployment",
+          "smoke-tests",
+          "performance-verification",
+          "security-verification"
+        ]
+      }
+    },
+    "monitoring": {
+      "prometheus": {
+        "enabled": false,
+        "endpoint": "http://localhost:9090"
+      },
+      "grafana": {
+        "enabled": false,
+        "dashboard": "deployment-metrics"
+      }
+    }
+  }
+} 

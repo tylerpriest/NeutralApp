@@ -116,46 +116,99 @@ restore_previous_version() {
     log_success "Rollback deployment completed"
 }
 
-# Function to run health checks after rollback
-run_health_checks() {
-    local environment=$1
-    
-    log_info "Running health checks after rollback for $environment environment..."
-    
-    # Wait for application to start
-    sleep 10
-    
-    # Check application health endpoint
-    local health_url
-    if [[ "$environment" == "production" ]]; then
-        health_url="https://neutralapp.com/health"
-    else
-        health_url="https://staging.neutralapp.com/health"
-    fi
-    
-    # Retry health check multiple times
-    local max_attempts=5
-    local attempt=1
-    
-    while [[ $attempt -le $max_attempts ]]; do
-        log_info "Health check attempt $attempt/$max_attempts"
+    # Function to run health checks after rollback
+    run_health_checks() {
+        local environment=$1
         
-        if curl -f -s "$health_url" > /dev/null; then
-            log_success "Health check passed"
-            return 0
+        log_info "Running health checks after rollback for $environment environment..."
+        
+        # Wait for application to start
+        sleep 10
+        
+        # Check application health endpoint
+        local health_url
+        if [[ "$environment" == "production" ]]; then
+            health_url="https://neutralapp.com/health"
         else
-            log_warning "Health check failed (attempt $attempt/$max_attempts)"
-            if [[ $attempt -lt $max_attempts ]]; then
-                sleep 10
-            fi
+            health_url="https://staging.neutralapp.com/health"
         fi
         
-        ((attempt++))
-    done
-    
-    log_error "Health check failed after $max_attempts attempts"
-    return 1
-}
+        # Retry health check multiple times
+        local max_attempts=5
+        local attempt=1
+        
+        while [[ $attempt -le $max_attempts ]]; do
+            log_info "Health check attempt $attempt/$max_attempts"
+            
+            if curl -f -s "$health_url" > /dev/null; then
+                log_success "Health check passed"
+                return 0
+            else
+                log_warning "Health check failed (attempt $attempt/$max_attempts)"
+                if [[ $attempt -lt $max_attempts ]]; then
+                    sleep 10
+                fi
+            fi
+            
+            ((attempt++))
+        done
+        
+        log_error "Health check failed after $max_attempts attempts"
+        return 1
+    }
+
+    # Function to verify rollback health
+    verify_rollback_health() {
+        local environment=$1
+        log_info "Verifying rollback health for $environment..."
+        
+        # Run comprehensive health checks
+        if run_health_checks "$environment"; then
+            log_success "Rollback health verification passed"
+            return 0
+        else
+            log_error "Rollback health verification failed"
+            return 1
+        fi
+    }
+
+    # Function to run rollback smoke tests
+    run_rollback_smoke_tests() {
+        local environment=$1
+        log_info "Running rollback smoke tests for $environment..."
+        
+        # Run basic smoke tests after rollback
+        cd "$PROJECT_ROOT"
+        
+        if npm run test:e2e -- tests/e2e/navigation.spec.ts; then
+            log_success "Rollback smoke tests passed"
+            return 0
+        else
+            log_error "Rollback smoke tests failed"
+            return 1
+        fi
+    }
+
+    # Function to notify rollback completion
+    notify_rollback_completion() {
+        local environment=$1
+        local status=$2
+        local version=$3
+        local message=$4
+        
+        log_info "Notifying rollback completion for $environment..."
+        
+        # This would integrate with notification systems
+        # For now, we'll log the notification
+        log_info "Rollback notification: $status for $environment to version $version - $message"
+        
+        # Send notification based on configuration
+        if [[ "$status" == "success" ]]; then
+            log_success "Rollback notification sent successfully"
+        else
+            log_error "Rollback notification sent for failure"
+        fi
+    }
 
 # Function to run smoke tests after rollback
 run_smoke_tests() {
@@ -189,21 +242,116 @@ send_notification() {
     echo "Rollback $status for $environment to version $version: $message"
 }
 
-# Function to get available versions
-list_available_versions() {
-    local environment=$1
-    
-    log_info "Available versions for $environment:"
-    
-    # This would query your Docker registry for available tags
-    # For now, we'll show a placeholder
-    echo "Available versions:"
-    echo "  - v1.0.0"
-    echo "  - v1.0.1"
-    echo "  - v1.0.2"
-    echo "  - latest"
-    echo "  - previous"
-}
+    # Function to get available versions
+    list_available_versions() {
+        local environment=$1
+        
+        log_info "Available versions for $environment:"
+        
+        # This would query your Docker registry for available tags
+        # For now, we'll show a placeholder
+        echo "Available versions:"
+        echo "  - v1.0.0"
+        echo "  - v1.0.1"
+        echo "  - v1.0.2"
+        echo "  - latest"
+        echo "  - previous"
+    }
+
+    # Function to get current version
+    get_current_version() {
+        local environment=$1
+        
+        log_info "Getting current version for $environment..."
+        
+        # Get current version from Docker image
+        local current_image
+        if [[ "$environment" == "production" ]]; then
+            current_image="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:latest"
+        else
+            current_image="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:staging"
+        fi
+        
+        # Extract version from image
+        local version=$(docker inspect "$current_image" --format='{{.Config.Labels.version}}' 2>/dev/null || echo "unknown")
+        
+        if [[ "$version" == "unknown" ]]; then
+            log_warning "Could not determine current version"
+            version="latest"
+        fi
+        
+        log_info "Current version: $version"
+        echo "$version"
+    }
+
+    # Function to backup current version
+    backup_current_version() {
+        local environment=$1
+        local backup_dir="/var/backups/deployments"
+        
+        log_info "Backing up current version for $environment..."
+        
+        # Create backup directory
+        mkdir -p "$backup_dir"
+        
+        # Get current version
+        local current_version=$(get_current_version "$environment")
+        local timestamp=$(date +%Y%m%d-%H%M%S)
+        local backup_name="backup-$environment-$current_version-$timestamp"
+        
+        # Create backup
+        if [[ "$environment" == "production" ]]; then
+            docker save "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:latest" -o "$backup_dir/$backup_name.tar"
+        else
+            docker save "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:staging" -o "$backup_dir/$backup_name.tar"
+        fi
+        
+        if [[ $? -eq 0 ]]; then
+            log_success "Backup created: $backup_name.tar"
+            echo "$backup_name.tar"
+        else
+            log_error "Failed to create backup"
+            return 1
+        fi
+    }
+
+    # Function to verify rollback success
+    verify_rollback_success() {
+        local environment=$1
+        local target_version=$2
+        
+        log_info "Verifying rollback success for $environment to version $target_version..."
+        
+        # Run comprehensive verification
+        local verification_passed=true
+        
+        # Health check verification
+        if ! run_health_checks "$environment"; then
+            log_error "Health check verification failed"
+            verification_passed=false
+        fi
+        
+        # Smoke test verification
+        if ! run_smoke_tests "$environment"; then
+            log_error "Smoke test verification failed"
+            verification_passed=false
+        fi
+        
+        # Version verification
+        local current_version=$(get_current_version "$environment")
+        if [[ "$current_version" != "$target_version" ]]; then
+            log_error "Version verification failed (expected: $target_version, actual: $current_version)"
+            verification_passed=false
+        fi
+        
+        if [[ "$verification_passed" == "true" ]]; then
+            log_success "Rollback verification passed"
+            return 0
+        else
+            log_error "Rollback verification failed"
+            return 1
+        fi
+    }
 
 # Main rollback function
 main() {

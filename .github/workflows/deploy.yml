@@ -65,6 +65,18 @@ jobs:
         echo "🧪 Running smoke tests on staging..."
         # This would run basic health checks on staging
         echo "✅ Smoke tests passed"
+    - name: Verify deployment
+      run: |
+        echo "🔍 Verifying deployment..."
+        ./scripts/verify-deployment.sh staging
+    - name: Run performance verification
+      run: |
+        echo "⚡ Running performance verification..."
+        ./scripts/verify-performance.sh staging
+    - name: Run security verification
+      run: |
+        echo "🔒 Running security verification..."
+        ./scripts/verify-security.sh staging
 
     - name: Notify staging deployment
       run: |
@@ -131,6 +143,23 @@ jobs:
         # Run health check script
         ./scripts/health-check.sh production || echo "Health checks failed but continuing..."
         echo "✅ Health checks completed"
+
+    - name: Verify deployment
+      run: |
+        echo "🔍 Verifying deployment..."
+        ./scripts/verify-deployment.sh production
+    - name: Run smoke tests
+      run: |
+        echo "🧪 Running smoke tests..."
+        ./scripts/smoke-tests.sh production
+    - name: Run performance verification
+      run: |
+        echo "⚡ Running performance verification..."
+        ./scripts/verify-performance.sh production
+    - name: Run security verification
+      run: |
+        echo "🔒 Running security verification..."
+        ./scripts/verify-security.sh production
 
     - name: Run performance tests
       run: |
