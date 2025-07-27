@@ -81,8 +81,11 @@ describe('AuthPage', () => {
       expect(screen.getByText('Test User:')).toBeInTheDocument();
       expect(screen.getByText('Development User:')).toBeInTheDocument();
       expect(screen.getByText('test@example.com')).toBeInTheDocument();
-      expect(screen.getByText('password123')).toBeInTheDocument();
       expect(screen.getByText('any-valid-email@example.com')).toBeInTheDocument();
+      
+      // Check for password123 in both sections (use getAllByText since it appears twice)
+      const passwordElements = screen.getAllByText('password123');
+      expect(passwordElements).toHaveLength(2);
     });
   });
 

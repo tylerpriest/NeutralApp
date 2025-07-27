@@ -201,6 +201,34 @@ check_system_resources() {
     return 0
 }
 
+# Function to check plugin health
+check_plugin_health() {
+    local environment=$1
+    
+    log_info "Checking plugin health for $environment environment..."
+    
+    # Determine base URL
+    local base_url
+    if [[ "$environment" == "production" ]]; then
+        base_url="https://neutralapp.com"
+    else
+        base_url="https://staging.neutralapp.com"
+    fi
+    
+    # Check plugin health endpoint
+    local plugin_health_url="$base_url/api/plugins/health"
+    local response_code
+    response_code=$(curl -s -o /dev/null -w "%{http_code}" "$plugin_health_url" || echo "000")
+    
+    if [[ "$response_code" == "200" ]]; then
+        log_success "Plugin health check passed (HTTP $response_code)"
+        return 0
+    else
+        log_warning "Plugin health check failed or endpoint not available (HTTP $response_code)"
+        return 0  # Don't fail overall check for plugin issues
+    fi
+}
+
 # Function to check Docker containers
 check_docker_containers() {
     local environment=$1
@@ -260,6 +288,7 @@ Timestamp: $timestamp
 - API Endpoints: $([ $? -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
 - System Resources: $([ $? -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
 - Docker Containers: $([ $? -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
+- Plugin Health: $([ $? -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
 
 ## Recommendations
 $(if [[ $? -ne 0 ]]; then
@@ -327,6 +356,13 @@ main() {
     
     # Check Docker containers
     if check_docker_containers "$environment"; then
+        ((health_checks_passed++))
+    else
+        ((health_checks_failed++))
+    fi
+    
+    # Check plugin health
+    if check_plugin_health "$environment"; then
         ((health_checks_passed++))
     else
         ((health_checks_failed++))

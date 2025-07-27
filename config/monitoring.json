@@ -1,0 +1,132 @@
+{
+  "healthCheck": {
+    "interval": 30000,
+    "timeout": 5000,
+    "retries": 3,
+    "endpoints": [
+      "/health",
+      "/api/health",
+      "/api/status"
+    ],
+    "components": [
+      "database",
+      "plugins",
+      "authentication",
+      "file-system",
+      "memory",
+      "cpu"
+    ]
+  },
+  "monitoring": {
+    "enabled": true,
+    "interval": 60000,
+    "cpuThreshold": 0.8,
+    "memoryThreshold": 0.85,
+    "diskThreshold": 0.9,
+    "responseTimeThreshold": 500,
+    "errorRateThreshold": 0.05,
+    "availabilityThreshold": 0.99
+  },
+  "alerts": {
+    "enabled": true,
+    "email": {
+      "enabled": false,
+      "smtp": {
+        "host": "smtp.example.com",
+        "port": 587,
+        "secure": true
+      },
+      "recipients": ["admin@neutralapp.com"]
+    },
+    "webhook": {
+      "enabled": false,
+      "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "slack": {
+      "enabled": false,
+      "webhookUrl": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+      "channel": "#alerts"
+    },
+    "severity": {
+      "critical": {
+        "immediate": true,
+        "retry": false,
+        "escalation": true
+      },
+      "error": {
+        "immediate": true,
+        "retry": true,
+        "escalation": false
+      },
+      "warning": {
+        "immediate": false,
+        "retry": true,
+        "escalation": false
+      },
+      "info": {
+        "immediate": false,
+        "retry": false,
+        "escalation": false
+      }
+    }
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "retention": {
+      "days": 30,
+      "maxSize": "100MB"
+    },
+    "structured": true,
+    "context": {
+      "includeUser": true,
+      "includePlugin": true,
+      "includeComponent": true
+    }
+  },
+  "metrics": {
+    "enabled": true,
+    "collection": {
+      "interval": 30000,
+      "retention": "7d"
+    },
+    "aggregation": {
+      "enabled": true,
+      "intervals": ["1m", "5m", "15m", "1h", "1d"]
+    },
+    "export": {
+      "prometheus": {
+        "enabled": false,
+        "port": 9090
+      },
+      "custom": {
+        "enabled": false,
+        "endpoint": "/api/metrics"
+      }
+    }
+  },
+  "performance": {
+    "webVitals": {
+      "enabled": true,
+      "tracking": ["LCP", "FID", "CLS", "TTFB", "FCP"]
+    },
+    "profiling": {
+      "enabled": false,
+      "sampleRate": 0.1
+    }
+  },
+  "plugins": {
+    "healthCheck": {
+      "enabled": true,
+      "interval": 60000,
+      "timeout": 10000
+    },
+    "performance": {
+      "enabled": true,
+      "tracking": ["loadTime", "memoryUsage", "errorRate"]
+    }
+  }
+} 

@@ -72,13 +72,51 @@ export class SimpleWebServer {
   private setupRoutes(): void {
     // Health check endpoint
     this.app.get('/health', (req: Request, res: Response) => {
-      res.json({ 
-        status: 'healthy', 
+      const healthData = {
+        status: 'healthy',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         version: '1.0.0',
-        architecture: 'feature-based modular'
-      });
+        architecture: 'feature-based modular',
+        environment: process.env.NODE_ENV || 'development',
+        memory: {
+          used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+          total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+          external: Math.round(process.memoryUsage().external / 1024 / 1024)
+        },
+        cpu: {
+          usage: process.cpuUsage(),
+          uptime: process.uptime()
+        },
+        features: {
+          auth: 'available',
+          plugins: 'available',
+          settings: 'available',
+          admin: 'available',
+          logging: 'available'
+        }
+      };
+      
+      res.json(healthData);
+    });
+
+    // API health check endpoint
+    this.app.get('/api/health', (req: Request, res: Response) => {
+      const apiHealthData = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        endpoints: {
+          auth: '/api/auth',
+          plugins: '/api/plugins',
+          settings: '/api/settings',
+          admin: '/api/admin',
+          health: '/health'
+        },
+        version: '1.0.0',
+        uptime: process.uptime()
+      };
+      
+      res.json(apiHealthData);
     });
 
     // API status endpoint

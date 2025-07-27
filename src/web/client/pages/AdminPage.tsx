@@ -96,6 +96,25 @@ const AdminPage: React.FC = () => {
   };
 
   const setupMonitoring = () => {
+    // Set up real-time monitoring updates
+    const monitoringInterval = setInterval(async () => {
+      if (isMonitoring) {
+        try {
+          const [resources, performance, errors] = await Promise.all([
+            systemMonitor.getResourceUsage(),
+            systemMonitor.getPerformanceMetrics(),
+            systemMonitor.getErrorRates()
+          ]);
+          
+          setResourceUsage(resources);
+          setPerformanceMetrics(performance);
+          setErrorStats(errors);
+        } catch (err) {
+          console.error('Error updating monitoring data:', err);
+        }
+      }
+    }, 30000); // Update every 30 seconds
+
     systemMonitor.subscribeToAlerts((alert: SystemAlert) => {
       // Handle system alerts
       console.log('System alert:', alert);
