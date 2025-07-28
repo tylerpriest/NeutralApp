@@ -55,11 +55,11 @@
     - [x] Update or add tests
   - _Requirements: 1, 3, 4, 5_
 
-- [ ] 4. Ensure accessibility and responsiveness
+- [x] 4. Ensure accessibility and responsiveness
   - [x] 4.1 Audit all shared and feature UI components for WCAG compliance
   - [x] 4.2 Test keyboard navigation and screen reader support
-  - [ ] 4.3 Test mobile responsiveness and touch targets
-  - [ ] 4.4 Update or add tests for accessibility and responsiveness
+  - [x] 4.3 Test mobile responsiveness and touch targets
+  - [x] 4.4 Update or add tests for accessibility and responsiveness
   - _Requirements: 1, 5_
 
 - [ ] 5. Finalize, document, and verify quality
