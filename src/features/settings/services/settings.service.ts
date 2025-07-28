@@ -96,9 +96,32 @@ export class SettingsService implements ISettingsService {
         };
       },
       validateSchema: async (schema: any): Promise<ValidationResult> => {
-        // Schema validation implementation ready
-        // In production, this would validate plugin settings against their schema
-        return { isValid: true, errors: [] };
+        const errors: string[] = [];
+        
+        try {
+          // Validate schema structure
+          if (!schema || typeof schema !== 'object') {
+            errors.push('Schema must be an object');
+            return { isValid: false, errors };
+          }
+          
+          // Validate each field in the schema
+          for (const [key, fieldSchema] of Object.entries(schema)) {
+            if (!this.isValidFieldSchema(fieldSchema)) {
+              errors.push(`Invalid field schema for '${key}'`);
+            }
+          }
+          
+          return {
+            isValid: errors.length === 0,
+            errors
+          };
+        } catch (error) {
+          return {
+            isValid: false,
+            errors: ['Schema validation failed: ' + (error instanceof Error ? error.message : 'Unknown error')]
+          };
+        }
       },
       sanitizeValue: (value: any): any => {
         // Basic sanitization - in a real app, you'd want more sophisticated sanitization
@@ -323,11 +346,10 @@ export class SettingsService implements ISettingsService {
     try {
       const { id: pluginId, settings: settingsSchema } = pluginInfo;
       
-      // Validate settings schema
-      for (const [key, schema] of Object.entries(settingsSchema)) {
-        if (!this.isValidSettingType(schema.type)) {
-          throw new Error(`Invalid setting type: ${schema.type}`);
-        }
+      // Validate settings schema using comprehensive validation
+      const schemaValidation = await this.validator.validateSchema(settingsSchema);
+      if (!schemaValidation.isValid) {
+        throw new Error(`Invalid plugin settings schema: ${schemaValidation.errors.join(', ')}`);
       }
 
       // Check if plugin settings already exist by looking at storage directly
@@ -535,20 +557,85 @@ export class SettingsService implements ISettingsService {
     const validTypes = ['string', 'number', 'boolean', 'array', 'object'];
     return validTypes.includes(type);
   }
-
-  private async validatePluginSettingValue(pluginId: string, key: string, value: any): Promise<void> {
-    // For now, we'll implement basic type validation
-    // In a full implementation, this would check against the plugin's schema
-    
-    // Basic type validation based on the key name
-    if (key.includes('Interval') && typeof value !== 'number') {
-      throw new Error(`Invalid value type for setting ${key}`);
+  
+  private isValidFieldSchema(fieldSchema: any): boolean {
+    if (!fieldSchema || typeof fieldSchema !== 'object') {
+      return false;
     }
     
-    // Note: We don't check if the setting exists here because:
-    // 1. During registration, settings don't exist yet
-    // 2. During updates, we want to allow setting new values
-    // 3. The validation should focus on value type and format, not existence
+    // Required properties
+    if (!fieldSchema.type || !this.isValidSettingType(fieldSchema.type)) {
+      return false;
+    }
+    
+    if (fieldSchema.default === undefined) {
+      return false;
+    }
+    
+    // Optional properties validation
+    if (fieldSchema.required !== undefined && typeof fieldSchema.required !== 'boolean') {
+      return false;
+    }
+    
+    if (fieldSchema.description !== undefined && typeof fieldSchema.description !== 'string') {
+      return false;
+    }
+    
+    // Type-specific validation
+    if (fieldSchema.type === 'string' && fieldSchema.maxLength !== undefined) {
+      if (typeof fieldSchema.maxLength !== 'number' || fieldSchema.maxLength <= 0) {
+        return false;
+      }
+    }
+    
+    if (fieldSchema.type === 'number') {
+      if (fieldSchema.min !== undefined && typeof fieldSchema.min !== 'number') {
+        return false;
+      }
+      if (fieldSchema.max !== undefined && typeof fieldSchema.max !== 'number') {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  private async validatePluginSettingValue(pluginId: string, key: string, value: any): Promise<void> {
+    try {
+      // Get plugin settings to check against schema if available
+      const existingSettings = await this.getPluginSettings(pluginId);
+      
+      // Basic type validation based on the key name patterns
+      if (key.includes('Interval') || key.includes('Duration') || key.includes('Timeout')) {
+        if (typeof value !== 'number' || value < 0) {
+          throw new Error(`Setting '${key}' must be a non-negative number`);
+        }
+      }
+      
+      if (key.includes('Enabled') || key.includes('Active') || key.startsWith('is')) {
+        if (typeof value !== 'boolean') {
+          throw new Error(`Setting '${key}' must be a boolean value`);
+        }
+      }
+      
+      if (key.includes('Url') || key.includes('Path')) {
+        if (typeof value !== 'string' || value.trim().length === 0) {
+          throw new Error(`Setting '${key}' must be a non-empty string`);
+        }
+      }
+      
+      // Additional validation for arrays and objects
+      if (Array.isArray(value) && value.length === 0 && key.includes('Required')) {
+        throw new Error(`Setting '${key}' cannot be an empty array`);
+      }
+      
+      if (typeof value === 'object' && value !== null && Object.keys(value).length === 0 && key.includes('Config')) {
+        throw new Error(`Setting '${key}' cannot be an empty configuration object`);
+      }
+      
+    } catch (error) {
+      throw error; // Re-throw validation errors
+    }
   }
 
   subscribe(key: string, callback: (key: string, value: any, userId: string | null) => void): () => void {

@@ -151,9 +151,9 @@ describe('useWidgetErrorHandler', () => {
         expect(fallback.showRetry).toBe(true);
         expect(fallback.showRemove).toBe(true);
         expect(fallback.actions).toHaveLength(3);
-        expect(fallback.actions[0].id).toBe('retry');
-        expect(fallback.actions[1].id).toBe('remove');
-        expect(fallback.actions[2].id).toBe('report');
+        expect(fallback.actions[0]?.id).toBe('retry');
+        expect(fallback.actions[1]?.id).toBe('remove');
+        expect(fallback.actions[2]?.id).toBe('report');
       });
     });
 

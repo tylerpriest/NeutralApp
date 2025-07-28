@@ -2,6 +2,8 @@ import { IPluginManager } from '../interfaces/plugin.interface';
 import { PluginInfo, PluginPackage, InstallResult, PluginDependency, PluginStatus, DashboardWidget } from '../../../shared';
 import { PLUGIN_REGISTRY, discoverPlugins, getPluginInfo, validatePlugin } from '../../../plugins';
 import { createLogger } from '../../../core/logger';
+import { SettingsService } from '../../settings/services/settings.service';
+import { eventBus } from '../../../core/event-bus';
 // Browser-compatible storage for plugin persistence
 
 // Define interfaces for dependency injection
@@ -39,6 +41,7 @@ export class PluginManager implements IPluginManager {
   private installedPlugins: Map<string, PluginInfo> = new Map();
   private readonly persistenceFile: string;
   private dashboardManager?: IDashboardManager;
+  private settingsService: SettingsService;
   private registeredWidgets: Set<string> = new Set(); // Track plugins with registered widgets
   private logger = createLogger('PluginManager');
 
@@ -46,7 +49,8 @@ export class PluginManager implements IPluginManager {
     pluginRegistry?: IPluginRegistry,
     pluginVerifier?: IPluginVerifier,
     dependencyResolver?: IDependencyResolver,
-    dashboardManager?: IDashboardManager
+    dashboardManager?: IDashboardManager,
+    settingsService?: SettingsService
   ) {
     // Initialize persistence file path
     this.persistenceFile = 'installed-plugins'; // Browser localStorage key
@@ -56,6 +60,7 @@ export class PluginManager implements IPluginManager {
     this.pluginVerifier = pluginVerifier || this.createDefaultPluginVerifier();
     this.dependencyResolver = dependencyResolver || this.createDefaultDependencyResolver();
     this.dashboardManager = dashboardManager;
+    this.settingsService = settingsService || new SettingsService();
     
     // Load persisted plugins on startup
     this.loadPersistedPlugins();
@@ -352,17 +357,34 @@ export class PluginManager implements IPluginManager {
   }
 
   handlePluginFailure(pluginId: string, error: Error): void {
-    console.error(`Plugin ${pluginId} failed:`, error);
+    this.logger.error(`Plugin failed`, { pluginId, error: error.message, stack: error.stack });
     
     // Set plugin status to error
     this.pluginRegistry.updatePluginStatus(pluginId, PluginStatus.ERROR)
       .catch((updateError: Error) => {
-        console.error(`Failed to update status for failed plugin ${pluginId}:`, updateError);
+        this.logger.error(`Failed to update status for failed plugin`, { pluginId, updateError });
       });
 
-    // Notify admin dashboard about plugin failure
-    // In a full implementation, this would send notifications to the admin interface
-    // For now, we log the error and mark the plugin as failed
+    // Notify admin dashboard about plugin failure via event bus
+    try {
+      eventBus.publish('admin.plugin.failure', {
+        pluginId,
+        error: {
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString()
+        },
+        severity: 'high',
+        requiresAction: true
+      });
+      
+      this.logger.info(`Admin notification sent for plugin failure`, { pluginId });
+    } catch (notificationError) {
+      this.logger.error(`Failed to send admin notification for plugin failure`, { 
+        pluginId, 
+        notificationError 
+      });
+    }
   }
 
   private async downloadFromRegistry(pluginId: string): Promise<PluginPackage> {
@@ -510,18 +532,31 @@ export class PluginManager implements IPluginManager {
     return {
       settings: {
         get: async (key: string) => {
-          // Plugin settings API - delegate to SettingsService
-          // This would integrate with the actual SettingsService in production
-          return null;
+          try {
+            return await this.settingsService.getSetting(key, undefined);
+          } catch (error) {
+            this.logger.error(`Error getting plugin setting`, { pluginId, key, error });
+            return null;
+          }
         },
         set: async (key: string, value: any) => {
-          // Plugin settings API - delegate to SettingsService
-          // This would integrate with the actual SettingsService in production
+          try {
+            await this.settingsService.setPluginSetting(pluginId, key, value);
+          } catch (error) {
+            this.logger.error(`Error setting plugin setting`, { pluginId, key, value, error });
+            throw error;
+          }
         },
-        subscribe: (pluginId: string, callback: (key: string, value: any) => void) => {
-          // Plugin settings subscription API
-          // This would integrate with the actual SettingsService in production
-          return () => {}; // Return unsubscribe function
+        subscribe: (key: string, callback: (key: string, value: any) => void) => {
+          try {
+            const settingsKey = `${pluginId}.${key}`;
+            return this.settingsService.subscribe(settingsKey, (settingKey: string, value: any, userId: string | null) => {
+              callback(key, value);
+            });
+          } catch (error) {
+            this.logger.error(`Error subscribing to plugin setting`, { pluginId, key, error });
+            return () => {}; // Return no-op unsubscribe function
+          }
         }
       },
       ui: {
@@ -552,12 +587,31 @@ export class PluginManager implements IPluginManager {
       },
       events: {
         emit: (event: string, data: any) => {
-          // Event emission API - delegate to EventBus
-          // This would integrate with the actual EventBus in production
+          try {
+            const eventName = `plugin.${pluginId}.${event}`;
+            eventBus.publish(eventName, { pluginId, data });
+            this.logger.debug(`Plugin emitted event`, { pluginId, event, eventName });
+          } catch (error) {
+            this.logger.error(`Error emitting plugin event`, { pluginId, event, error });
+          }
         },
         on: (event: string, callback: (data: any) => void) => {
-          // Event subscription API - delegate to EventBus
-          // This would integrate with the actual EventBus in production
+          try {
+            const eventName = `plugin.${pluginId}.${event}`;
+            const wrappedCallback = (eventData: { pluginId: string; data: any }) => {
+              callback(eventData.data);
+            };
+            const subscription = eventBus.subscribe(eventName, wrappedCallback);
+            this.logger.debug(`Plugin subscribed to event`, { pluginId, event, eventName });
+            
+            // Return unsubscribe function
+            return () => {
+              subscription.unsubscribe();
+            };
+          } catch (error) {
+            this.logger.error(`Error subscribing to plugin event`, { pluginId, event, error });
+            return () => {}; // Return no-op unsubscribe function
+          }
         }
       }
     };

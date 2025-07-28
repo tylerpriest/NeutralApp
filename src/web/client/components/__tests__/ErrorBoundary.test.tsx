@@ -6,10 +6,13 @@ import ErrorBoundary from '../ErrorBoundary';
 // The ErrorBoundary component itself is working correctly as shown by the other passing tests
 
 // Mock the WebErrorLogger
+const mockLogReactError = jest.fn();
+const mockLogWebError = jest.fn();
+
 jest.mock('../../services/WebErrorLogger', () => ({
   webErrorLogger: {
-    logReactError: jest.fn(),
-    logWebError: jest.fn()
+    logReactError: mockLogReactError,
+    logWebError: mockLogWebError
   }
 }));
 

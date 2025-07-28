@@ -61,7 +61,7 @@ describe('useOptimisticUpdate', () => {
     const mockAsyncOperation = jest.fn().mockReturnValue(slowPromise);
     
     const { result } = renderHook(() => 
-      useOptimisticUpdate<string>('initial', { timeout: 100 })
+      useOptimisticUpdate<string>('initial', { timeout: 10 })
     );
 
     let error: Error | undefined;
@@ -76,14 +76,14 @@ describe('useOptimisticUpdate', () => {
     });
 
     // Wait for timeout to occur
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise(resolve => setTimeout(resolve, 50));
     
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toBe('Operation timed out');
     expect(result.current.data).toBe('initial'); // Should rollback
     expect(result.current.isPending).toBe(false);
     expect(result.current.error?.message).toBe('Operation timed out');
-  }, 15000); // 15 second timeout for this specific test
+  }, 5000); // 5 second timeout for this specific test
 
   it('should call success callback', async () => {
     const onSuccess = jest.fn();

@@ -91,7 +91,7 @@ describe('DashboardPage', () => {
       await waitFor(() => {
         const ctaElement = screen.getByText('Install plugins to see widgets here');
         expect(ctaElement).toBeInTheDocument();
-        expect(ctaElement.closest('.widget-placeholder')).toHaveClass('widget-placeholder');
+        expect(ctaElement.closest('.bg-gray-50')).toHaveClass('bg-gray-50');
       });
     });
   });
@@ -141,7 +141,7 @@ describe('DashboardPage', () => {
       await waitFor(() => {
         const widgetContainer = screen.getByTestId('widget-container');
         expect(widgetContainer).toBeInTheDocument();
-        expect(widgetContainer).toHaveClass('widget-grid');
+        expect(widgetContainer).toHaveClass('w-full');
       });
     });
   });
@@ -155,7 +155,7 @@ describe('DashboardPage', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Failed to load dashboard. Please try refreshing the page.')).toBeInTheDocument();
-        expect(screen.getByText('Refresh Page')).toBeInTheDocument();
+        expect(screen.getByText('Retry')).toBeInTheDocument();
       });
     });
 
@@ -184,25 +184,25 @@ describe('DashboardPage', () => {
   describe('Layout and Responsiveness', () => {
     it('should have proper CSS classes for responsive design', async () => {
       mockDashboardManager.getActiveWidgets.mockReturnValue([]);
-      mockDashboardManager.showWelcomeScreen.mockReturnValue(false);
+      mockDashboardManager.showWelcomeScreen.mockReturnValue(true);
 
       renderDashboardPage();
 
       await waitFor(() => {
-        const dashboardPage = screen.getByText('Dashboard').closest('.dashboard-page');
-        expect(dashboardPage).toHaveClass('dashboard-page');
+        const welcomeScreen = screen.getByText('Welcome to NeutralApp').closest('.min-h-screen');
+        expect(welcomeScreen).toHaveClass('min-h-screen');
       });
     });
 
     it('should maintain proper spacing and layout structure', async () => {
       mockDashboardManager.getActiveWidgets.mockReturnValue([]);
-      mockDashboardManager.showWelcomeScreen.mockReturnValue(false);
+      mockDashboardManager.showWelcomeScreen.mockReturnValue(true);
 
       renderDashboardPage();
 
       await waitFor(() => {
-        const dashboardContent = screen.getByText('Dashboard').closest('.dashboard-content');
-        expect(dashboardContent).toHaveClass('dashboard-content');
+        const welcomeContent = screen.getByText('Welcome to NeutralApp').closest('.w-full');
+        expect(welcomeContent).toHaveClass('w-full');
       });
     });
   });

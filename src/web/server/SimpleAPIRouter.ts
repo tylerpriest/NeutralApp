@@ -1,12 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { PluginManager } from '../../features/plugin-manager/services/plugin.manager';
 import { SettingsService } from '../../features/settings/services/settings.service';
+import { ISettingsService } from '../../features/settings/interfaces/settings.interface';
 import { DashboardManager } from '../../features/ui-shell/services/dashboard.manager';
 
 export class SimpleAPIRouter {
   private router: Router;
   private pluginManager: PluginManager;
-  private settingsService: SettingsService;
+  private settingsService: ISettingsService;
   private dashboardManager: DashboardManager;
 
   constructor() {
@@ -463,6 +464,7 @@ module.exports = {
       try {
         const { key } = req.params;
         const { value, userId } = req.body;
+        const userIdTyped = userId as string | undefined;
         
         if (value === undefined) {
           return res.status(400).json({ error: 'Value is required' });
@@ -485,14 +487,15 @@ module.exports = {
           });
         }
 
-        // Setting update implementation ready for integration
-        // In production, this would use the SettingsService
+        await (this.settingsService as any).setSetting(key, value, userIdTyped);
+        
         return res.json({
+          success: true,
           message: 'Setting updated successfully',
           setting: {
             key,
             value,
-            userId: userId || 'no-user-id-provided'
+            userId: userId || null
           }
         });
       } catch (error) {
@@ -505,7 +508,7 @@ module.exports = {
     this.router.delete('/settings/:key', async (req: Request, res: Response) => {
       try {
         const { key } = req.params;
-        const userId = req.query.userId as string;
+        const userId = req.query.userId as string | undefined;
         
         // For development/testing, provide mock response
         if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
@@ -514,11 +517,26 @@ module.exports = {
           });
         }
 
-        // Setting deletion implementation ready for integration
-        // In production, this would use the SettingsService
-        return res.json({
-          message: 'Setting deleted successfully'
-        });
+        // Delete the setting by resetting to default or removing
+        try {
+          // For deletion, we'll set to an empty string to indicate removal
+          await (this.settingsService as any).setSetting(key, '', userId);
+          
+          return res.json({
+            success: true,
+            message: 'Setting deleted successfully',
+            setting: {
+              key,
+              userId: userId || null
+            }
+          });
+        } catch (deleteError) {
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to delete setting',
+            key
+          });
+        }
       } catch (error) {
         console.error('Delete setting error:', error);
         return res.status(500).json({ error: 'Internal server error' });

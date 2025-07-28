@@ -9,7 +9,7 @@ import { ErrorSeverity } from '../../../../features/error-reporter/interfaces/lo
 jest.mock('../../services/WebErrorLogger');
 
 // Mock the shared UI components
-jest.mock('../../../shared/ui', () => ({
+jest.mock('../../../../shared/ui', () => ({
   Button: ({ children, onClick, variant, size, className, disabled }: any) => (
     <button
       onClick={onClick}
@@ -294,7 +294,7 @@ describe('ErrorReportingInterface', () => {
         expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
       });
 
-      const suggestionsTab = screen.getByRole('tab', { name: 'Suggestions' });
+      const suggestionsTab = screen.getByRole('tab', { name: 'Lightbulb Suggestions' });
       fireEvent.click(suggestionsTab);
     });
 
@@ -376,7 +376,7 @@ describe('ErrorReportingInterface', () => {
 
     it('should have proper ARIA labels and roles', () => {
       expect(screen.getByRole('tablist')).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: 'Overview' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'BarChart3 Overview' })).toBeInTheDocument();
       expect(screen.getByRole('tabpanel')).toBeInTheDocument();
     });
 

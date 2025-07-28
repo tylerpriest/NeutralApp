@@ -34,7 +34,7 @@ export const useWidgetErrorHandler = (config?: ErrorRecoveryConfig) => {
   const [fallbackCallbacks, setFallbackCallbacks] = useState<Map<string, FallbackCallbacks>>(new Map());
   
   const currentConfig = useRef<ErrorRecoveryConfig>(config || getDefaultConfig());
-  const autoRemoveCallback = useRef<((widgetId: string, pluginId: PluginId) => void) | undefined>();
+  const autoRemoveCallback = useRef<((widgetId: string, pluginId: PluginId) => void) | undefined>(undefined);
 
   const calculateSeverity = useCallback((retryCount: number): SecuritySeverity => {
     if (retryCount >= currentConfig.current.escalationThreshold) {
