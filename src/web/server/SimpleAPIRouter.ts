@@ -1,13 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { PluginManager } from '../../features/plugin-manager/services/plugin.manager';
 import { SettingsService } from '../../features/settings/services/settings.service';
-import { ISettingsService } from '../../features/settings/interfaces/settings.interface';
 import { DashboardManager } from '../../features/ui-shell/services/dashboard.manager';
 
 export class SimpleAPIRouter {
   private router: Router;
   private pluginManager: PluginManager;
-  private settingsService: ISettingsService;
+  private settingsService: SettingsService;
   private dashboardManager: DashboardManager;
 
   constructor() {
@@ -550,7 +549,7 @@ module.exports = {
       try {
         const { key } = req.params;
         const { value, userId } = req.body;
-        const userIdTyped = userId as string | undefined;
+        const userIdTyped: string | undefined = userId;
         
         if (value === undefined) {
           return res.status(400).json({ error: 'Value is required' });
@@ -594,7 +593,7 @@ module.exports = {
     this.router.delete('/settings/:key', async (req: Request, res: Response) => {
       try {
         const { key } = req.params;
-        const userId = req.query.userId as string | undefined;
+        const userId: string | undefined = req.query.userId as string | undefined;
         
         // For development/testing, provide mock response
         if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
