@@ -28,6 +28,7 @@ interface IDependencyResolver {
 interface IDashboardManager {
   registerWidget(widget: DashboardWidget): void;
   handlePluginUninstall(pluginId: string): void;
+  handlePluginDisable(pluginId: string): void;
 }
 
 export class PluginManager implements IPluginManager {
@@ -67,8 +68,12 @@ export class PluginManager implements IPluginManager {
         await this.savePersistedPlugins();
       },
       removeInstalledPlugin: async (pluginId: string, cleanupData?: boolean) => {
+        console.log(`Removing plugin ${pluginId} from registry`);
+        console.log(`Installed plugins before removal:`, Array.from(this.installedPlugins.keys()));
         this.installedPlugins.delete(pluginId);
+        console.log(`Installed plugins after removal:`, Array.from(this.installedPlugins.keys()));
         await this.savePersistedPlugins();
+        console.log(`Plugin ${pluginId} removed from registry and persisted`);
       },
       updatePluginStatus: async (pluginId: string, status: PluginStatus) => {
         const plugin = this.installedPlugins.get(pluginId);
@@ -101,9 +106,17 @@ export class PluginManager implements IPluginManager {
     try {
       // Get plugins from the modular plugin registry
       const availablePluginIds = discoverPlugins();
+      const installedPlugins = await this.getInstalledPlugins();
+      const installedPluginIds = new Set(installedPlugins.map(p => p.id));
+      
       const plugins: PluginInfo[] = [];
 
       for (const pluginId of availablePluginIds) {
+        // Skip plugins that are already installed
+        if (installedPluginIds.has(pluginId)) {
+          continue;
+        }
+        
         const pluginInfo = getPluginInfo(pluginId);
         if (pluginInfo) {
           plugins.push({
@@ -216,6 +229,11 @@ export class PluginManager implements IPluginManager {
 
   async disablePlugin(pluginId: string): Promise<void> {
     try {
+      // Remove widgets for the disabled plugin
+      if (this.dashboardManager) {
+        this.dashboardManager.handlePluginDisable(pluginId);
+      }
+      
       await this.pluginRegistry.updatePluginStatus(pluginId, PluginStatus.DISABLED);
       
       // TODO: Unload plugin from sandbox
@@ -228,6 +246,9 @@ export class PluginManager implements IPluginManager {
 
   async uninstallPlugin(pluginId: string, cleanupData?: boolean): Promise<void> {
     try {
+      console.log(`Starting uninstall process for plugin: ${pluginId}`);
+      console.log(`Current installed plugins before uninstall:`, Array.from(this.installedPlugins.keys()));
+      
       // TODO: Check for dependent plugins
       
       // Remove from sandbox if loaded
@@ -241,6 +262,7 @@ export class PluginManager implements IPluginManager {
       // Remove from registry
       await this.pluginRegistry.removeInstalledPlugin(pluginId, cleanupData || false);
       
+      console.log(`Current installed plugins after uninstall:`, Array.from(this.installedPlugins.keys()));
       console.log(`Plugin ${pluginId} uninstalled successfully`);
     } catch (error) {
       console.error(`Failed to uninstall plugin ${pluginId}:`, error);

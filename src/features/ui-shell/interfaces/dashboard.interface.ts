@@ -13,5 +13,6 @@ export interface IDashboardManager {
   importLayout(layout: DashboardLayout): Promise<boolean>;
   resetToDefault(): Promise<void>;
   handlePluginUninstall(pluginId: string): void;
+  handlePluginDisable(pluginId: string): void;
   refreshLayout(): Promise<void>;
 } 

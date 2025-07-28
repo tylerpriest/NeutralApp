@@ -306,6 +306,20 @@ export class DashboardManager implements IDashboardManager {
     }
   }
 
+  handlePluginDisable(pluginId: string): void {
+    try {
+      const pluginWidgets = this.getWidgetsByPlugin(pluginId);
+      
+      for (const widget of pluginWidgets) {
+        this.unregisterWidget(widget.id);
+      }
+
+      console.log(`Removed ${pluginWidgets.length} widgets for disabled plugin: ${pluginId}`);
+    } catch (error) {
+      console.error(`Error handling plugin disable for ${pluginId}:`, error);
+    }
+  }
+
   async refreshLayout(): Promise<void> {
     try {
       const activeWidgets = this.getActiveWidgets();

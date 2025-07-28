@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { PluginManager } from '../../../features/plugin-manager/services/plugin.manager';
 import { PluginInfo, PluginStatus, InstallResult } from '../../../shared/types';
 import './PluginManagerPage.css';
-
-// Initialize PluginManager instance
-const pluginManager = new PluginManager();
 
 const PluginManagerPage: React.FC = () => {
   const [availablePlugins, setAvailablePlugins] = useState<PluginInfo[]>([]);
@@ -32,13 +28,14 @@ const PluginManagerPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      const [available, installed] = await Promise.all([
-        pluginManager.getAvailablePlugins(),
-        pluginManager.getInstalledPlugins()
-      ]);
-
-      setAvailablePlugins(available);
-      setInstalledPlugins(installed);
+      const response = await fetch('/api/plugins');
+      if (!response.ok) {
+        throw new Error('Failed to load plugins');
+      }
+      
+      const data = await response.json();
+      setAvailablePlugins(data.available || []);
+      setInstalledPlugins(data.installed || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load plugins');
     } finally {
@@ -65,25 +62,20 @@ const PluginManagerPage: React.FC = () => {
     try {
       setInstallingPlugins(prev => new Set(prev).add(plugin.id));
 
-      const result: InstallResult = await pluginManager.installPlugin({
-        id: plugin.id,
-        version: plugin.version,
-        code: '',
-        manifest: {
-          id: plugin.id,
-          name: plugin.name,
-          version: plugin.version,
-          description: plugin.description,
-          author: plugin.author,
-          main: '',
-          dependencies: plugin.dependencies,
-          permissions: plugin.permissions,
-          api: []
+      const response = await fetch('/api/plugins/install', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        signature: ''
+        body: JSON.stringify({
+          pluginId: plugin.id,
+          version: plugin.version
+        })
       });
 
-      if (result.success) {
+      const result = await response.json();
+
+      if (response.ok) {
         setNotification({ type: 'success', message: 'Plugin installed successfully' });
         await loadPlugins(); // Refresh the lists
       } else {
@@ -105,9 +97,20 @@ const PluginManagerPage: React.FC = () => {
 
   const handleEnablePlugin = async (pluginId: string) => {
     try {
-      await pluginManager.enablePlugin(pluginId);
-      setNotification({ type: 'success', message: 'Plugin enabled successfully' });
-      await loadPlugins();
+      const response = await fetch(`/api/plugins/${pluginId}/enable`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        setNotification({ type: 'success', message: 'Plugin enabled successfully' });
+        await loadPlugins();
+      } else {
+        const result = await response.json();
+        setNotification({ type: 'error', message: result.error || 'Failed to enable plugin' });
+      }
     } catch (err) {
       setNotification({ 
         type: 'error', 
@@ -118,9 +121,20 @@ const PluginManagerPage: React.FC = () => {
 
   const handleDisablePlugin = async (pluginId: string) => {
     try {
-      await pluginManager.disablePlugin(pluginId);
-      setNotification({ type: 'success', message: 'Plugin disabled successfully' });
-      await loadPlugins();
+      const response = await fetch(`/api/plugins/${pluginId}/disable`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        setNotification({ type: 'success', message: 'Plugin disabled successfully' });
+        await loadPlugins();
+      } else {
+        const result = await response.json();
+        setNotification({ type: 'error', message: result.error || 'Failed to disable plugin' });
+      }
     } catch (err) {
       setNotification({ 
         type: 'error', 
@@ -131,10 +145,22 @@ const PluginManagerPage: React.FC = () => {
 
   const handleUninstallPlugin = async (pluginId: string, cleanupData: boolean = true) => {
     try {
-      await pluginManager.uninstallPlugin(pluginId, cleanupData);
-      setNotification({ type: 'success', message: 'Plugin uninstalled successfully' });
-      setShowUninstallDialog(null);
-      await loadPlugins();
+      const response = await fetch(`/api/plugins/${pluginId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cleanupData })
+      });
+
+      if (response.ok) {
+        setNotification({ type: 'success', message: 'Plugin uninstalled successfully' });
+        setShowUninstallDialog(null);
+        await loadPlugins();
+      } else {
+        const result = await response.json();
+        setNotification({ type: 'error', message: result.error || 'Failed to uninstall plugin' });
+      }
     } catch (err) {
       setNotification({ 
         type: 'error', 
@@ -529,5 +555,4 @@ const PluginManagerPage: React.FC = () => {
   );
 };
 
-export { pluginManager };
 export default PluginManagerPage; 

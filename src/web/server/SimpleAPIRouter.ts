@@ -119,23 +119,105 @@ export class SimpleAPIRouter {
         }
 
         // Use the actual PluginManager to install the plugin
-        const pluginPackage = {
-          id: pluginId,
-          version: version || 'latest',
-          code: `// Mock plugin code for ${pluginId}`,
-          manifest: {
+        let pluginPackage;
+        
+        if (pluginId === 'demo-hello-world') {
+          // Use actual Hello World plugin data
+          pluginPackage = {
             id: pluginId,
-            name: pluginId,
+            version: version || '1.0.0',
+            code: `// Hello World plugin code
+module.exports = {
+  activate: function(api) {
+    console.log('Hello World plugin activated');
+    return {
+      name: 'Hello World Demo',
+      version: '1.0.0'
+    };
+  }
+};`,
+            manifest: {
+              id: pluginId,
+              name: 'Hello World Demo',
+              version: version || '1.0.0',
+              description: 'A simple demo plugin to validate the plugin system',
+              author: 'NeutralApp Team',
+              main: 'demo-hello-world.js',
+              dependencies: [],
+              permissions: [
+                {
+                  name: 'settings:read',
+                  description: 'Read application settings',
+                  required: false
+                },
+                {
+                  name: 'settings:write',
+                  description: 'Write application settings',
+                  required: false
+                },
+                {
+                  name: 'ui:widget:create',
+                  description: 'Create UI widgets',
+                  required: true
+                },
+                {
+                  name: 'ui:widget:update',
+                  description: 'Update UI widgets',
+                  required: false
+                }
+              ],
+              api: []
+            },
+            signature: 'demo-hello-world-signature'
+          };
+        } else if (pluginId === 'test-plugin') {
+          // Use test plugin data
+          pluginPackage = {
+            id: pluginId,
+            version: version || '1.0.0',
+            code: `// Test plugin code
+module.exports = {
+  activate: function(api) {
+    console.log('Test plugin activated');
+    return {
+      name: 'Test Plugin',
+      version: '1.0.0'
+    };
+  }
+};`,
+            manifest: {
+              id: pluginId,
+              name: 'Test Plugin',
+              version: version || '1.0.0',
+              description: 'A test plugin for development',
+              author: 'Test Author',
+              main: 'index.js',
+              dependencies: [],
+              permissions: [],
+              api: []
+            },
+            signature: 'test-plugin-signature'
+          };
+        } else {
+          // Fallback for other plugins
+          pluginPackage = {
+            id: pluginId,
             version: version || 'latest',
-            description: `Test plugin for ${pluginId}`,
-            author: 'Test Author',
-            main: 'index.js',
-            dependencies: [],
-            permissions: [],
-            api: []
-          },
-          signature: 'mock-signature'
-        };
+            code: `// Mock plugin code for ${pluginId}`,
+            manifest: {
+              id: pluginId,
+              name: pluginId,
+              version: version || 'latest',
+              description: `Test plugin for ${pluginId}`,
+              author: 'Test Author',
+              main: 'index.js',
+              dependencies: [],
+              permissions: [],
+              api: []
+            },
+            signature: 'mock-signature'
+          };
+        }
 
         const result = await this.pluginManager.installPlugin(pluginPackage);
         
@@ -162,21 +244,15 @@ export class SimpleAPIRouter {
     this.router.delete('/plugins/:pluginId', async (req: Request, res: Response) => {
       try {
         const { pluginId } = req.params;
+        const { cleanupData } = req.body;
         
-        // For development/testing, provide mock response
-        if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
-          if (pluginId === 'non-existent-plugin') {
-            return res.status(404).json({ error: 'Plugin not found' });
-          }
-          return res.json({
-            message: 'Plugin uninstalled successfully'
-          });
+        if (!pluginId) {
+          return res.status(400).json({ error: 'Plugin ID is required' });
         }
 
-        // TODO: Implement actual plugin uninstallation
-        if (pluginId === 'non-existent-plugin') {
-          return res.status(404).json({ error: 'Plugin not found' });
-        }
+        // Use the actual PluginManager to uninstall the plugin
+        await this.pluginManager.uninstallPlugin(pluginId, cleanupData !== false);
+
         return res.json({
           message: 'Plugin uninstalled successfully'
         });
@@ -212,6 +288,46 @@ export class SimpleAPIRouter {
         });
       } catch (error) {
         console.error('Plugin enable/disable error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+    // Enable plugin
+    this.router.post('/plugins/:pluginId/enable', async (req: Request, res: Response) => {
+      try {
+        const { pluginId } = req.params;
+        
+        if (!pluginId) {
+          return res.status(400).json({ error: 'Plugin ID is required' });
+        }
+
+        await this.pluginManager.enablePlugin(pluginId);
+
+        return res.json({
+          message: 'Plugin enabled successfully'
+        });
+      } catch (error) {
+        console.error('Plugin enable error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+    // Disable plugin
+    this.router.post('/plugins/:pluginId/disable', async (req: Request, res: Response) => {
+      try {
+        const { pluginId } = req.params;
+        
+        if (!pluginId) {
+          return res.status(400).json({ error: 'Plugin ID is required' });
+        }
+
+        await this.pluginManager.disablePlugin(pluginId);
+
+        return res.json({
+          message: 'Plugin disabled successfully'
+        });
+      } catch (error) {
+        console.error('Plugin disable error:', error);
         return res.status(500).json({ error: 'Internal server error' });
       }
     });

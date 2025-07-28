@@ -408,7 +408,7 @@
 /* Notifications */
 .notification {
   position: fixed;
-  top: var(--spacing-lg);
+  bottom: var(--spacing-lg);
   right: var(--spacing-lg);
   padding: var(--spacing-md);
   border-radius: var(--spacing-sm);
@@ -419,7 +419,21 @@
   align-items: center;
   gap: var(--spacing-sm);
   max-width: 400px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .notification.success {
