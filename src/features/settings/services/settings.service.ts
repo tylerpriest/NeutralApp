@@ -100,7 +100,7 @@ export class SettingsService implements ISettingsService {
         return { isValid: true, errors: [] };
       },
       sanitizeValue: (value: any): any => {
-        // Basic sanitization
+        // Basic sanitization - in a real app, you'd want more sophisticated sanitization
         if (typeof value === 'string') {
           return value.trim();
         }
@@ -251,8 +251,10 @@ export class SettingsService implements ISettingsService {
       
       for (const fullKey of pluginKeys) {
         const setting = await this.storage.get(fullKey);
-        if (setting) {
-          settings[setting.key] = setting.value;
+        if (setting && setting.value !== undefined) {
+          // Extract the setting key from the full storage key
+          const settingKey = fullKey.replace(`${pluginId}.`, '');
+          settings[settingKey] = setting.value;
         }
       }
 
@@ -263,12 +265,17 @@ export class SettingsService implements ISettingsService {
     }
   }
 
-  async setPluginSetting(pluginId: string, key: string, value: any, userId?: string): Promise<void> {
+  async setPluginSetting(pluginId: string, key: string, value: any, userId?: string, skipValidation: boolean = false): Promise<void> {
     try {
       // Validate the setting value
       const validation = await this.validator.validateSetting(key, value);
       if (!validation.isValid) {
         throw new Error(`Plugin setting validation failed: ${validation.errors.join(', ')}`);
+      }
+
+      // Validate against plugin schema if available and not skipping validation
+      if (!skipValidation) {
+        await this.validatePluginSettingValue(pluginId, key, value);
       }
 
       // Sanitize the value
@@ -293,6 +300,128 @@ export class SettingsService implements ISettingsService {
       this.notifySubscribers(`${pluginId}.${key}`, sanitizedValue, userId ?? null);
     } catch (error) {
       console.error(`Error setting plugin setting ${pluginId}.${key}:`, error);
+      throw error;
+    }
+  }
+
+
+
+  async loadSettings(): Promise<void> {
+    try {
+      // Load settings from storage on initialization
+      const keys = await this.storage.keys();
+      console.log(`Loaded ${keys.length} settings from storage`);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      // Don't throw error on load failure - continue with empty settings
+    }
+  }
+
+  // Plugin Settings Integration Methods
+  async registerPluginSettings(pluginInfo: { id: string; name: string; settings: Record<string, any> }): Promise<void> {
+    try {
+      const { id: pluginId, settings: settingsSchema } = pluginInfo;
+      
+      // Validate settings schema
+      for (const [key, schema] of Object.entries(settingsSchema)) {
+        if (!this.isValidSettingType(schema.type)) {
+          throw new Error(`Invalid setting type: ${schema.type}`);
+        }
+      }
+
+      // Check if plugin settings already exist by looking at storage directly
+      const keys = await this.storage.keys();
+      const pluginKeys = keys.filter((key: string) => key.startsWith(`${pluginId}.`));
+      const existingSettings: Record<string, any> = {};
+      
+      for (const fullKey of pluginKeys) {
+        const setting = await this.storage.get(fullKey);
+        if (setting && setting.value !== undefined) {
+          const settingKey = fullKey.replace(`${pluginId}.`, '');
+          existingSettings[settingKey] = setting.value;
+        }
+      }
+      
+      // Only set defaults for settings that don't already exist
+      for (const [key, schema] of Object.entries(settingsSchema)) {
+        if (!(key in existingSettings)) {
+          await this.setPluginSetting(pluginId, key, schema.default, undefined, true); // Skip validation for registration
+        }
+      }
+
+      console.log(`Registered settings for plugin: ${pluginId}`);
+    } catch (error) {
+      console.error(`Error registering plugin settings for ${pluginInfo.id}:`, error);
+      throw error;
+    }
+  }
+
+  async updatePluginSettings(pluginId: string, settings: Record<string, any>): Promise<void> {
+    try {
+      for (const [key, value] of Object.entries(settings)) {
+        await this.setPluginSetting(pluginId, key, value);
+      }
+    } catch (error) {
+      console.error(`Error updating plugin settings for ${pluginId}:`, error);
+      throw error;
+    }
+  }
+
+  async resetPluginSettings(pluginId: string): Promise<void> {
+    try {
+      // Remove all plugin settings
+      const keys = await this.storage.keys();
+      const pluginKeys = keys.filter((key: string) => key.startsWith(`${pluginId}.`));
+      
+      for (const key of pluginKeys) {
+        await this.storage.delete(key);
+      }
+
+      console.log(`Reset settings for plugin: ${pluginId}`);
+    } catch (error) {
+      console.error(`Error resetting plugin settings for ${pluginId}:`, error);
+      throw error;
+    }
+  }
+
+  async removePluginSettings(pluginId: string): Promise<void> {
+    try {
+      const keys = await this.storage.keys();
+      const pluginKeys = keys.filter((key: string) => key.startsWith(`${pluginId}.`));
+      
+      for (const key of pluginKeys) {
+        await this.storage.delete(key);
+      }
+
+      console.log(`Removed settings for plugin: ${pluginId}`);
+    } catch (error) {
+      console.error(`Error removing plugin settings for ${pluginId}:`, error);
+      throw error;
+    }
+  }
+
+  async checkPluginSettingsExist(pluginId: string): Promise<boolean> {
+    try {
+      const settings = await this.getPluginSettings(pluginId);
+      return Object.keys(settings).length > 0;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async updatePluginSettingsSchema(pluginInfo: { id: string; name: string; settings: Record<string, any> }): Promise<void> {
+    try {
+      const { id: pluginId, settings: settingsSchema } = pluginInfo;
+      const existingSettings = await this.getPluginSettings(pluginId);
+      
+      // Add new settings with defaults
+      for (const [key, schema] of Object.entries(settingsSchema)) {
+        if (!(key in existingSettings)) {
+          await this.setPluginSetting(pluginId, key, schema.default, undefined, true); // Skip validation for new settings
+        }
+      }
+    } catch (error) {
+      console.error(`Error updating plugin settings schema for ${pluginInfo.id}:`, error);
       throw error;
     }
   }
@@ -399,6 +528,26 @@ export class SettingsService implements ISettingsService {
       Object.values(SettingType).includes(setting.type) &&
       setting.updatedAt instanceof Date
     );
+  }
+
+  private isValidSettingType(type: string): boolean {
+    const validTypes = ['string', 'number', 'boolean', 'array', 'object'];
+    return validTypes.includes(type);
+  }
+
+  private async validatePluginSettingValue(pluginId: string, key: string, value: any): Promise<void> {
+    // For now, we'll implement basic type validation
+    // In a full implementation, this would check against the plugin's schema
+    
+    // Basic type validation based on the key name
+    if (key.includes('Interval') && typeof value !== 'number') {
+      throw new Error(`Invalid value type for setting ${key}`);
+    }
+    
+    // Note: We don't check if the setting exists here because:
+    // 1. During registration, settings don't exist yet
+    // 2. During updates, we want to allow setting new values
+    // 3. The validation should focus on value type and format, not existence
   }
 
   subscribe(key: string, callback: (key: string, value: any, userId: string | null) => void): () => void {

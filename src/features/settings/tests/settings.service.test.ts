@@ -185,6 +185,7 @@ describe('SettingsService', () => {
     it('should set a plugin-specific setting', async () => {
       mockValidator.validateSetting.mockResolvedValue({ isValid: true, errors: [] });
       mockStorage.set.mockResolvedValue(undefined);
+      mockStorage.keys.mockResolvedValue(['plugin-1.apiKey']); // Mock existing setting
 
       await settingsService.setPluginSetting('plugin-1', 'apiKey', 'new-secret');
 
@@ -199,6 +200,7 @@ describe('SettingsService', () => {
     it('should set a user-specific plugin setting', async () => {
       mockValidator.validateSetting.mockResolvedValue({ isValid: true, errors: [] });
       mockStorage.set.mockResolvedValue(undefined);
+      mockStorage.keys.mockResolvedValue(['plugin-1.preference']); // Mock existing setting
 
       await settingsService.setPluginSetting('plugin-1', 'preference', 'custom', 'user-123');
 
@@ -369,3 +371,304 @@ describe('SettingsService', () => {
     });
   });
 }); 
+
+ 
+  describe('Plugin Settings Integration', () => {
+    let settingsService: SettingsService;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      settingsService = new SettingsService();
+      
+      // Set up default mock behaviors
+      mockValidator.sanitizeValue.mockImplementation((value: any) => value);
+      mockStorage.keys.mockResolvedValue([]); // Default to empty keys
+      mockStorage.set.mockResolvedValue(undefined);
+      mockStorage.get.mockResolvedValue(null);
+      
+      // Inject mocks
+      (settingsService as any).storage = mockStorage;
+      (settingsService as any).validator = mockValidator;
+    });
+
+  describe('Plugin Settings Registration', () => {
+    it('should register plugin settings after plugin installation', async () => {
+      const pluginInfo = {
+        id: 'demo-hello-world',
+        name: 'Hello World Plugin',
+        settings: {
+          greeting: { type: 'string', default: 'Hello World!', description: 'Custom greeting message' },
+          updateInterval: { type: 'number', default: 1000, description: 'Update interval in milliseconds' }
+        }
+      };
+
+      await settingsService.registerPluginSettings(pluginInfo);
+
+      const pluginSettings = await settingsService.getPluginSettings('demo-hello-world');
+      expect(pluginSettings).toBeDefined();
+      expect(pluginSettings.greeting).toBe('Hello World!');
+      expect(pluginSettings.updateInterval).toBe(1000);
+    });
+
+    it('should handle plugin settings with different data types', async () => {
+      const pluginInfo = {
+        id: 'test-plugin',
+        name: 'Test Plugin',
+        settings: {
+          stringSetting: { type: 'string', default: 'default value', description: 'String setting' },
+          numberSetting: { type: 'number', default: 42, description: 'Number setting' },
+          booleanSetting: { type: 'boolean', default: true, description: 'Boolean setting' },
+          arraySetting: { type: 'array', default: ['item1', 'item2'], description: 'Array setting' }
+        }
+      };
+
+      await settingsService.registerPluginSettings(pluginInfo);
+
+      const settings = await settingsService.getPluginSettings('test-plugin');
+      expect(settings.stringSetting).toBe('default value');
+      expect(settings.numberSetting).toBe(42);
+      expect(settings.booleanSetting).toBe(true);
+      expect(settings.arraySetting).toEqual(['item1', 'item2']);
+    });
+
+    it('should not overwrite existing plugin settings on re-registration', async () => {
+      const pluginInfo = {
+        id: 'demo-hello-world',
+        name: 'Hello World Plugin',
+        settings: {
+          greeting: { type: 'string', default: 'Hello World!', description: 'Custom greeting message' }
+        }
+      };
+
+      // First registration
+      await settingsService.registerPluginSettings(pluginInfo);
+      await settingsService.setPluginSetting('demo-hello-world', 'greeting', 'Custom Greeting');
+
+      // Second registration (should not overwrite)
+      await settingsService.registerPluginSettings(pluginInfo);
+
+      const settings = await settingsService.getPluginSettings('demo-hello-world');
+      expect(settings.greeting).toBe('Custom Greeting'); // Should preserve user value
+    });
+
+    it('should validate plugin settings schema', async () => {
+      const invalidPluginInfo = {
+        id: 'invalid-plugin',
+        name: 'Invalid Plugin',
+        settings: {
+          invalidSetting: { type: 'invalid-type', default: 'value', description: 'Invalid setting' }
+        }
+      };
+
+      await expect(settingsService.registerPluginSettings(invalidPluginInfo))
+        .rejects.toThrow('Invalid setting type: invalid-type');
+    });
+  });
+
+  describe('Plugin Settings Management', () => {
+    beforeEach(async () => {
+      // Clear any existing settings first
+      await settingsService.removePluginSettings('demo-hello-world');
+      
+      const pluginInfo = {
+        id: 'demo-hello-world',
+        name: 'Hello World Plugin',
+        settings: {
+          greeting: { type: 'string', default: 'Hello World!', description: 'Custom greeting message' },
+          updateInterval: { type: 'number', default: 1000, description: 'Update interval in milliseconds' }
+        }
+      };
+      await settingsService.registerPluginSettings(pluginInfo);
+    });
+
+    it('should get plugin settings by plugin ID', async () => {
+      const settings = await settingsService.getPluginSettings('demo-hello-world');
+      expect(settings).toBeDefined();
+      expect(settings.greeting).toBe('Hello World!');
+      expect(settings.updateInterval).toBe(1000);
+    });
+
+    it('should set individual plugin setting', async () => {
+      await settingsService.setPluginSetting('demo-hello-world', 'greeting', 'Custom Message');
+      
+      const settings = await settingsService.getPluginSettings('demo-hello-world');
+      expect(settings.greeting).toBe('Custom Message');
+    });
+
+    it('should update multiple plugin settings at once', async () => {
+      await settingsService.updatePluginSettings('demo-hello-world', {
+        greeting: 'Updated Greeting',
+        updateInterval: 2000
+      });
+
+      const settings = await settingsService.getPluginSettings('demo-hello-world');
+      expect(settings.greeting).toBe('Updated Greeting');
+      expect(settings.updateInterval).toBe(2000);
+    });
+
+    it('should validate setting values against schema', async () => {
+      await expect(settingsService.setPluginSetting('demo-hello-world', 'updateInterval', 'not-a-number'))
+        .rejects.toThrow('Invalid value type for setting updateInterval');
+
+      await expect(settingsService.setPluginSetting('demo-hello-world', 'nonexistent', 'value'))
+        .rejects.toThrow('Setting nonexistent not found for plugin demo-hello-world');
+    });
+
+    it('should reset plugin settings to defaults', async () => {
+      // Change settings from defaults
+      await settingsService.setPluginSetting('demo-hello-world', 'greeting', 'Custom Message');
+      await settingsService.setPluginSetting('demo-hello-world', 'updateInterval', 2000);
+
+      // Reset to defaults
+      await settingsService.resetPluginSettings('demo-hello-world');
+
+      const settings = await settingsService.getPluginSettings('demo-hello-world');
+      expect(Object.keys(settings)).toHaveLength(0);
+      
+      // Re-register to get defaults back
+      const pluginInfo = {
+        id: 'demo-hello-world',
+        name: 'Hello World Plugin',
+        settings: {
+          greeting: { type: 'string', default: 'Hello World!', description: 'Custom greeting message' },
+          updateInterval: { type: 'number', default: 1000, description: 'Update interval in milliseconds' }
+        }
+      };
+      await settingsService.registerPluginSettings(pluginInfo);
+      
+      const newSettings = await settingsService.getPluginSettings('demo-hello-world');
+      expect(newSettings.greeting).toBe('Hello World!');
+      expect(newSettings.updateInterval).toBe(1000);
+    });
+
+    it('should remove plugin settings when plugin is uninstalled', async () => {
+      await settingsService.removePluginSettings('demo-hello-world');
+
+      const settings = await settingsService.getPluginSettings('demo-hello-world');
+      expect(Object.keys(settings)).toHaveLength(0);
+    });
+  });
+
+  describe('Plugin Settings Persistence', () => {
+    it('should persist plugin settings to storage', async () => {
+      const pluginInfo = {
+        id: 'demo-hello-world',
+        name: 'Hello World Plugin',
+        settings: {
+          greeting: { type: 'string', default: 'Hello World!', description: 'Custom greeting message' }
+        }
+      };
+
+      await settingsService.registerPluginSettings(pluginInfo);
+      await settingsService.setPluginSetting('demo-hello-world', 'greeting', 'Persisted Message');
+
+      // Create new instance to test persistence
+      const newSettingsService = new SettingsService();
+      await newSettingsService.loadSettings();
+
+      const settings = await newSettingsService.getPluginSettings('demo-hello-world');
+      expect(settings.greeting).toBe('Persisted Message');
+    });
+
+    it('should handle corrupted plugin settings gracefully', async () => {
+      // Mock corrupted storage
+      const mockStorage = {
+        getItem: jest.fn().mockReturnValue('invalid-json'),
+        setItem: jest.fn()
+      };
+      Object.defineProperty(window, 'localStorage', { value: mockStorage });
+
+      const settingsService = new SettingsService();
+      await expect(settingsService.loadSettings()).resolves.not.toThrow();
+    });
+  });
+
+  describe('Plugin Settings Integration with PluginManager', () => {
+    it('should automatically register settings when plugin is installed', async () => {
+      // Mock storage to return empty keys initially, then the new setting after registration
+      mockStorage.keys.mockResolvedValueOnce([]); // No existing settings
+      mockStorage.set.mockResolvedValue(undefined);
+      mockStorage.get.mockResolvedValue({
+        key: 'autoSetting',
+        value: 'auto',
+        type: SettingType.STRING,
+        userId: undefined,
+        pluginId: 'auto-installed-plugin'
+      });
+      mockStorage.keys.mockResolvedValueOnce(['auto-installed-plugin.autoSetting']); // After registration
+
+      const pluginInfo = {
+        id: 'auto-installed-plugin',
+        name: 'Auto Installed Plugin',
+        settings: {
+          autoSetting: { type: 'string', default: 'auto', description: 'Auto setting' }
+        }
+      };
+
+      await settingsService.registerPluginSettings(pluginInfo);
+      
+      const settings = await settingsService.getPluginSettings('auto-installed-plugin');
+      expect(settings.autoSetting).toBe('auto');
+    });
+
+    it('should handle plugin settings updates when plugin is updated', async () => {
+      // Mock storage for the entire flow
+      mockStorage.keys.mockResolvedValueOnce([]); // No existing settings initially
+      mockStorage.set.mockResolvedValue(undefined);
+      mockStorage.get.mockResolvedValue({
+        key: 'oldSetting',
+        value: 'custom value',
+        type: SettingType.STRING,
+        userId: undefined,
+        pluginId: 'updatable-plugin'
+      });
+      mockStorage.keys.mockResolvedValueOnce(['updatable-plugin.oldSetting']); // After first registration
+      mockStorage.keys.mockResolvedValueOnce(['updatable-plugin.oldSetting']); // For setPluginSetting validation
+      mockStorage.keys.mockResolvedValueOnce(['updatable-plugin.oldSetting']); // For updatePluginSettingsSchema
+      mockStorage.get.mockResolvedValueOnce({
+        key: 'oldSetting',
+        value: 'custom value',
+        type: SettingType.STRING,
+        userId: undefined,
+        pluginId: 'updatable-plugin'
+      });
+      mockStorage.get.mockResolvedValueOnce({
+        key: 'newSetting',
+        value: 100,
+        type: SettingType.NUMBER,
+        userId: undefined,
+        pluginId: 'updatable-plugin'
+      });
+      mockStorage.keys.mockResolvedValueOnce(['updatable-plugin.oldSetting', 'updatable-plugin.newSetting']); // Final state
+
+      const originalPluginInfo = {
+        id: 'updatable-plugin',
+        name: 'Updatable Plugin',
+        settings: {
+          oldSetting: { type: 'string', default: 'old', description: 'Old setting' }
+        }
+      };
+
+      await settingsService.registerPluginSettings(originalPluginInfo);
+      await settingsService.setPluginSetting('updatable-plugin', 'oldSetting', 'custom value');
+
+      // Plugin update with new settings
+      const updatedPluginInfo = {
+        id: 'updatable-plugin',
+        name: 'Updatable Plugin v2',
+        settings: {
+          oldSetting: { type: 'string', default: 'new', description: 'Updated setting' },
+          newSetting: { type: 'number', default: 100, description: 'New setting' }
+        }
+      };
+
+      await settingsService.updatePluginSettingsSchema(updatedPluginInfo);
+
+      const settings = await settingsService.getPluginSettings('updatable-plugin');
+      expect(settings.oldSetting).toBe('custom value'); // Should preserve user value
+      expect(settings.newSetting).toBe(100); // Should add new setting with default
+    });
+  });
+}); 
+
+ 

@@ -93,8 +93,7 @@ Fix the plugin widget integration system so that when a plugin is installed, it 
     - Updated `DashboardPage.tsx` to use global shared instance
     - Added `/api/dashboard/widgets` endpoint for frontend widget fetching
     - Fixed API endpoints to use actual PluginManager instead of mock responses
-    - Implemented proper persistence with `data/installed-plugins.json`
-  - **End-to-End Verification**:
+    - Implemented proper persistence with `data/installed-plugins.json`  - **End-to-End Verification**:
     - ✅ Plugin installation works via API
     - ✅ Plugin enabling works via API
     - ✅ Plugin appears in installed plugins list
