@@ -49,10 +49,10 @@
     - [x] Use shared UI primitives and Tailwind/shadcn/ui
     - [x] Remove legacy CSS
     - [x] Update or add tests
-  - [ ] 3.6 Error-reporter feature: Refactor /src/features/error-reporter/web/ components
-    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
-    - [ ] Remove legacy CSS
-    - [ ] Update or add tests
+  - [x] 3.6 Error-reporter feature: Refactor /src/features/error-reporter/web/ components
+    - [x] Use shared UI primitives and Tailwind/shadcn/ui
+    - [x] Remove legacy CSS
+    - [x] Update or add tests
   - _Requirements: 1, 3, 4, 5_
 
 - [ ] 4. Ensure accessibility and responsiveness

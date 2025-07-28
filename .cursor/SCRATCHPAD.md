@@ -9,10 +9,7 @@ Once this is fixed and UI is modernised ... then get the app working ... then go
 What is all the stuff in the GUI that is not needed ?
 
 make sure the plugin section works like I want and that I can have a github repository as the marketplace 
-
-Does app run? 
-Log in does not work
-Box showing demo login details not appearing
+Plugin Marketpalce
 
 
 What are my priorities
@@ -21,8 +18,7 @@ What are my priorities
 2. TODO's completed*
 3. UI modernised - Working on now
 4. UX / CX modernised*
-5. Login not required
-6. Pack of Plugins to recreate Narratoo?*
+5. Pack of Plugins to recreate Narratoo?*
 
 X. Modular by feature audit and refactor
 X. Steering rules audit and refactor

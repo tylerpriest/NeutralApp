@@ -1,7 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { webErrorLogger } from '../services/WebErrorLogger';
 import { ErrorStatistics, AggregatedError, ErrorSuggestion } from '../../../features/error-reporter/interfaces/logging.interface';
-import './ErrorReportingInterface.css';
+import { Button, Card, CardContent, CardHeader, CardTitle, LoadingSpinner } from '../../../shared/ui';
+import {
+  AlertTriangle,
+  RefreshCw,
+  BarChart3,
+  AlertCircle,
+  Lightbulb,
+  Clock,
+  TrendingUp,
+  Activity,
+  XCircle,
+  AlertOctagon,
+  Info,
+  CheckCircle,
+  Calendar,
+  Users,
+  Code,
+  Zap
+} from 'lucide-react';
 
 interface ErrorReportingInterfaceProps {
   className?: string;
@@ -53,20 +71,30 @@ const ErrorReportingInterface: React.FC<ErrorReportingInterfaceProps> = ({ class
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'severity-critical';
-      case 'high': return 'severity-high';
-      case 'medium': return 'severity-medium';
-      case 'low': return 'severity-low';
-      default: return 'severity-medium';
+      case 'critical': return 'text-red-600 bg-red-50 border-red-200';
+      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200';
+      case 'medium': return 'text-blue-600 bg-blue-50 border-blue-200';
+      case 'low': return 'text-green-600 bg-green-50 border-green-200';
+      default: return 'text-blue-600 bg-blue-50 border-blue-200';
+    }
+  };
+
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
+      case 'critical': return <XCircle className="w-4 h-4" />;
+      case 'high': return <AlertOctagon className="w-4 h-4" />;
+      case 'medium': return <AlertTriangle className="w-4 h-4" />;
+      case 'low': return <Info className="w-4 h-4" />;
+      default: return <AlertTriangle className="w-4 h-4" />;
     }
   };
 
   if (loading) {
     return (
-      <div className={`error-reporting-interface ${className}`}>
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading error data...</p>
+      <div className={`bg-white rounded-lg shadow-sm border border-border overflow-hidden ${className}`}>
+        <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-medium">Loading error data...</p>
         </div>
       </div>
     );
@@ -74,152 +102,231 @@ const ErrorReportingInterface: React.FC<ErrorReportingInterfaceProps> = ({ class
 
   if (error) {
     return (
-      <div className={`error-reporting-interface ${className}`}>
-        <div className="error-state">
-          <p>{error}</p>
-          <button onClick={loadErrorData} className="retry-button">
+      <div className={`bg-white rounded-lg shadow-sm border border-border overflow-hidden ${className}`}>
+        <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+          <p className="text-red-600 mb-6">{error}</p>
+          <Button onClick={loadErrorData} variant="default" className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-5 h-5" /> },
+    { id: 'errors', label: 'Error Details', icon: <AlertCircle className="w-5 h-5" /> },
+    { id: 'suggestions', label: 'Suggestions', icon: <Lightbulb className="w-5 h-5" /> }
+  ];
+
   return (
-    <div className={`error-reporting-interface ${className}`}>
-      <div className="error-reporting-header">
-        <h2>Error Reporting & Analytics</h2>
-        <button onClick={loadErrorData} className="refresh-button">
-          Refresh Data
-        </button>
+    <div className={`bg-white rounded-lg shadow-sm border border-border overflow-hidden ${className}`}>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-white flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            Error Reporting & Analytics
+          </h2>
+          <Button 
+            onClick={loadErrorData} 
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-2 bg-white/20 text-white border-white/30 hover:bg-white/30"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh Data
+          </Button>
+        </div>
       </div>
 
-      <div className="error-reporting-tabs">
-        <button
-          className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          Overview
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'errors' ? 'active' : ''}`}
-          onClick={() => setActiveTab('errors')}
-        >
-          Error Details
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'suggestions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('suggestions')}
-        >
-          Suggestions
-        </button>
+      {/* Tabs */}
+      <div className="border-b border-border">
+        <div className="flex" role="tablist">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              className={`flex items-center gap-2 px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
+                activeTab === tab.id 
+                  ? 'border-primary text-primary bg-primary/5' 
+                  : 'border-transparent text-gray-medium hover:text-gray-dark hover:bg-gray-50'
+              }`}
+              onClick={() => setActiveTab(tab.id as any)}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="error-reporting-content">
+      {/* Content */}
+      <div className="p-6" role="tabpanel">
         {activeTab === 'overview' && errorStats && (
-          <div className="overview-tab">
-            <div className="stats-grid">
-              <div className="stat-card">
-                <h3>Total Errors</h3>
-                <div className="stat-value">{errorStats.totalErrors}</div>
-                <div className="stat-period">
-                  {formatDate(errorStats.timeRange.start)} - {formatDate(errorStats.timeRange.end)}
-                </div>
-              </div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-3 text-lg">
+                    <div className="p-2 bg-red-50 rounded-lg">
+                      <AlertCircle className="w-5 h-5 text-red-600" />
+                    </div>
+                    Total Errors
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="text-3xl font-bold text-red-600">{errorStats.totalErrors}</div>
+                  <div className="text-sm text-gray-medium flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    {formatDate(errorStats.timeRange.start)} - {formatDate(errorStats.timeRange.end)}
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="stat-card">
-                <h3>By Severity</h3>
-                <div className="severity-breakdown">
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-3 text-lg">
+                    <div className="p-2 bg-orange-50 rounded-lg">
+                      <TrendingUp className="w-5 h-5 text-orange-600" />
+                    </div>
+                    By Severity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   {Object.entries(errorStats.bySeverity).map(([severity, count]) => (
-                    <div key={severity} className={`severity-item ${getSeverityColor(severity)}`}>
-                      <span className="severity-label">{severity}</span>
-                      <span className="severity-count">{count}</span>
+                    <div key={severity} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getSeverityIcon(severity)}
+                        <span className="font-medium capitalize">{severity}</span>
+                      </div>
+                      <span className="font-semibold">{count}</span>
                     </div>
                   ))}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              <div className="stat-card">
-                <h3>Top Components</h3>
-                <div className="component-breakdown">
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-3 text-lg">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      <Code className="w-5 h-5 text-blue-600" />
+                    </div>
+                    Top Components
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   {Object.entries(errorStats.byComponent)
                     .sort(([,a], [,b]) => b - a)
                     .slice(0, 5)
                     .map(([component, count]) => (
-                      <div key={component} className="component-item">
-                        <span className="component-name">{component}</span>
-                        <span className="component-count">{count}</span>
+                      <div key={component} className="flex items-center justify-between">
+                        <span className="font-medium truncate">{component}</span>
+                        <span className="font-semibold text-blue-600">{count}</span>
                       </div>
                     ))}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              <div className="stat-card">
-                <h3>Error Types</h3>
-                <div className="type-breakdown">
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-3 text-lg">
+                    <div className="p-2 bg-purple-50 rounded-lg">
+                      <Activity className="w-5 h-5 text-purple-600" />
+                    </div>
+                    Error Types
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   {Object.entries(errorStats.byType)
                     .sort(([,a], [,b]) => b - a)
                     .slice(0, 5)
                     .map(([type, count]) => (
-                      <div key={type} className="type-item">
-                        <span className="type-name">{type}</span>
-                        <span className="type-count">{count}</span>
+                      <div key={type} className="flex items-center justify-between">
+                        <span className="font-medium truncate">{type}</span>
+                        <span className="font-semibold text-purple-600">{count}</span>
                       </div>
                     ))}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
 
         {activeTab === 'errors' && (
-          <div className="errors-tab">
-            <div className="errors-list">
-              {aggregatedErrors.length === 0 ? (
-                <div className="no-errors">
-                  <p>No errors found in the current time period.</p>
-                </div>
-              ) : (
-                aggregatedErrors.map((error, index) => (
-                  <div key={index} className="error-item">
-                    <div className="error-header">
-                      <h4 className="error-message">{error.message}</h4>
-                      <div className={`error-severity ${getSeverityColor(error.severity)}`}>
-                        {error.severity}
-                      </div>
-                    </div>
-                    
-                    <div className="error-details">
-                      <div className="error-meta">
-                        <span className="error-count">Occurred {error.count} times</span>
-                        <span className="error-components">
-                          Components: {error.affectedComponents.join(', ')}
+          <div className="space-y-6">
+            {aggregatedErrors.length === 0 ? (
+              <div className="text-center py-12">
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <p className="text-gray-medium">No errors found in the current time period.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {aggregatedErrors.map((error, index) => (
+                  <Card key={index} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <h4 className="text-lg font-semibold text-gray-dark flex-1 mr-4">
+                          {error.message}
+                        </h4>
+                        <span className={`px-3 py-1 rounded-full border text-sm font-semibold uppercase ${getSeverityColor(error.severity)}`}>
+                          {error.severity}
                         </span>
                       </div>
                       
-                      <div className="error-timeline">
-                        <span>First: {formatDate(error.firstOccurrence)}</span>
-                        <span>Last: {formatDate(error.lastOccurrence)}</span>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-4 text-sm text-gray-medium">
+                          <span className="flex items-center gap-2 font-semibold text-blue-600">
+                            <Zap className="w-4 h-4" />
+                            Occurred {error.count} times
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            Components: {error.affectedComponents.join(', ')}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-gray-medium">
+                          <span className="flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            First: {formatDate(error.firstOccurrence)}
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            Last: {formatDate(error.lastOccurrence)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'suggestions' && (
-          <div className="suggestions-tab">
-            <div className="suggestions-list">
+          <div className="space-y-6">
+            <div className="space-y-4">
               {errorSuggestions.map((suggestion, index) => (
-                <div key={index} className="suggestion-item">
-                  <div className="suggestion-header">
-                    <h4>Pattern: {suggestion.pattern.source}</h4>
-                    <div className="suggestion-action">{suggestion.action}</div>
-                  </div>
-                  <p className="suggestion-text">{suggestion.suggestion}</p>
-                </div>
+                <Card key={index} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="text-lg font-semibold text-gray-dark">
+                        Pattern: {suggestion.pattern.source}
+                      </h4>
+                      <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-sm font-semibold uppercase">
+                        {suggestion.action}
+                      </span>
+                    </div>
+                    <p className="text-gray-medium leading-relaxed">{suggestion.suggestion}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
