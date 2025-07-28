@@ -751,7 +751,8 @@ describe('PluginManager', () => {
 
       mockDashboardManager = {
         registerWidget: jest.fn(),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
     });
 
@@ -778,7 +779,8 @@ describe('PluginManager', () => {
 
       const mockDashboardManager = {
         registerWidget: jest.fn(),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
 
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
@@ -795,7 +797,8 @@ describe('PluginManager', () => {
         registerWidget: jest.fn().mockImplementation(() => {
           throw new Error('Widget creation failed');
         }),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
 
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
@@ -816,7 +819,8 @@ describe('PluginManager', () => {
       
       const mockDashboardManager = {
         registerWidget: jest.fn(),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
 
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
@@ -834,7 +838,8 @@ describe('PluginManager', () => {
       ];
       const mockDashboardManager = {
         registerWidget: jest.fn(),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
 
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
@@ -863,7 +868,8 @@ describe('PluginManager', () => {
       installedPlugins[0]!.status = PluginStatus.ENABLED;
       const mockDashboardManager = {
         registerWidget: jest.fn(),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
 
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
@@ -910,7 +916,8 @@ describe('PluginManager', () => {
       
       const mockDashboardManager = {
         registerWidget: jest.fn(),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
       
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
@@ -930,7 +937,8 @@ describe('PluginManager', () => {
       
       const mockDashboardManager = {
         registerWidget: jest.fn(),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
 
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
@@ -946,7 +954,8 @@ describe('PluginManager', () => {
       installedPlugins[0]!.status = PluginStatus.ENABLED;
       const mockDashboardManager = {
         registerWidget: jest.fn(),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
 
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
@@ -966,23 +975,28 @@ describe('PluginManager', () => {
       );
     });
 
-    it('should handle plugin activation lifecycle events', async () => {
-      installedPlugins[0]!.status = PluginStatus.ENABLED;
+    it('should prevent duplicate widget registration', async () => {
+      // Start with a plugin that's not enabled to have clean state
+      installedPlugins[0]!.status = PluginStatus.INSTALLED;
       const mockDashboardManager = {
         registerWidget: jest.fn(),
-        handlePluginUninstall: jest.fn()
+        handlePluginUninstall: jest.fn(),
+        handlePluginDisable: jest.fn()
       };
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
-      // First enable
+      
+      // Enable plugin first time - should register widget
       await pluginManager.enablePlugin('demo-hello-world');
-      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(1); // Only during enable, not during load since persistence is empty
-      // Disable
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(1);
+      
+      // Try to enable same plugin again - should NOT register widget again due to deduplication
+      await pluginManager.enablePlugin('demo-hello-world');
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(1); // Still only 1 call, duplicates prevented
+      
+      // Disable and re-enable should register widget again
       await pluginManager.disablePlugin('demo-hello-world');
-      expect(mockPluginRegistry.updatePluginStatus).toHaveBeenCalledWith('demo-hello-world', PluginStatus.DISABLED);
-      // Re-enable
-      installedPlugins[0]!.status = PluginStatus.ENABLED;
       await pluginManager.enablePlugin('demo-hello-world');
-      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(2); // Called again on re-enable
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(2); // Called again after disable/re-enable
     });
   });
 }); 

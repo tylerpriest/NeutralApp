@@ -39,6 +39,7 @@ export class PluginManager implements IPluginManager {
   private installedPlugins: Map<string, PluginInfo> = new Map();
   private readonly persistenceFile: string;
   private dashboardManager?: IDashboardManager;
+  private registeredWidgets: Set<string> = new Set(); // Track plugins with registered widgets
 
   constructor(
     pluginRegistry?: IPluginRegistry,
@@ -234,6 +235,9 @@ export class PluginManager implements IPluginManager {
         this.dashboardManager.handlePluginDisable(pluginId);
       }
       
+      // Remove from registered widgets tracking
+      this.registeredWidgets.delete(pluginId);
+      
       await this.pluginRegistry.updatePluginStatus(pluginId, PluginStatus.DISABLED);
       
       // TODO: Unload plugin from sandbox
@@ -258,6 +262,9 @@ export class PluginManager implements IPluginManager {
       if (this.dashboardManager) {
         this.dashboardManager.handlePluginUninstall(pluginId);
       }
+      
+      // Remove from registered widgets tracking
+      this.registeredWidgets.delete(pluginId);
       
       // Remove from registry
       await this.pluginRegistry.removeInstalledPlugin(pluginId, cleanupData || false);
@@ -377,6 +384,7 @@ export class PluginManager implements IPluginManager {
           await this.pluginRegistry.addInstalledPlugin(plugin);
           // Register widgets for persisted plugins if dashboard manager is available
           if (this.dashboardManager && plugin.status === PluginStatus.ENABLED) {
+            console.log(`Loading persisted ENABLED plugin ${plugin.id}, registering widget`);
             this.registerPluginWidgets(plugin);
           }
         }
@@ -405,6 +413,12 @@ export class PluginManager implements IPluginManager {
       return;
     }
 
+    // Check if widget is already registered to prevent duplicates
+    if (this.registeredWidgets.has(plugin.id)) {
+      console.log(`Widget for plugin ${plugin.id} already registered, skipping duplicate registration`);
+      return;
+    }
+
     try {
       // Create default widget for the plugin
       const widget: DashboardWidget = {
@@ -416,6 +430,7 @@ export class PluginManager implements IPluginManager {
         permissions: plugin.permissions.map(p => p.name)
       };
       this.dashboardManager.registerWidget(widget);
+      this.registeredWidgets.add(plugin.id); // Mark as registered
       console.log(`Registered widget for plugin: ${plugin.id}`);
     } catch (error) {
       console.error(`Failed to register widget for plugin ${plugin.id}:`, error);
