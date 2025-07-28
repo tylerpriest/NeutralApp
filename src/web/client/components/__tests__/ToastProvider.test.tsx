@@ -149,7 +149,7 @@ describe('ToastProvider', () => {
       expect(screen.getByText('Success')).toBeInTheDocument();
     });
 
-    const closeButton = screen.getByRole('button', { name: /close/i });
+    const closeButton = screen.getByRole('button', { name: /dismiss notification/i });
     fireEvent.click(closeButton);
 
     await waitFor(() => {
@@ -324,11 +324,12 @@ describe('ToastProvider', () => {
     fireEvent.click(screen.getByText('Show Error'));
 
     await waitFor(() => {
-      const successToast = screen.getByText('Success').closest('.toast-notification');
-      const errorToast = screen.getByText('Error').closest('.toast-notification');
+      const successToast = screen.getByText('Success').closest('[role="alert"]');
+      const errorToast = screen.getByText('Error').closest('[role="alert"]');
       
-      expect(successToast).toHaveClass('success');
-      expect(errorToast).toHaveClass('error');
+      // Check for border color classes that indicate toast type
+      expect(successToast).toHaveClass('border-l-green-500');
+      expect(errorToast).toHaveClass('border-l-red-500');
     });
   });
 }); 

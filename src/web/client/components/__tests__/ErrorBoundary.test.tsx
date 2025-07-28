@@ -5,7 +5,7 @@ import ErrorBoundary from '../ErrorBoundary';
 // This is a known issue with ErrorBoundary tests - they sometimes pass in the UI but the logger calls fail due to component lifecycle timing
 // The ErrorBoundary component itself is working correctly as shown by the other passing tests
 
-// Mock the WebErrorLogger with proper factory function
+// Mock the WebErrorLogger
 jest.mock('../../services/WebErrorLogger', () => ({
   webErrorLogger: {
     logReactError: jest.fn(),
@@ -50,21 +50,19 @@ describe('ErrorBoundary', () => {
     );
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    expect(screen.getByText('We encountered an unexpected error. Our team has been notified and is working to fix it.')).toBeInTheDocument();
-    expect(screen.getByText('Try Again')).toBeInTheDocument();
-    expect(screen.getByText('Report Issue')).toBeInTheDocument();
+    expect(screen.getByText('An unexpected error occurred. We\'ve been notified and are working to fix it.')).toBeInTheDocument();
+    expect(screen.getByText('Retry')).toBeInTheDocument();
+    expect(screen.getByText('Report')).toBeInTheDocument();
   });
 
   it('logs error when error occurs', () => {
-    const { webErrorLogger } = jest.requireMock('../../services/WebErrorLogger');
-    
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>
     );
 
-    expect(webErrorLogger.logReactError).toHaveBeenCalledWith(
+    expect(mockLogReactError).toHaveBeenCalledWith(
       expect.any(Error),
       expect.any(Object),
       'ErrorBoundary'
@@ -78,7 +76,7 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const retryButton = screen.getByText('Try Again');
+    const retryButton = screen.getByText('Retry');
     expect(retryButton).toBeInTheDocument();
 
     fireEvent.click(retryButton);
@@ -89,20 +87,18 @@ describe('ErrorBoundary', () => {
   });
 
   it('shows report button and handles report action', () => {
-    const { webErrorLogger } = jest.requireMock('../../services/WebErrorLogger');
-    
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>
     );
 
-    const reportButton = screen.getByText('Report Issue');
+    const reportButton = screen.getByText('Report');
     expect(reportButton).toBeInTheDocument();
 
     fireEvent.click(reportButton);
 
-    expect(webErrorLogger.logWebError).toHaveBeenCalledWith(
+    expect(mockLogWebError).toHaveBeenCalledWith(
       expect.objectContaining({
         error: expect.any(Error),
         context: expect.objectContaining({
@@ -124,9 +120,13 @@ describe('ErrorBoundary', () => {
     );
 
     expect(screen.getByText('Error Details')).toBeInTheDocument();
-    expect(screen.getByText('Error Message:')).toBeInTheDocument();
+    
+    // Click to expand error details
+    fireEvent.click(screen.getByText('Error Details'));
+    
+    expect(screen.getByText('Error Message')).toBeInTheDocument();
     expect(screen.getByText('Test error message')).toBeInTheDocument();
-    expect(screen.getByText('Component Stack:')).toBeInTheDocument();
+    expect(screen.getByText('Component Stack')).toBeInTheDocument();
   });
 
   it('does not show error details when showDetails is false', () => {
@@ -174,7 +174,7 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const retryButton = screen.getByText('Try Again');
+    const retryButton = screen.getByText('Retry');
     expect(retryButton).toBeInTheDocument();
     expect(retryButton).not.toBeDisabled();
   });
@@ -188,7 +188,9 @@ describe('ErrorBoundary', () => {
 
     const errorBoundary = screen.getByRole('alert');
     expect(errorBoundary).toBeInTheDocument();
-    expect(errorBoundary).toHaveClass('error-boundary');
+    expect(errorBoundary).toHaveClass('flex');
+    expect(errorBoundary).toHaveClass('items-center');
+    expect(errorBoundary).toHaveClass('justify-center');
   });
 
   it('handles multiple errors gracefully', () => {

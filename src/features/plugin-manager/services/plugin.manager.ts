@@ -2,8 +2,7 @@ import { IPluginManager } from '../interfaces/plugin.interface';
 import { PluginInfo, PluginPackage, InstallResult, PluginDependency, PluginStatus, DashboardWidget } from '../../../shared';
 import { PLUGIN_REGISTRY, discoverPlugins, getPluginInfo, validatePlugin } from '../../../plugins';
 import { createLogger } from '../../../core/logger';
-import * as fs from 'fs';
-import * as path from 'path';
+// Browser-compatible storage for plugin persistence
 
 // Define interfaces for dependency injection
 interface IPluginRegistry {
@@ -50,7 +49,7 @@ export class PluginManager implements IPluginManager {
     dashboardManager?: IDashboardManager
   ) {
     // Initialize persistence file path
-    this.persistenceFile = path.join(process.cwd(), 'data', 'installed-plugins.json');
+    this.persistenceFile = 'installed-plugins'; // Browser localStorage key
     
     // Inject dependencies or use defaults
     this.pluginRegistry = pluginRegistry || this.createDefaultPluginRegistry();
@@ -390,8 +389,8 @@ export class PluginManager implements IPluginManager {
 
   private async loadPersistedPlugins(): Promise<void> {
     try {
-      if (fs.existsSync(this.persistenceFile)) {
-        const data = fs.readFileSync(this.persistenceFile, 'utf8');
+      const data = localStorage.getItem(this.persistenceFile);
+      if (data) {
         const persistedPlugins: PluginInfo[] = JSON.parse(data);
         for (const plugin of persistedPlugins) {
           await this.pluginRegistry.addInstalledPlugin(plugin);
@@ -413,8 +412,8 @@ export class PluginManager implements IPluginManager {
   private async savePersistedPlugins(): Promise<void> {
     try {
       const data = JSON.stringify(Array.from(this.installedPlugins.values()), null, 2);
-      fs.writeFileSync(this.persistenceFile, data);
-      this.logger.debug('Persisted installed plugins', { file: this.persistenceFile });
+      localStorage.setItem(this.persistenceFile, data);
+      this.logger.debug('Persisted installed plugins', { key: this.persistenceFile });
     } catch (error) {
       console.error('Error saving persisted plugins:', error);
     }

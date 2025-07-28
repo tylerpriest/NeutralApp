@@ -33,11 +33,12 @@ describe('System Quality Audit', () => {
       const srcDir = path.join(process.cwd(), 'src');
       const todoFiles = findFilesWithPattern(srcDir, /TODO/);
       
-      // Allow TODOs in test files but not in production code
+      // Allow TODOs in test files and quality-gates.ts (which checks for TODOs) but not in other production code
       const productionTodoFiles = todoFiles.filter(file => 
         !file.includes('.test.') && 
         !file.includes('.spec.') && 
-        !file.includes('__tests__')
+        !file.includes('__tests__') &&
+        !file.includes('quality-gates.ts')
       );
       
       expect(productionTodoFiles).toHaveLength(0);

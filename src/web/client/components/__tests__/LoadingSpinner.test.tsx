@@ -27,14 +27,16 @@ describe('LoadingSpinner', () => {
     render(<LoadingSpinner size="small" />);
     
     const container = screen.getByText('Loading...').parentElement;
-    expect(container).toHaveClass('small');
+    expect(container).toHaveClass('min-h-[100px]');
+    expect(container).toHaveClass('p-5');
   });
 
   it('applies large size class', () => {
     render(<LoadingSpinner size="large" />);
     
     const container = screen.getByText('Loading...').parentElement;
-    expect(container).toHaveClass('large');
+    expect(container).toHaveClass('min-h-[400px]');
+    expect(container).toHaveClass('p-15');
   });
 
   it('applies custom className', () => {
@@ -62,7 +64,8 @@ describe('LoadingSpinner', () => {
     render(<LoadingSpinner />);
     
     const spinner = screen.getByText('Loading...').previousElementSibling;
-    expect(spinner).toHaveClass('loading-spinner');
+    expect(spinner).toHaveClass('relative');
+    expect(spinner).toHaveClass('inline-block');
     expect(spinner?.children).toHaveLength(3);
   });
 

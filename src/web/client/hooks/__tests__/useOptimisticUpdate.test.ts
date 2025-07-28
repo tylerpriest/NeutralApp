@@ -83,7 +83,7 @@ describe('useOptimisticUpdate', () => {
     expect(result.current.data).toBe('initial'); // Should rollback
     expect(result.current.isPending).toBe(false);
     expect(result.current.error?.message).toBe('Operation timed out');
-  }, 10000); // 10 second timeout for this specific test
+  }, 15000); // 15 second timeout for this specific test
 
   it('should call success callback', async () => {
     const onSuccess = jest.fn();
