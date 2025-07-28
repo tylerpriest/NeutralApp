@@ -11,6 +11,26 @@ export class DashboardManager implements IDashboardManager {
   private widgetErrors: WidgetErrorCount = {};
   private readonly MAX_ERROR_COUNT = 3;
 
+  // Static instance for global access
+  private static instance: DashboardManager | null = null;
+
+  /**
+   * Get the global shared instance
+   */
+  public static getInstance(): DashboardManager {
+    if (!DashboardManager.instance) {
+      DashboardManager.instance = new DashboardManager();
+    }
+    return DashboardManager.instance;
+  }
+
+  /**
+   * Set the global instance (used by server)
+   */
+  public static setInstance(instance: DashboardManager): void {
+    DashboardManager.instance = instance;
+  }
+
   constructor() {
     this.initializeComponents();
   }

@@ -12,18 +12,26 @@ const DashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
 
+  // Use the global shared DashboardManager instance
+  const dashboardManager = DashboardManager.getInstance();
+
   useEffect(() => {
     const loadDashboard = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Get active widgets from DashboardManager
-        const activeWidgets = dashboardManager.getActiveWidgets() || [];
+        // Fetch active widgets from API
+        const response = await fetch('/api/dashboard/widgets');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch widgets: ${response.status}`);
+        }
+        const data = await response.json();
+        const activeWidgets = data.widgets || [];
         setWidgets(activeWidgets);
 
         // Check if we should show welcome screen
-        const shouldShowWelcome = dashboardManager.showWelcomeScreen();
+        const shouldShowWelcome = activeWidgets.length === 0;
         setShowWelcome(shouldShowWelcome);
 
         if (shouldShowWelcome) {
@@ -145,7 +153,5 @@ const DashboardPage: React.FC = () => {
   );
 };
 
-// Initialize DashboardManager instance
-export const dashboardManager = new DashboardManager();
-
+// Remove the local dashboardManager export and use the global instance
 export default DashboardPage; 

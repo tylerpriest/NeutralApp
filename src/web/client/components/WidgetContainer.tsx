@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { DashboardWidget, DashboardLayout, WidgetSize, WidgetPosition } from '../../../shared/types';
+import { useWidgetComponent } from './WidgetFactory';
 import './WidgetContainer.css';
 
 interface WidgetContainerProps {
@@ -111,6 +112,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
       {widgets.map((widget) => {
         const layoutItem = layout.widgets.find(item => item.componentId === widget.id);
         const isError = errorStates[widget.id];
+        const WidgetComponent = useWidgetComponent(widget);
 
         if (isError) {
           return (
@@ -154,7 +156,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
                   <h3 className="widget-title">{widget.title}</h3>
                 </div>
                 <div className="widget-body">
-                  <widget.component />
+                  <WidgetComponent widget={widget} />
                 </div>
               </div>
             </WidgetErrorBoundary>

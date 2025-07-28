@@ -74,7 +74,34 @@ Fix the plugin widget integration system so that when a plugin is installed, it 
     - Fixed component naming convention in tests
   - **Tests**: All 41 PluginManager tests passing (100% pass rate)
   - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite 97.9%, critical services operational)
-- [ ] **3.2.3** Fix DashboardPage to display widgets from installed plugins
+- [x] **3.2.3** Fix DashboardPage to display widgets from installed plugins
+  - **Implementation**: Created WidgetFactory system for dynamic component rendering and updated WidgetContainer
+  - **Changes**:
+    - Created `WidgetFactory.tsx` with dynamic component creation system
+    - Added `HelloWorldWidgetComponent` with live timestamp updates
+    - Added `DefaultWidgetComponent` for fallback rendering
+    - Updated `WidgetContainer.tsx` to use `useWidgetComponent` hook
+    - Added comprehensive CSS styling for widget components
+    - Fixed component rendering from string-based component definitions
+  - **Tests**: All 29 WidgetFactory and WidgetContainer tests passing (100% pass rate)
+  - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite 100%, critical services operational)
+  - **Integration Fix**: Resolved shared DashboardManager instance issue between frontend and backend
+  - **Additional Changes**:
+    - Modified `SimpleAPIRouter.ts` to create shared DashboardManager instance
+    - Updated `WebServer.ts` to set global DashboardManager instance
+    - Added static instance management to `DashboardManager` class
+    - Updated `DashboardPage.tsx` to use global shared instance
+    - Added `/api/dashboard/widgets` endpoint for frontend widget fetching
+    - Fixed API endpoints to use actual PluginManager instead of mock responses
+    - Implemented proper persistence with `data/installed-plugins.json`
+  - **End-to-End Verification**:
+    - ✅ Plugin installation works via API
+    - ✅ Plugin enabling works via API
+    - ✅ Plugin appears in installed plugins list
+    - ✅ Widget appears on dashboard with correct component name
+    - ✅ Persistence working correctly (plugins survive server restart)
+    - ✅ Widget registration working correctly (widgets created during plugin activation)
+  - **Test Fixes**: Fixed all 41 plugin manager tests to handle persistence and widget registration correctly
 - [ ] **3.3.1** Add plugin settings to SettingsService after installation
 - [ ] **3.3.2** Update SettingsPage to display plugin-specific settings
 - [ ] **3.4.1** Ensure plugin.activate() properly creates widgets

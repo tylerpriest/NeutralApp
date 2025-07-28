@@ -8,7 +8,12 @@ import { SimpleWebServer } from '../SimpleWebServer';
 // Mock the SimpleAPIRouter
 jest.mock('../SimpleAPIRouter', () => ({
   SimpleAPIRouter: jest.fn().mockImplementation(() => ({
-    getRouter: jest.fn().mockReturnValue(express.Router())
+    getRouter: jest.fn().mockReturnValue(express.Router()),
+    getDashboardManager: jest.fn().mockReturnValue({
+      getActiveWidgets: jest.fn().mockReturnValue([]),
+      registerWidget: jest.fn(),
+      handlePluginUninstall: jest.fn()
+    })
   }))
 }));
 

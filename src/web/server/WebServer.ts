@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import path from 'path';
 import { SimpleAPIRouter } from './SimpleAPIRouter';
 import { JWTAuthRoutes, JWTAuthMiddleware } from '../../features/auth';
+import { DashboardManager } from '../../features/ui-shell/services/dashboard.manager';
 
 /**
  * WebServer class manages the Express.js application lifecycle
@@ -21,6 +22,11 @@ export class WebServer {
     this.apiRouter = new SimpleAPIRouter();
     this.authRoutes = new JWTAuthRoutes();
     this.authMiddleware = new JWTAuthMiddleware();
+    
+    // Set the global DashboardManager instance
+    const dashboardManager = this.apiRouter.getDashboardManager();
+    DashboardManager.setInstance(dashboardManager);
+    
     this.setupMiddleware();
     this.setupRoutes();
   }
@@ -154,6 +160,13 @@ export class WebServer {
         resolve();
       }
     });
+  }
+
+  /**
+   * Get the shared DashboardManager instance
+   */
+  getDashboardManager() {
+    return this.apiRouter.getDashboardManager();
   }
 
   /**

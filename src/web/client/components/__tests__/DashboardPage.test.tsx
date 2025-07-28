@@ -5,33 +5,48 @@ import { DashboardManager } from '../../../../features/ui-shell/services/dashboa
 import { DashboardWidget, WidgetSize } from '../../../../shared/types';
 
 // Mock the DashboardManager
-jest.mock('../../../../features/ui-shell/services/dashboard.manager', () => ({
-  DashboardManager: jest.fn().mockImplementation(() => ({
+jest.mock('../../../../features/ui-shell/services/dashboard.manager', () => {
+  const mockInstance = {
     getActiveWidgets: jest.fn().mockReturnValue([]),
     showWelcomeScreen: jest.fn().mockReturnValue(true),
     calculateOptimalLayout: jest.fn().mockReturnValue({
       grid: { columns: 12, rows: 8, gap: '16px', cellSize: { width: 100, height: 80 } },
       widgets: []
     })
-  }))
-}));
-
-// Import the mocked DashboardManager to get access to the mock instance
-import { DashboardManager as MockDashboardManager } from '../../../../features/ui-shell/services/dashboard.manager';
+  };
+  
+  const MockDashboardManager = jest.fn().mockImplementation(() => mockInstance) as any;
+  MockDashboardManager.getInstance = jest.fn().mockReturnValue(mockInstance);
+  
+  return {
+    DashboardManager: MockDashboardManager
+  };
+});
 
 // Now import the actual component after mocking
-import DashboardPage, { dashboardManager } from '../../pages/DashboardPage';
+import DashboardPage from '../../pages/DashboardPage';
 
 describe('DashboardPage', () => {
+  let mockDashboardManager: any;
+
   beforeEach(() => {
     jest.clearAllMocks();
     
+    // Get the mocked DashboardManager instance
+    mockDashboardManager = new DashboardManager();
+    
     // Default mock setup - will be overridden in individual tests
-    (dashboardManager.getActiveWidgets as jest.Mock).mockReturnValue([]);
-    (dashboardManager.showWelcomeScreen as jest.Mock).mockReturnValue(true);
-    (dashboardManager.calculateOptimalLayout as jest.Mock).mockReturnValue({
+    mockDashboardManager.getActiveWidgets.mockReturnValue([]);
+    mockDashboardManager.showWelcomeScreen.mockReturnValue(true);
+    mockDashboardManager.calculateOptimalLayout.mockReturnValue({
       grid: { columns: 12, rows: 8, gap: '16px', cellSize: { width: 100, height: 80 } },
       widgets: []
+    });
+    
+    // Mock global fetch
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ widgets: [] })
     });
   });
 
@@ -54,8 +69,8 @@ describe('DashboardPage', () => {
 
   describe('Welcome Screen', () => {
     it('should display welcome screen when no plugins are installed', async () => {
-      (dashboardManager.getActiveWidgets as jest.Mock).mockReturnValue([]);
-      (dashboardManager.showWelcomeScreen as jest.Mock).mockReturnValue(true);
+      mockDashboardManager.getActiveWidgets.mockReturnValue([]);
+      mockDashboardManager.showWelcomeScreen.mockReturnValue(true);
 
       renderDashboardPage();
 
@@ -68,8 +83,8 @@ describe('DashboardPage', () => {
     });
 
     it('should display call-to-action for plugin installation', async () => {
-      (dashboardManager.getActiveWidgets as jest.Mock).mockReturnValue([]);
-      (dashboardManager.showWelcomeScreen as jest.Mock).mockReturnValue(true);
+      mockDashboardManager.getActiveWidgets.mockReturnValue([]);
+      mockDashboardManager.showWelcomeScreen.mockReturnValue(true);
 
       renderDashboardPage();
 
@@ -88,9 +103,13 @@ describe('DashboardPage', () => {
         createMockWidget('widget-2', 'Test Widget 2')
       ];
 
-      (dashboardManager.getActiveWidgets as jest.Mock).mockReturnValue(mockWidgets);
-      (dashboardManager.showWelcomeScreen as jest.Mock).mockReturnValue(false);
-      (dashboardManager.calculateOptimalLayout as jest.Mock).mockReturnValue({
+      // Mock fetch to return widgets
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ widgets: mockWidgets })
+      });
+
+      mockDashboardManager.calculateOptimalLayout.mockReturnValue({
         grid: { columns: 12, rows: 8, gap: '16px', cellSize: { width: 100, height: 80 } },
         widgets: mockWidgets
       });
@@ -98,17 +117,21 @@ describe('DashboardPage', () => {
       renderDashboardPage();
 
       await waitFor(() => {
-        expect(screen.getByTestId('widget-widget-1')).toBeInTheDocument();
-        expect(screen.getByTestId('widget-widget-2')).toBeInTheDocument();
+        expect(screen.getByText('Test Widget 1', { selector: 'h3' })).toBeInTheDocument();
+        expect(screen.getByText('Test Widget 2', { selector: 'h3' })).toBeInTheDocument();
       });
     });
 
     it('should render widgets in a responsive grid container', async () => {
       const mockWidgets = [createMockWidget('widget-1', 'Test Widget')];
 
-      (dashboardManager.getActiveWidgets as jest.Mock).mockReturnValue(mockWidgets);
-      (dashboardManager.showWelcomeScreen as jest.Mock).mockReturnValue(false);
-      (dashboardManager.calculateOptimalLayout as jest.Mock).mockReturnValue({
+      // Mock fetch to return widgets
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ widgets: mockWidgets })
+      });
+
+      mockDashboardManager.calculateOptimalLayout.mockReturnValue({
         grid: { columns: 12, rows: 8, gap: '16px', cellSize: { width: 100, height: 80 } },
         widgets: mockWidgets
       });
@@ -125,9 +148,8 @@ describe('DashboardPage', () => {
 
   describe('Error Handling', () => {
     it('should display graceful error state when dashboard fails to load', async () => {
-      (dashboardManager.getActiveWidgets as jest.Mock).mockImplementation(() => {
-        throw new Error('Failed to load dashboard');
-      });
+      // Mock fetch to fail
+      (global.fetch as jest.Mock).mockRejectedValue(new Error('Failed to load dashboard'));
 
       renderDashboardPage();
 
@@ -140,9 +162,13 @@ describe('DashboardPage', () => {
     it('should handle widget errors gracefully', async () => {
       const mockWidgets = [createMockWidget('widget-1', 'Test Widget')];
 
-      (dashboardManager.getActiveWidgets as jest.Mock).mockReturnValue(mockWidgets);
-      (dashboardManager.showWelcomeScreen as jest.Mock).mockReturnValue(false);
-      (dashboardManager.calculateOptimalLayout as jest.Mock).mockReturnValue({
+      // Mock fetch to return widgets
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ widgets: mockWidgets })
+      });
+
+      mockDashboardManager.calculateOptimalLayout.mockReturnValue({
         grid: { columns: 12, rows: 8, gap: '16px', cellSize: { width: 100, height: 80 } },
         widgets: mockWidgets
       });
@@ -150,15 +176,15 @@ describe('DashboardPage', () => {
       renderDashboardPage();
 
       await waitFor(() => {
-        expect(screen.getByTestId('widget-widget-1')).toBeInTheDocument();
+        expect(screen.getByText('Test Widget', { selector: 'h3' })).toBeInTheDocument();
       });
     });
   });
 
   describe('Layout and Responsiveness', () => {
     it('should have proper CSS classes for responsive design', async () => {
-      (dashboardManager.getActiveWidgets as jest.Mock).mockReturnValue([]);
-      (dashboardManager.showWelcomeScreen as jest.Mock).mockReturnValue(false);
+      mockDashboardManager.getActiveWidgets.mockReturnValue([]);
+      mockDashboardManager.showWelcomeScreen.mockReturnValue(false);
 
       renderDashboardPage();
 
@@ -169,8 +195,8 @@ describe('DashboardPage', () => {
     });
 
     it('should maintain proper spacing and layout structure', async () => {
-      (dashboardManager.getActiveWidgets as jest.Mock).mockReturnValue([]);
-      (dashboardManager.showWelcomeScreen as jest.Mock).mockReturnValue(false);
+      mockDashboardManager.getActiveWidgets.mockReturnValue([]);
+      mockDashboardManager.showWelcomeScreen.mockReturnValue(false);
 
       renderDashboardPage();
 
@@ -186,21 +212,23 @@ describe('DashboardPage', () => {
       renderDashboardPage();
 
       await waitFor(() => {
-        expect(dashboardManager.getActiveWidgets).toHaveBeenCalled();
-        expect(dashboardManager.showWelcomeScreen).toHaveBeenCalled();
+        expect(global.fetch).toHaveBeenCalledWith('/api/dashboard/widgets');
       });
     });
 
     it('should use DashboardManager layout calculations', async () => {
       const mockWidgets = [createMockWidget('widget-1', 'Test Widget')];
 
-      (dashboardManager.getActiveWidgets as jest.Mock).mockReturnValue(mockWidgets);
-      (dashboardManager.showWelcomeScreen as jest.Mock).mockReturnValue(false);
+      // Mock fetch to return widgets
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ widgets: mockWidgets })
+      });
 
       renderDashboardPage();
 
       await waitFor(() => {
-        expect(dashboardManager.calculateOptimalLayout).toHaveBeenCalledWith(mockWidgets);
+        expect(mockDashboardManager.calculateOptimalLayout).toHaveBeenCalledWith(mockWidgets);
       });
     });
   });

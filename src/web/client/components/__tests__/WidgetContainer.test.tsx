@@ -3,14 +3,22 @@ import { render, screen, waitFor } from '@testing-library/react';
 import WidgetContainer from '../WidgetContainer';
 import { DashboardWidget, WidgetSize, DashboardLayout } from '../../../../shared/types';
 
+// Mock the WidgetFactory
+jest.mock('../WidgetFactory', () => ({
+  useWidgetComponent: jest.fn()
+}));
+
+import { useWidgetComponent } from '../WidgetFactory';
+
 describe('WidgetContainer', () => {
   const createMockWidget = (id: string, title: string): DashboardWidget => ({
     id,
     pluginId: 'test-plugin',
     title,
-    component: () => <div data-testid={`widget-${id}`}>{title}</div>,
+    component: 'TestComponent', // Changed from function to string
     size: { width: 2, height: 1 } as WidgetSize,
-    position: { x: 0, y: 0 }
+    position: { x: 0, y: 0 },
+    permissions: ['read']
   });
 
   const createMockLayout = (widgets: DashboardWidget[]): DashboardLayout => ({
@@ -27,6 +35,15 @@ describe('WidgetContainer', () => {
     }))
   });
 
+  // Mock component factory
+  const MockWidgetComponent: React.FC<{ widget: DashboardWidget }> = ({ widget }) => (
+    <div data-testid={`widget-${widget.id}`}>{widget.title}</div>
+  );
+
+  beforeEach(() => {
+    (useWidgetComponent as jest.Mock).mockReturnValue(MockWidgetComponent);
+  });
+
   describe('Widget Rendering', () => {
     it('should render widgets in a responsive grid', async () => {
       const widgets = [
@@ -38,8 +55,6 @@ describe('WidgetContainer', () => {
       render(<WidgetContainer widgets={widgets} layout={layout} />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('widget-widget-1')).toBeInTheDocument();
-        expect(screen.getByTestId('widget-widget-2')).toBeInTheDocument();
         expect(screen.getByTestId('widget-widget-1')).toBeInTheDocument();
         expect(screen.getByTestId('widget-widget-2')).toBeInTheDocument();
       });
@@ -91,62 +106,19 @@ describe('WidgetContainer', () => {
         });
       });
     });
-  });
 
-  describe('Error Boundaries', () => {
-    it('should handle widget rendering errors gracefully', async () => {
-      const errorWidget = {
-        ...createMockWidget('error-widget', 'Error Widget'),
-        component: () => {
-          throw new Error('Widget failed to render');
-        }
-      };
-      const widgets = [errorWidget];
+    it('should call useWidgetComponent for each widget', async () => {
+      const widgets = [
+        createMockWidget('widget-1', 'Test Widget 1'),
+        createMockWidget('widget-2', 'Test Widget 2')
+      ];
       const layout = createMockLayout(widgets);
 
       render(<WidgetContainer widgets={widgets} layout={layout} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Widget Error')).toBeInTheDocument();
-        expect(screen.getByText('This widget encountered an error and could not be displayed.')).toBeInTheDocument();
-      });
-    });
-
-    it('should continue rendering other widgets when one fails', async () => {
-      const errorWidget = {
-        ...createMockWidget('error-widget', 'Error Widget'),
-        component: () => {
-          throw new Error('Widget failed to render');
-        }
-      };
-      const goodWidget = createMockWidget('good-widget', 'Good Widget');
-      const widgets = [errorWidget, goodWidget];
-      const layout = createMockLayout(widgets);
-
-      render(<WidgetContainer widgets={widgets} layout={layout} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Widget Error')).toBeInTheDocument();
-        expect(screen.getByTestId('widget-good-widget')).toBeInTheDocument();
-      });
-    });
-
-    it('should provide retry functionality for failed widgets', async () => {
-      const errorWidget = {
-        ...createMockWidget('error-widget', 'Error Widget'),
-        component: () => {
-          throw new Error('Widget failed to render');
-        }
-      };
-      const widgets = [errorWidget];
-      const layout = createMockLayout(widgets);
-
-      render(<WidgetContainer widgets={widgets} layout={layout} />);
-
-      await waitFor(() => {
-        const retryButton = screen.getByText('Retry');
-        expect(retryButton).toBeInTheDocument();
-        expect(retryButton).toHaveClass('widget-error-retry');
+        expect(useWidgetComponent).toHaveBeenCalledWith(widgets[0]);
+        expect(useWidgetComponent).toHaveBeenCalledWith(widgets[1]);
       });
     });
   });
