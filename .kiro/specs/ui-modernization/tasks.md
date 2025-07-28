@@ -33,10 +33,10 @@
     - [x] Use shared UI primitives and Tailwind/shadcn/ui
     - [x] Remove legacy CSS
     - [x] Update or add tests
-  - [ ] 3.2 Plugin-manager feature: Refactor /src/features/plugin-manager/web/ components
-    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
-    - [ ] Remove legacy CSS
-    - [ ] Update or add tests
+      - [x] 3.2 Plugin-manager feature: Refactor /src/features/plugin-manager/web/ components
+      - [x] Use shared UI primitives and Tailwind/shadcn/ui
+      - [x] Remove legacy CSS
+      - [x] Update or add tests
   - [ ] 3.3 UI-shell feature: Refactor /src/features/ui-shell/web/ components
     - [ ] Use shared UI primitives and Tailwind/shadcn/ui
     - [ ] Remove legacy CSS

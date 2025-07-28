@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { PluginInfo, PluginStatus, InstallResult } from '../../../shared/types';
-import './PluginManagerPage.css';
+import { Button, Input, Card, CardHeader, CardContent, LoadingSpinner } from '../../../shared/ui';
+import { 
+  Search, 
+  Download, 
+  Trash2, 
+  Settings, 
+  AlertTriangle, 
+  CheckCircle, 
+  XCircle, 
+  RefreshCw, 
+  Shield, 
+  Star,
+  Eye,
+  EyeOff,
+  Package,
+  Info,
+  ExternalLink,
+  Filter
+} from 'lucide-react';
 
 const PluginManagerPage: React.FC = () => {
   const [availablePlugins, setAvailablePlugins] = useState<PluginInfo[]>([]);
@@ -14,6 +32,7 @@ const PluginManagerPage: React.FC = () => {
   const [showDependencyDialog, setShowDependencyDialog] = useState<string | null>(null);
   const [showUpdateDialog, setShowUpdateDialog] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'installed' | 'available'>('all');
 
   useEffect(() => {
     loadPlugins();
@@ -21,7 +40,7 @@ const PluginManagerPage: React.FC = () => {
 
   useEffect(() => {
     filterPlugins();
-  }, [availablePlugins, searchTerm]);
+  }, [availablePlugins, installedPlugins, searchTerm, filterType]);
 
   const loadPlugins = async () => {
     try {
@@ -44,12 +63,25 @@ const PluginManagerPage: React.FC = () => {
   };
 
   const filterPlugins = () => {
+    let basePlugins: PluginInfo[] = [];
+    
+    switch (filterType) {
+      case 'installed':
+        basePlugins = installedPlugins;
+        break;
+      case 'available':
+        basePlugins = availablePlugins;
+        break;
+      default:
+        basePlugins = [...installedPlugins, ...availablePlugins];
+    }
+
     if (!searchTerm.trim()) {
-      setFilteredPlugins(availablePlugins);
+      setFilteredPlugins(basePlugins);
       return;
     }
 
-    const filtered = availablePlugins.filter(plugin =>
+    const filtered = basePlugins.filter(plugin =>
       plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       plugin.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       plugin.author.toLowerCase().includes(searchTerm.toLowerCase())
@@ -76,7 +108,7 @@ const PluginManagerPage: React.FC = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setNotification({ type: 'success', message: 'Plugin installed successfully' });
+        setNotification({ type: 'success', message: `${plugin.name} installed successfully` });
         await loadPlugins(); // Refresh the lists
       } else {
         setNotification({ type: 'error', message: result.error || 'Installation failed' });
@@ -145,8 +177,8 @@ const PluginManagerPage: React.FC = () => {
 
   const handleUninstallPlugin = async (pluginId: string, cleanupData: boolean = true) => {
     try {
-      const response = await fetch(`/api/plugins/${pluginId}`, {
-        method: 'DELETE',
+      const response = await fetch(`/api/plugins/${pluginId}/uninstall`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -171,10 +203,21 @@ const PluginManagerPage: React.FC = () => {
 
   const handleUpdatePlugin = async (pluginId: string) => {
     try {
-      // This would integrate with the plugin manager's update functionality
-      setNotification({ type: 'success', message: 'Plugin updated successfully' });
-      setShowUpdateDialog(null);
-      await loadPlugins();
+      const response = await fetch(`/api/plugins/${pluginId}/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        setNotification({ type: 'success', message: 'Plugin updated successfully' });
+        setShowUpdateDialog(null);
+        await loadPlugins();
+      } else {
+        const result = await response.json();
+        setNotification({ type: 'error', message: result.error || 'Failed to update plugin' });
+      }
     } catch (err) {
       setNotification({ 
         type: 'error', 
@@ -184,288 +227,353 @@ const PluginManagerPage: React.FC = () => {
   };
 
   const checkDependencyConflicts = (plugin: PluginInfo): { hasConflicts: boolean; conflicts: string[] } => {
+    if (!plugin.dependencies) return { hasConflicts: false, conflicts: [] };
+
     const conflicts: string[] = [];
-    
-    // Check for version conflicts with installed plugins
+    const installedPluginIds = installedPlugins.map(p => p.id);
+
     plugin.dependencies.forEach(dep => {
-      const installedDep = installedPlugins.find(p => p.id === dep.id);
-      if (installedDep && installedDep.version !== dep.version) {
-        conflicts.push(`${dep.id}: requires ${dep.version}, but ${installedDep.version} is installed`);
+      if (!installedPluginIds.includes(dep.id)) {
+        conflicts.push(dep.id);
       }
     });
 
-    return {
-      hasConflicts: conflicts.length > 0,
-      conflicts
-    };
+    return { hasConflicts: conflicts.length > 0, conflicts };
+  };
+
+  const getPluginStatus = (plugin: PluginInfo): 'installed' | 'available' | 'installing' => {
+    if (installingPlugins.has(plugin.id)) return 'installing';
+    if (installedPlugins.some(p => p.id === plugin.id)) return 'installed';
+    return 'available';
   };
 
   const renderPluginCard = (plugin: PluginInfo) => {
-    const isInstalling = installingPlugins.has(plugin.id);
-    const isInstalled = installedPlugins.some(p => p.id === plugin.id);
+    const status = getPluginStatus(plugin);
+    const { hasConflicts } = checkDependencyConflicts(plugin);
+    const isInstalled = status === 'installed';
+    const isInstalling = status === 'installing';
     const installedPlugin = installedPlugins.find(p => p.id === plugin.id);
-    const dependencyConflicts = checkDependencyConflicts(plugin);
-    const hasUpdate = isInstalled && installedPlugin && installedPlugin.version !== plugin.version;
 
     return (
-      <div key={plugin.id} className="plugin-card" data-testid={`plugin-card-${plugin.id}`}>
-        <div className="plugin-header">
-          <h3 className="plugin-title">{plugin.name}</h3>
-          <div className="plugin-meta">
-            <span className="plugin-version">v{plugin.version}</span>
-            <span className="plugin-rating">★ {plugin.rating}</span>
-            <span className="plugin-downloads">{plugin.downloads.toLocaleString()} downloads</span>
-            {hasUpdate && (
-              <span className="update-badge">Update Available</span>
-            )}
-          </div>
-        </div>
-
-        <div className="plugin-author">by {plugin.author}</div>
-        
-        <p className="plugin-description">{plugin.description}</p>
-
-        {plugin.dependencies.length > 0 && (
-          <div className="plugin-dependencies">
-            <div className="dependencies-header">
-              <strong>Dependencies:</strong>
-              <button
-                className="dependency-details-button"
-                onClick={() => setShowDependencyDialog(plugin.id)}
-              >
-                View Details
-              </button>
-            </div>
-            {plugin.dependencies.map(dep => {
-              const isInstalled = installedPlugins.some(p => p.id === dep.id);
-              const installedDep = installedPlugins.find(p => p.id === dep.id);
-              const hasConflict = installedDep && installedDep.version !== dep.version;
-              
-              return (
-                <span 
-                  key={dep.id} 
-                  className={`dependency-tag ${isInstalled ? 'installed' : ''} ${hasConflict ? 'conflict' : ''}`}
-                >
-                  {dep.id} {dep.version}
-                  {isInstalled && <span className="installed-indicator">✓</span>}
-                  {hasConflict && <span className="conflict-indicator">⚠</span>}
-                </span>
-              );
-            })}
-            {dependencyConflicts.hasConflicts && (
-              <div className="dependency-conflicts">
-                <span className="conflict-warning">⚠ Dependency conflicts detected</span>
+      <Card key={plugin.id} className="hover:shadow-lg transition-all duration-200">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+                             <div className="flex items-center gap-2 mb-1">
+                 <h3 className="text-lg font-semibold text-gray-900 truncate">
+                   {plugin.name}
+                 </h3>
+                 <div className="flex items-center gap-1 text-xs text-gray-500">
+                   <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                   <span>{plugin.rating}/5</span>
+                 </div>
+               </div>
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <span>v{plugin.version}</span>
+                <span>by {plugin.author}</span>
+                {plugin.downloads && (
+                  <span className="flex items-center gap-1">
+                    <Download className="w-3 h-3" />
+                    {plugin.downloads.toLocaleString()}
+                  </span>
+                )}
               </div>
+            </div>
+                         {isInstalled && installedPlugin && installedPlugin.version !== plugin.version && (
+               <div className="flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                 <RefreshCw className="w-3 h-3" />
+                 Update
+               </div>
+             )}
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          <p className="text-sm text-gray-600 line-clamp-2">
+            {plugin.description}
+          </p>
+
+          {plugin.dependencies && plugin.dependencies.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-700">Dependencies</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDependencyDialog(plugin.id)}
+                  className="h-6 px-2 text-xs"
+                >
+                  <Info className="w-3 h-3 mr-1" />
+                  Details
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {plugin.dependencies.slice(0, 3).map(dep => (
+                  <span
+                    key={dep.id}
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                      installedPlugins.some(p => p.id === dep.id)
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    {dep.id}
+                  </span>
+                ))}
+                {plugin.dependencies.length > 3 && (
+                  <span className="text-xs text-gray-500">
+                    +{plugin.dependencies.length - 3} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {hasConflicts && (
+            <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 p-2 rounded">
+              <AlertTriangle className="w-3 h-3" />
+              <span>Dependency conflicts detected</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2">
+            {isInstalled ? (
+              <div className="flex items-center gap-2">
+                                 <Button
+                   variant={installedPlugin?.status === 'enabled' ? "default" : "secondary"}
+                   size="sm"
+                   onClick={() => installedPlugin?.status === 'enabled'
+                     ? handleDisablePlugin(plugin.id)
+                     : handleEnablePlugin(plugin.id)
+                   }
+                   className="flex items-center gap-1"
+                 >
+                   {installedPlugin?.status === 'enabled' ? (
+                     <>
+                       <Eye className="w-3 h-3" />
+                       Enabled
+                     </>
+                   ) : (
+                     <>
+                       <EyeOff className="w-3 h-3" />
+                       Disabled
+                     </>
+                   )}
+                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUninstallDialog(plugin.id)}
+                  className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Uninstall
+                </Button>
+                                 {installedPlugin && installedPlugin.version !== plugin.version && (
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => setShowUpdateDialog(plugin.id)}
+                     className="flex items-center gap-1"
+                   >
+                     <RefreshCw className="w-3 h-3" />
+                     Update
+                   </Button>
+                 )}
+              </div>
+            ) : (
+              <Button
+                onClick={() => handleInstallPlugin(plugin)}
+                disabled={isInstalling}
+                className="flex items-center gap-2"
+              >
+                {isInstalling ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    Installing...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Install
+                  </>
+                )}
+              </Button>
             )}
           </div>
-        )}
-
-        <div className="plugin-verification">
-          <span className="verification-badge">Verified</span>
-          <span className="security-badge">Security: Safe</span>
-        </div>
-
-        <div className="plugin-actions">
-          {isInstalled ? (
-            <div className="installed-actions">
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  checked={installedPlugin?.status === PluginStatus.ENABLED}
-                  onChange={() => {
-                    if (installedPlugin?.status === PluginStatus.ENABLED) {
-                      handleDisablePlugin(plugin.id);
-                    } else {
-                      handleEnablePlugin(plugin.id);
-                    }
-                  }}
-                />
-                <span className="toggle-slider"></span>
-              </label>
-              {hasUpdate && (
-                <button
-                  className="update-button"
-                  onClick={() => setShowUpdateDialog(plugin.id)}
-                >
-                  Update
-                </button>
-              )}
-              <button
-                className="uninstall-button"
-                onClick={() => setShowUninstallDialog(plugin.id)}
-              >
-                Uninstall
-              </button>
-            </div>
-          ) : (
-            <button
-              className="install-button"
-              onClick={() => handleInstallPlugin(plugin)}
-              disabled={isInstalling || dependencyConflicts.hasConflicts}
-            >
-              {isInstalling ? 'Installing...' : 'Install'}
-            </button>
-          )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   };
 
   const renderUninstallDialog = () => {
     if (!showUninstallDialog) return null;
-
-    const plugin = installedPlugins.find(p => p.id === showUninstallDialog);
+    
+    const plugin = [...installedPlugins, ...availablePlugins].find(p => p.id === showUninstallDialog);
     if (!plugin) return null;
 
     return (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <h3>Uninstall Plugin</h3>
-          <p>Are you sure you want to uninstall {plugin.name}?</p>
-          <div className="modal-actions">
-            <button
-              className="cancel-button"
-              onClick={() => setShowUninstallDialog(null)}
-            >
-              Cancel
-            </button>
-            <button
-              className="confirm-button"
-              onClick={() => handleUninstallPlugin(plugin.id)}
-            >
-              Uninstall
-            </button>
-          </div>
-        </div>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <h3 className="text-lg font-semibold text-gray-900">Uninstall Plugin</h3>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to uninstall <strong>{plugin.name}</strong>?
+            </p>
+            <p className="text-xs text-gray-500">
+              This will remove the plugin and all its data from your system.
+            </p>
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowUninstallDialog(null)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleUninstallPlugin(plugin.id)}
+                className="flex-1"
+              >
+                Uninstall
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };
 
   const renderDependencyDialog = () => {
     if (!showDependencyDialog) return null;
+    
+    const plugin = [...installedPlugins, ...availablePlugins].find(p => p.id === showDependencyDialog);
+    if (!plugin || !plugin.dependencies) return null;
 
-    const plugin = availablePlugins.find(p => p.id === showDependencyDialog) || 
-                   installedPlugins.find(p => p.id === showDependencyDialog);
-    if (!plugin) return null;
-
-    const dependencyConflicts = checkDependencyConflicts(plugin);
+    const { conflicts } = checkDependencyConflicts(plugin);
 
     return (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <h3>Dependency Details - {plugin.name}</h3>
-          <div className="dependency-details">
-            {plugin.dependencies.length === 0 ? (
-              <p>No dependencies required.</p>
-            ) : (
-              <>
-                <h4>Required Dependencies:</h4>
-                <div className="dependency-list">
-                  {plugin.dependencies.map(dep => {
-                    const isInstalled = installedPlugins.some(p => p.id === dep.id);
-                    const installedDep = installedPlugins.find(p => p.id === dep.id);
-                    const hasConflict = installedDep && installedDep.version !== dep.version;
-                    
-                    return (
-                      <div key={dep.id} className={`dependency-item ${isInstalled ? 'installed' : ''} ${hasConflict ? 'conflict' : ''}`}>
-                        <div className="dependency-info">
-                          <strong>{dep.id}</strong>
-                          <span>Required: {dep.version}</span>
-                          {installedDep && <span>Installed: {installedDep.version}</span>}
-                        </div>
-                        <div className="dependency-status">
-                          {isInstalled ? (
-                            hasConflict ? (
-                              <span className="status-conflict">⚠ Version Conflict</span>
-                            ) : (
-                              <span className="status-ok">✓ Installed</span>
-                            )
-                          ) : (
-                            <span className="status-missing">✗ Missing</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                {dependencyConflicts.hasConflicts && (
-                  <div className="conflict-resolution">
-                    <h4>Conflict Resolution:</h4>
-                    <ul>
-                      {dependencyConflicts.conflicts.map((conflict, index) => (
-                        <li key={index}>{conflict}</li>
-                      ))}
-                    </ul>
-                    <p className="conflict-note">
-                      Note: Installing this plugin may require updating conflicting dependencies.
-                    </p>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-lg max-h-[80vh] overflow-y-auto">
+          <CardHeader>
+            <h3 className="text-lg font-semibold text-gray-900">Dependencies for {plugin.name}</h3>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              {plugin.dependencies.map(dep => {
+                const isInstalled = installedPlugins.some(p => p.id === dep.id);
+                const hasConflict = conflicts.includes(dep.id);
+                
+                return (
+                  <div
+                    key={dep.id}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      isInstalled 
+                        ? 'bg-green-50 border-green-200' 
+                        : hasConflict 
+                        ? 'bg-red-50 border-red-200'
+                        : 'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">{dep.id}</div>
+                      <div className="text-sm text-gray-600">v{dep.version}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isInstalled ? (
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      ) : hasConflict ? (
+                        <XCircle className="w-5 h-5 text-red-600" />
+                      ) : (
+                        <Package className="w-5 h-5 text-gray-400" />
+                      )}
+                    </div>
                   </div>
-                )}
-              </>
+                );
+              })}
+            </div>
+            
+            {conflicts.length > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <h4 className="font-medium text-yellow-800 mb-2">Dependency Conflicts</h4>
+                <p className="text-sm text-yellow-700">
+                  The following dependencies need to be installed: {conflicts.join(', ')}
+                </p>
+              </div>
             )}
-          </div>
-          <div className="modal-actions">
-            <button
-              className="cancel-button"
-              onClick={() => setShowDependencyDialog(null)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
+            
+            <div className="flex justify-end pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowDependencyDialog(null)}
+              >
+                Close
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };
 
   const renderUpdateDialog = () => {
     if (!showUpdateDialog) return null;
-
+    
     const plugin = installedPlugins.find(p => p.id === showUpdateDialog);
     const availablePlugin = availablePlugins.find(p => p.id === showUpdateDialog);
-    if (!plugin || !availablePlugin) return null;
+    if (!plugin || !availablePlugin || plugin.version === availablePlugin.version) return null;
 
     return (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <h3>Update Plugin</h3>
-          <div className="update-details">
-            <p>Update {plugin.name} from version {plugin.version} to {availablePlugin.version}?</p>
-            <div className="version-comparison">
-              <div className="current-version">
-                <strong>Current Version:</strong> {plugin.version}
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <h3 className="text-lg font-semibold text-gray-900">Update Plugin</h3>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">
+                Update <strong>{plugin.name}</strong> to the latest version?
+              </p>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Current version:</span>
+                <span className="font-medium">{plugin.version}</span>
               </div>
-              <div className="new-version">
-                <strong>New Version:</strong> {availablePlugin.version}
-              </div>
+                             <div className="flex items-center justify-between text-sm">
+                 <span className="text-gray-500">Latest version:</span>
+                 <span className="font-medium text-green-600">{availablePlugin.version}</span>
+               </div>
             </div>
-          </div>
-          <div className="modal-actions">
-            <button
-              className="cancel-button"
-              onClick={() => setShowUpdateDialog(null)}
-            >
-              Cancel
-            </button>
-            <button
-              className="confirm-button"
-              onClick={() => handleUpdatePlugin(plugin.id)}
-            >
-              Update
-            </button>
-          </div>
-        </div>
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowUpdateDialog(null)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleUpdatePlugin(plugin.id)}
+                className="flex-1"
+              >
+                Update
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };
 
   if (isLoading) {
     return (
-      <div className="plugin-manager-page">
-        <div className="plugin-manager-content">
-          <h1>Plugin Manager</h1>
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
-            <p>Loading plugins...</p>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <LoadingSpinner size="xl" />
+            <p className="mt-4 text-gray-600">Loading plugins...</p>
           </div>
         </div>
       </div>
@@ -474,14 +582,15 @@ const PluginManagerPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="plugin-manager-page">
-        <div className="plugin-manager-content">
-          <h1>Plugin Manager</h1>
-          <div className="error-state">
-            <p>{error}</p>
-            <button onClick={loadPlugins} className="retry-button">
-              Try again
-            </button>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Failed to load plugins</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button onClick={loadPlugins}>
+              Try Again
+            </Button>
           </div>
         </div>
       </div>
@@ -489,66 +598,93 @@ const PluginManagerPage: React.FC = () => {
   }
 
   return (
-    <div className="plugin-manager-page">
-      <div className="plugin-manager-content">
-        <h1>Plugin Manager</h1>
-        <p>Browse and manage your plugins</p>
-
-        {/* Search and Filter */}
-        <div className="search-section">
-          <input
-            type="text"
-            placeholder="Search plugins..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Plugin Manager</h1>
+          <p className="text-gray-600">Browse and manage your plugins</p>
         </div>
 
-        {/* Installed Plugins Section */}
-        {installedPlugins.length > 0 && (
-          <section className="installed-plugins-section">
-            <h2>Installed Plugins</h2>
-            <div className="plugin-grid">
-              {installedPlugins.map(renderPluginCard)}
+        {/* Search and Filter */}
+        <div className="mb-8 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 max-w-md">
+              <Input
+                type="text"
+                placeholder="Search plugins..."
+                value={searchTerm}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                icon={<Search className="w-4 h-4" />}
+              />
             </div>
-          </section>
-        )}
+            <div className="flex gap-2">
+              <Button
+                variant={filterType === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('all')}
+              >
+                All ({installedPlugins.length + availablePlugins.length})
+              </Button>
+              <Button
+                variant={filterType === 'installed' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('installed')}
+              >
+                Installed ({installedPlugins.length})
+              </Button>
+              <Button
+                variant={filterType === 'available' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('available')}
+              >
+                Available ({availablePlugins.length})
+              </Button>
+            </div>
+          </div>
+        </div>
 
-        {/* Available Plugins Section */}
-        <section className="available-plugins-section">
-          <h2>Available Plugins</h2>
-          {filteredPlugins.length > 0 ? (
-            <div className="plugin-grid">
-              {filteredPlugins.map(renderPluginCard)}
-            </div>
-          ) : searchTerm ? (
-            <div className="no-results">
-              <p>No plugins found matching your search</p>
-            </div>
-          ) : (
-            <div className="empty-state">
-              <p>No plugins available</p>
-              <p>Plugin marketplace coming soon</p>
-            </div>
-          )}
-        </section>
-
-        {/* Notification */}
-        {notification && (
-          <div className={`notification ${notification.type}`}>
-            {notification.message}
-            <button onClick={() => setNotification(null)}>×</button>
+        {/* Plugin Grid */}
+        {filteredPlugins.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPlugins.map(renderPluginCard)}
+          </div>
+        ) : searchTerm ? (
+          <div className="text-center py-12">
+            <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No plugins found</h3>
+            <p className="text-gray-600">Try adjusting your search terms</p>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No plugins available</h3>
+            <p className="text-gray-600">Plugin marketplace coming soon</p>
           </div>
         )}
 
-        {/* Uninstall Dialog */}
+        {/* Notification */}
+        {notification && (
+          <div className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg max-w-sm z-50 ${
+            notification.type === 'success' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">{notification.message}</span>
+              <button 
+                onClick={() => setNotification(null)}
+                className="ml-4 hover:opacity-75"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Dialogs */}
         {renderUninstallDialog()}
-
-        {/* Dependency Details Dialog */}
         {renderDependencyDialog()}
-
-        {/* Update Dialog */}
         {renderUpdateDialog()}
       </div>
     </div>
