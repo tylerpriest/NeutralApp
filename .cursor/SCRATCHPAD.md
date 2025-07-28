@@ -19,7 +19,7 @@ What are my priorities
 1. Plugin Manager working
     1.1 First round done issues found 2nd round started with Claude Code might also do 2.
 2. TODO's completed*
-3. UI modernised
+3. UI modernised - Working on now
 4. UX / CX modernised*
 5. Login not required
 6. Pack of Plugins to recreate Narratoo?*
