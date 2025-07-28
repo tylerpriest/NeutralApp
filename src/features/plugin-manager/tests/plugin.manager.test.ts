@@ -985,18 +985,22 @@ describe('PluginManager', () => {
       };
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
       
-      // Enable plugin first time - should register widget
+      // Enable plugin first time - should register widget (demo plugin calls api.ui.createWidget during init)
       await pluginManager.enablePlugin('demo-hello-world');
       expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(1);
       
+      // Clear the mock to reset the call count
+      mockDashboardManager.registerWidget.mockClear();
+      
       // Try to enable same plugin again - should NOT register widget again due to deduplication
       await pluginManager.enablePlugin('demo-hello-world');
-      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(1); // Still only 1 call, duplicates prevented
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(0); // No calls because already registered
       
       // Disable and re-enable should register widget again
       await pluginManager.disablePlugin('demo-hello-world');
+      mockDashboardManager.registerWidget.mockClear();
       await pluginManager.enablePlugin('demo-hello-world');
-      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(2); // Called again after disable/re-enable
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(1); // Called again after disable/re-enable
     });
   });
 }); 

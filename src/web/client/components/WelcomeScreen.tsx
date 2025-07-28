@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './WelcomeScreen.css';
+import { Button } from '../../../shared/ui/button';
+import { Package, BookOpen } from 'lucide-react';
 
 const WelcomeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -15,40 +16,45 @@ const WelcomeScreen: React.FC = () => {
   };
 
   return (
-    <div className="welcome-screen" data-testid="welcome-screen">
-      <div className="welcome-content">
-        <div className="welcome-illustration" data-testid="welcome-illustration">
-          <div className="illustration-icon">📦</div>
+    <div className="flex items-center justify-center min-h-screen p-8 bg-gray-50" data-testid="welcome-screen">
+      <div className="max-w-2xl text-center bg-white p-12 rounded-lg shadow-lg">
+        <div className="mb-8" data-testid="welcome-illustration">
+          <div className="text-6xl mb-4">📦</div>
         </div>
         
-        <h1 className="welcome-title">Welcome to NeutralApp</h1>
-        <h2 className="welcome-subtitle">Get started by installing your first plugin</h2>
+        <h1 className="text-4xl font-bold text-gray-900 mb-2 leading-tight">
+          Welcome to NeutralApp
+        </h1>
+        <h2 className="text-xl font-medium text-gray-700 mb-6 leading-relaxed">
+          Get started by installing your first plugin
+        </h2>
         
-        <p className="welcome-description">
+        <p className="text-base text-gray-600 mb-8 leading-relaxed">
           Plugins add functionality to your dashboard. Browse our plugin marketplace to find the perfect tools for your workflow.
         </p>
         
-        <div className="welcome-actions">
-          <button 
-            className="welcome-cta-button" 
+        <div className="flex gap-4 justify-center mb-8">
+          <Button 
             onClick={handleBrowsePlugins}
-            type="button"
+            className="min-w-[140px] px-6 py-3 text-base font-semibold"
           >
+            <Package className="w-4 h-4 mr-2" />
             Browse Plugins
-          </button>
+          </Button>
           
-          <button 
-            className="welcome-secondary-button" 
+          <Button 
             onClick={handleLearnMore}
-            type="button"
+            variant="outline"
+            className="min-w-[140px] px-6 py-3 text-base font-semibold"
           >
+            <BookOpen className="w-4 h-4 mr-2" />
             Learn More
-          </button>
+          </Button>
         </div>
         
-        <div className="widget-placeholder">
-          <p>No plugins installed yet</p>
-          <p>Install plugins to see widgets here</p>
+        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-md p-8 mt-6">
+          <p className="font-semibold text-gray-700 mb-1">No plugins installed yet</p>
+          <p className="text-gray-600">Install plugins to see widgets here</p>
         </div>
       </div>
     </div>

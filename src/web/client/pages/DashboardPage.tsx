@@ -3,7 +3,8 @@ import { DashboardManager } from '../../../features/ui-shell/services/dashboard.
 import { DashboardWidget, DashboardLayout } from '../../../shared/types';
 import WidgetContainer from '../components/WidgetContainer';
 import WelcomeScreen from '../components/WelcomeScreen';
-import './DashboardPage.css';
+import { Button } from '../../../shared/ui/button';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
   const [widgets, setWidgets] = useState<DashboardWidget[]>([]);
@@ -100,17 +101,19 @@ const DashboardPage: React.FC = () => {
   // Show error state
   if (error) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-content">
-          <h1>Dashboard</h1>
-          <div className="dashboard-error">
-            <p>{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="dashboard-error-retry"
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto p-8">
+          <div className="bg-white border border-red-300 rounded-md p-8 text-center mt-8">
+            <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-4" />
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              variant="destructive"
+              className="flex items-center gap-2"
             >
-              Refresh Page
-            </button>
+              <RefreshCw className="w-4 h-4" />
+              Retry
+            </Button>
           </div>
         </div>
       </div>
@@ -120,30 +123,32 @@ const DashboardPage: React.FC = () => {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-content">
-          <h1>Dashboard</h1>
-          <div className="dashboard-loading">
-            <div className="loading-spinner"></div>
-            <p>Loading dashboard...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto p-8">
+          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-md mt-8">
+            <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-500">Loading dashboard...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Show dashboard with widgets
+  // Show main dashboard
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-content">
-        <h1>Dashboard</h1>
-        <p>Welcome to your NeutralApp dashboard</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600">
+            Manage your widgets and customize your workspace
+          </p>
+        </div>
         
         {layout && (
           <WidgetContainer
             widgets={widgets}
             layout={layout}
-            isLoading={isLoading}
             onWidgetResize={handleWidgetResize}
             onWidgetMove={handleWidgetMove}
           />
@@ -153,5 +158,4 @@ const DashboardPage: React.FC = () => {
   );
 };
 
-// Remove the local dashboardManager export and use the global instance
 export default DashboardPage; 

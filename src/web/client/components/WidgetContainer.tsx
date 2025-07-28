@@ -1,7 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { DashboardWidget, DashboardLayout, WidgetSize, WidgetPosition } from '../../../shared/types';
 import { useWidgetComponent } from './WidgetFactory';
-import './WidgetContainer.css';
+import { Button } from '../../../shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface WidgetContainerProps {
   widgets: DashboardWidget[];
@@ -41,17 +43,21 @@ class WidgetErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="widget-error" data-testid="widget-error">
-          <div className="widget-error-content">
-            <h4>Widget Error</h4>
-            <p>This widget encountered an error and could not be displayed.</p>
-            <button 
-              className="widget-error-retry" 
+        <div className="h-full flex items-center justify-center p-4" data-testid="widget-error">
+          <div className="text-center">
+            <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-3" />
+            <h4 className="text-sm font-semibold text-red-700 mb-2">Widget Error</h4>
+            <p className="text-xs text-red-600 mb-3">This widget encountered an error and could not be displayed.</p>
+            <Button 
               onClick={this.handleRetry}
+              size="sm"
+              variant="destructive"
+              className="text-xs"
               data-testid="widget-error-retry"
             >
+              <RefreshCw className="w-3 h-3 mr-1" />
               Retry
-            </button>
+            </Button>
           </div>
         </div>
       );
@@ -80,8 +86,8 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
 
   if (isLoading) {
     return (
-      <div className="widget-loading" data-testid="widget-loading">
-        <div className="loading-spinner"></div>
+      <div className="flex flex-col items-center justify-center p-10 text-gray-500" data-testid="widget-loading">
+        <div className="w-8 h-8 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
         <p>Loading widgets...</p>
       </div>
     );
@@ -89,9 +95,9 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
 
   if (widgets.length === 0) {
     return (
-      <div className="widget-empty-state" data-testid="widget-empty-state">
-        <h3>No widgets available</h3>
-        <p>Install plugins to add widgets to your dashboard.</p>
+      <div className="text-center p-10 text-gray-500" data-testid="widget-empty-state">
+        <h3 className="text-lg font-semibold text-gray-700 mb-2">No widgets available</h3>
+        <p className="text-sm">Install plugins to add widgets to your dashboard.</p>
       </div>
     );
   }
@@ -100,69 +106,44 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
     display: 'grid',
     gridTemplateColumns: `repeat(${layout.grid.columns}, 1fr)`,
     gap: layout.grid.gap,
-    gridTemplateRows: layout.grid.rows ? `repeat(${layout.grid.rows}, 1fr)` : 'auto'
+    padding: '16px'
   };
 
   return (
-    <div 
-      className="widget-grid" 
-      style={gridStyle}
-      data-testid="widget-container"
-    >
-      {widgets.map((widget) => {
-        const layoutItem = layout.widgets.find(item => item.componentId === widget.id);
-        const isError = errorStates[widget.id];
-        const WidgetComponent = useWidgetComponent(widget);
-
-        if (isError) {
-          return (
-            <div
-              key={widget.id}
-              className="widget-item widget-error-item"
-              style={{
-                gridColumn: layoutItem ? `${layoutItem.position.x + 1} / span ${layoutItem.size.width}` : '1 / span 2',
-                gridRow: layoutItem ? `${layoutItem.position.y + 1} / span ${layoutItem.size.height}` : '1 / span 1'
-              }}
-            >
-              <div className="widget-error" data-testid="widget-error">
-                <div className="widget-error-content">
-                  <h4>Widget Error</h4>
-                  <p>This widget encountered an error and could not be displayed.</p>
-                  <button 
-                    className="widget-error-retry" 
-                    onClick={() => handleWidgetRetry(widget.id)}
-                    data-testid="widget-error-retry"
-                  >
-                    Retry
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        }
-
-        return (
-          <div
-            key={widget.id}
-            className="widget-item"
-            style={{
-              gridColumn: layoutItem ? `${layoutItem.position.x + 1} / span ${layoutItem.size.width}` : '1 / span 2',
-              gridRow: layoutItem ? `${layoutItem.position.y + 1} / span ${layoutItem.size.height}` : '1 / span 1'
-            }}
-          >
-            <WidgetErrorBoundary widget={widget}>
-              <div className="widget-content">
-                <div className="widget-header">
-                  <h3 className="widget-title">{widget.title}</h3>
-                </div>
-                <div className="widget-body">
-                  <WidgetComponent widget={widget} />
-                </div>
-              </div>
-            </WidgetErrorBoundary>
-          </div>
-        );
-      })}
+    <div className="w-full min-h-[400px] p-4 bg-gray-50 rounded-lg" data-testid="widget-container">
+      <div className="widget-grid" style={gridStyle}>
+                 {widgets.map((widget) => {
+           const WidgetComponent = useWidgetComponent(widget);
+           
+           return (
+             <Card
+               key={widget.id}
+               className={`
+                 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden
+                 transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5
+                 ${errorStates[widget.id] ? 'border-red-300 bg-red-50' : ''}
+               `}
+               style={{
+                 gridColumn: `span ${widget.size?.width || 1}`,
+                 gridRow: `span ${widget.size?.height || 1}`
+               }}
+             >
+               <CardHeader className="p-3 bg-gray-50 border-b border-gray-200">
+                 <CardTitle className="text-sm font-semibold text-gray-700 m-0">
+                   {widget.title}
+                 </CardTitle>
+               </CardHeader>
+               <CardContent className="p-4 h-full flex flex-col">
+                 <WidgetErrorBoundary widget={widget}>
+                   <div className="flex-1 overflow-auto">
+                     <WidgetComponent widget={widget} />
+                   </div>
+                 </WidgetErrorBoundary>
+               </CardContent>
+             </Card>
+           );
+         })}
+      </div>
     </div>
   );
 };

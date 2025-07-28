@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import './ToastNotification.css';
+import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { Button } from '../../../shared/ui/button';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -37,7 +38,7 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
     setIsExiting(true);
     setTimeout(() => {
       onDismiss(toast.id);
-    }, 300); // Match CSS transition duration
+    }, 300); // Match transition duration
   }, [toast.id, onDismiss]);
 
   const handleAction = useCallback((action: ToastAction) => {
@@ -69,95 +70,103 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
   }, [toast.persistent, toast.duration, handleDismiss]);
 
   const getIcon = () => {
+    const iconClasses = "w-6 h-6 flex-shrink-0 mt-0.5";
     switch (toast.type) {
       case 'success':
-        return (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22,4 12,14.01 9,11.01"/>
-          </svg>
-        );
+        return <CheckCircle className={`${iconClasses} text-green-600`} />;
       case 'error':
-        return (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="15" y1="9" x2="9" y2="15"/>
-            <line x1="9" y1="9" x2="15" y2="15"/>
-          </svg>
-        );
+        return <XCircle className={`${iconClasses} text-red-600`} />;
       case 'warning':
-        return (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-        );
+        return <AlertTriangle className={`${iconClasses} text-yellow-600`} />;
       case 'info':
-        return (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="16" x2="12" y2="12"/>
-            <line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
-        );
+        return <Info className={`${iconClasses} text-blue-600`} />;
       default:
         return null;
     }
   };
 
+  const getBorderColor = () => {
+    switch (toast.type) {
+      case 'success':
+        return 'border-l-green-500';
+      case 'error':
+        return 'border-l-red-500';
+      case 'warning':
+        return 'border-l-yellow-500';
+      case 'info':
+        return 'border-l-blue-500';
+      default:
+        return 'border-l-gray-300';
+    }
+  };
+
+  const getActionVariant = (variant?: string) => {
+    switch (variant) {
+      case 'primary':
+        return 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700';
+      case 'danger':
+        return 'bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700';
+      default:
+        return 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400';
+    }
+  };
+
   return (
-    <div 
-      className={`toast-notification ${toast.type} ${isVisible ? 'visible' : ''} ${isExiting ? 'exiting' : ''}`}
+    <div
+      className={`
+        relative bg-white rounded-lg shadow-lg border border-gray-200 mb-3 max-w-md min-w-[300px]
+        transform transition-all duration-300 ease-out overflow-hidden
+        ${getBorderColor()} border-l-4
+        ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
+        ${isExiting ? 'translate-x-full opacity-0' : ''}
+        focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2
+      `}
       role="alert"
-      aria-live="polite"
-      aria-atomic="true"
+      aria-live="assertive"
     >
-      <div className="toast-content">
-        <div className="toast-icon">
-          {getIcon()}
-        </div>
+      <div className="flex items-start p-4 gap-3">
+        {getIcon()}
         
-        <div className="toast-body">
-          <div className="toast-title">{toast.title}</div>
-          <div className="toast-message">{toast.message}</div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-sm text-gray-900 mb-1 leading-tight">
+            {toast.title}
+          </h4>
+          <p className="text-sm text-gray-600 leading-relaxed mb-2">
+            {toast.message}
+          </p>
           
           {toast.actions && toast.actions.length > 0 && (
-            <div className="toast-actions">
+            <div className="flex gap-2 mt-2">
               {toast.actions.map((action, index) => (
-                <button
+                <Button
                   key={index}
-                  className={`toast-action ${action.variant || 'secondary'}`}
                   onClick={() => handleAction(action)}
-                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={`text-xs font-medium px-3 py-1.5 border rounded-md transition-colors ${getActionVariant(action.variant)}`}
                 >
                   {action.label}
-                </button>
+                </Button>
               ))}
             </div>
           )}
         </div>
         
         <button
-          className="toast-close"
           onClick={handleDismiss}
-          aria-label="Close notification"
-          type="button"
+          className="flex-shrink-0 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+          aria-label="Dismiss notification"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
+          <X className="w-5 h-5" />
         </button>
       </div>
       
       {!toast.persistent && toast.duration && toast.duration > 0 && (
-        <div className="toast-progress">
-          <div 
-            className="toast-progress-bar"
-            style={{ 
-              animationDuration: `${toast.duration}ms`,
-              animationDelay: '300ms' // Start after entrance animation
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-blue-600 to-purple-600 animate-pulse"
+            style={{
+              animation: `toast-progress ${toast.duration}ms linear forwards`
             }}
           />
         </div>

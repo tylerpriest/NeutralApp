@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './TransitionWrapper.css';
 
 interface TransitionWrapperProps {
   children: React.ReactNode;
@@ -89,14 +88,42 @@ const TransitionWrapper: React.FC<TransitionWrapperProps> = ({
     return null;
   }
 
-  const transitionClasses = [
-    'transition-wrapper',
-    `transition-${transitionType}`,
-    `transition-direction-${direction}`,
-    isTransitioning ? 'transitioning' : '',
-    isVisible ? 'visible' : 'hidden',
-    className
-  ].filter(Boolean).join(' ');
+  const getTransitionClasses = () => {
+    const baseClasses = 'will-change-transform will-change-opacity';
+    const durationClass = `duration-[${duration}ms]`;
+    const delayClass = delay > 0 ? `delay-[${delay}ms]` : '';
+    
+    let transitionClasses = `${baseClasses} ${durationClass} ${delayClass} transition-all ease-in-out`;
+    
+    switch (transitionType) {
+      case 'fade':
+        transitionClasses += isVisible ? ' opacity-100' : ' opacity-0';
+        break;
+      case 'slide':
+        if (direction === 'out') {
+          transitionClasses += isVisible ? ' translate-x-0 opacity-100' : ' -translate-x-full opacity-0';
+        } else {
+          transitionClasses += isVisible ? ' translate-x-0 opacity-100' : ' translate-x-full opacity-0';
+        }
+        break;
+      case 'scale':
+        transitionClasses += isVisible ? ' scale-100 opacity-100' : ' scale-80 opacity-0';
+        break;
+      case 'flip':
+        transitionClasses += isVisible ? ' rotate-y-0 opacity-100' : ' rotate-y-90 opacity-0';
+        break;
+      case 'bounce':
+        transitionClasses += isVisible ? ' scale-100 opacity-100' : ' scale-30 opacity-0';
+        if (isVisible && isTransitioning) {
+          transitionClasses += ' animate-bounce';
+        }
+        break;
+      default:
+        transitionClasses += isVisible ? ' opacity-100' : ' opacity-0';
+    }
+    
+    return transitionClasses;
+  };
 
   const style = {
     '--transition-duration': `${duration}ms`,
@@ -104,7 +131,10 @@ const TransitionWrapper: React.FC<TransitionWrapperProps> = ({
   } as React.CSSProperties;
 
   return (
-    <div className={transitionClasses} style={style}>
+    <div 
+      className={`${getTransitionClasses()} ${className}`} 
+      style={style}
+    >
       {children}
     </div>
   );

@@ -1,6 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { webErrorLogger } from '../services/WebErrorLogger';
 import { ErrorSeverity } from '../../../features/error-reporter/interfaces/logging.interface';
+import { Button } from '../../../shared/ui/button';
+import { AlertTriangle, RefreshCw, Bug, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -14,6 +16,7 @@ interface State {
   error: Error | null;
   errorInfo: ErrorInfo | null;
   isRecovering: boolean;
+  showDetails: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -23,7 +26,8 @@ class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
-      isRecovering: false
+      isRecovering: false,
+      showDetails: false
     };
   }
 
@@ -32,7 +36,8 @@ class ErrorBoundary extends Component<Props, State> {
       hasError: true,
       error,
       errorInfo: null,
-      isRecovering: false
+      isRecovering: false,
+      showDetails: false
     };
   }
 
@@ -56,7 +61,8 @@ class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
-      isRecovering: false
+      isRecovering: false,
+      showDetails: false
     });
   };
 
@@ -79,6 +85,10 @@ class ErrorBoundary extends Component<Props, State> {
     }
   };
 
+  private toggleDetails = () => {
+    this.setState(prev => ({ showDetails: !prev.showDetails }));
+  };
+
   render() {
     if (this.state.hasError) {
       // Use custom fallback if provided
@@ -88,66 +98,79 @@ class ErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="error-boundary" role="alert">
-          <div className="error-boundary-content">
-            <div className="error-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
-              </svg>
+        <div className="flex items-center justify-center min-h-[400px] p-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200" role="alert">
+          <div className="text-center max-w-lg w-full">
+            <div className="text-red-500 mb-6 flex justify-center">
+              <AlertTriangle className="w-12 h-12" />
             </div>
             
-            <h2>Something went wrong</h2>
-            <p>We encountered an unexpected error. Our team has been notified and is working to fix it.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 leading-tight">
+              Something went wrong
+            </h2>
             
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              An unexpected error occurred. We've been notified and are working to fix it.
+            </p>
+
+            {/* Recovery Status */}
             {this.state.isRecovering && (
-              <div className="recovery-status">
-                <div className="loading-spinner"></div>
-                <p>Attempting to recover...</p>
+              <div className="flex flex-col items-center gap-3 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="w-6 h-6 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+                <p className="text-sm font-medium text-gray-700">Recovering...</p>
               </div>
             )}
-            
-            <div className="error-actions">
-              <button 
+
+            {/* Error Actions */}
+            <div className="flex gap-3 justify-center flex-wrap mb-8">
+              <Button 
                 onClick={this.handleRetry}
-                className="retry-button"
                 disabled={this.state.isRecovering}
+                className="min-w-[120px] px-6 py-3 text-sm font-semibold"
               >
-                Try Again
-              </button>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </Button>
               
-              <button 
+              <Button 
                 onClick={this.handleReportError}
-                className="report-button"
+                variant="outline"
                 disabled={this.state.isRecovering}
+                className="min-w-[120px] px-6 py-3 text-sm font-semibold"
               >
-                Report Issue
-              </button>
+                <Bug className="w-4 h-4 mr-2" />
+                Report
+              </Button>
             </div>
-            
+
+            {/* Error Details */}
             {this.props.showDetails && this.state.error && (
-              <details className="error-details">
-                <summary>Error Details</summary>
-                <div className="error-stack">
-                  <h4>Error Message:</h4>
-                  <pre>{this.state.error.message}</pre>
-                  
-                  {this.state.error.stack && (
-                    <>
-                      <h4>Stack Trace:</h4>
-                      <pre>{this.state.error.stack}</pre>
-                    </>
-                  )}
-                  
-                  {this.state.errorInfo && (
-                    <>
-                      <h4>Component Stack:</h4>
-                      <pre>{this.state.errorInfo.componentStack}</pre>
-                    </>
-                  )}
-                </div>
-              </details>
+              <div className="mt-8 text-left bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <button
+                  onClick={this.toggleDetails}
+                  className="w-full p-4 bg-gray-50 border-b border-gray-200 cursor-pointer font-semibold text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-between"
+                >
+                  Error Details
+                  {this.state.showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                
+                {this.state.showDetails && (
+                  <div className="p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Error Message</h4>
+                    <pre className="bg-gray-50 border border-gray-200 rounded-md p-3 mb-4 text-xs leading-relaxed text-gray-700 overflow-x-auto whitespace-pre-wrap break-words">
+                      {this.state.error.message}
+                    </pre>
+                    
+                    {this.state.errorInfo && (
+                      <>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-2">Component Stack</h4>
+                        <pre className="bg-gray-50 border border-gray-200 rounded-md p-3 text-xs leading-relaxed text-gray-700 overflow-x-auto whitespace-pre-wrap break-words">
+                          {this.state.errorInfo.componentStack}
+                        </pre>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

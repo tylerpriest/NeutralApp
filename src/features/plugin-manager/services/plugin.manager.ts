@@ -538,6 +538,8 @@ export class PluginManager implements IPluginManager {
                 permissions: []
               };
               this.dashboardManager.registerWidget(dashboardWidget);
+              // Mark as registered to prevent duplicate registration
+              this.registeredWidgets.add(pluginId);
             }
           } catch (error) {
             console.error(`Failed to create widget for plugin ${pluginId}:`, error);

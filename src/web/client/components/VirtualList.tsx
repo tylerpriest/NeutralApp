@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import './VirtualList.css';
 
 interface VirtualListProps<T> {
   items: T[];
@@ -76,7 +75,11 @@ function VirtualList<T>({
   return (
     <div 
       ref={containerRef}
-      className={`virtual-list ${className}`}
+      className={`
+        relative overflow-y-auto overflow-x-hidden will-change-scroll
+        scroll-smooth focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2
+        ${className}
+      `}
       style={{ height }}
       onScroll={handleScroll}
       role="list"
@@ -84,23 +87,25 @@ function VirtualList<T>({
       data-testid="virtual-list-container"
     >
       <div 
-        className="virtual-list-content"
+        className="relative w-full"
         style={{ height: totalHeight }}
       >
         <div 
-          className="virtual-list-items"
+          className="absolute top-0 left-0 right-0 will-change-transform"
           style={{ transform: `translateY(${transform}px)` }}
         >
           {items.length === 0 ? (
-            <div className="virtual-list-empty">
+            <div className="flex items-center justify-center text-gray-500 italic p-4">
               <p>No items to display</p>
             </div>
           ) : (
             visibleItems.map(({ item, index }) => (
               <div 
                 key={index}
-                className="virtual-list-item"
+                className="relative w-full box-border overflow-hidden focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-1"
                 style={{ height: itemHeight }}
+                role="listitem"
+                data-testid={`virtual-list-item-${index}`}
               >
                 {renderItem(item, index)}
               </div>
