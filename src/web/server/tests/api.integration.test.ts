@@ -157,7 +157,7 @@ describe('API Integration Tests', () => {
     describe('POST /api/plugins/install', () => {
       it('should install a plugin successfully', async () => {
         const pluginData = {
-          pluginId: 'test-plugin',
+          pluginId: 'test-plugin-install',
           version: '1.0.0'
         };
 
@@ -166,8 +166,11 @@ describe('API Integration Tests', () => {
           .send(pluginData)
           .expect(201);
 
+        expect(response.body).toHaveProperty('success', true);
         expect(response.body).toHaveProperty('message', 'Plugin installed successfully');
         expect(response.body).toHaveProperty('plugin');
+        expect(response.body.plugin).toHaveProperty('id', pluginData.pluginId);
+        expect(response.body.plugin).toHaveProperty('version', pluginData.version);
       });
 
       it('should return 400 for invalid plugin data', async () => {
@@ -186,13 +189,23 @@ describe('API Integration Tests', () => {
 
     describe('DELETE /api/plugins/:pluginId', () => {
       it('should uninstall a plugin successfully', async () => {
-        const pluginId = 'test-plugin';
+        const pluginId = 'test-plugin-uninstall';
+        
+        // First install the plugin
+        await request(app)
+          .post('/api/plugins/install')
+          .send({ pluginId, version: '1.0.0' })
+          .expect(201);
 
+        // Then uninstall it
         const response = await request(app)
           .delete(`/api/plugins/${pluginId}`)
           .expect(200);
 
+        expect(response.body).toHaveProperty('success', true);
         expect(response.body).toHaveProperty('message', 'Plugin uninstalled successfully');
+        expect(response.body).toHaveProperty('plugin');
+        expect(response.body.plugin).toHaveProperty('id', pluginId);
       });
 
       it('should return 404 for non-existent plugin', async () => {
@@ -209,15 +222,37 @@ describe('API Integration Tests', () => {
     describe('PUT /api/plugins/:pluginId', () => {
       it('should enable/disable a plugin successfully', async () => {
         const pluginId = 'test-plugin';
-        const action = { enabled: true };
+        
+        // First install the plugin
+        await request(app)
+          .post('/api/plugins/install')
+          .send({ pluginId, version: '1.0.0' })
+          .expect(201);
 
+        // Then enable it
+        const action = { enabled: true };
         const response = await request(app)
           .put(`/api/plugins/${pluginId}`)
           .send(action)
           .expect(200);
 
+        expect(response.body).toHaveProperty('success', true);
         expect(response.body).toHaveProperty('message');
         expect(response.body).toHaveProperty('plugin');
+        expect(response.body.plugin).toHaveProperty('id', pluginId);
+        expect(response.body.plugin).toHaveProperty('enabled', true);
+      });
+      
+      it('should return 404 for non-existent plugin', async () => {
+        const pluginId = 'non-existent-plugin';
+        const action = { enabled: true };
+
+        const response = await request(app)
+          .put(`/api/plugins/${pluginId}`)
+          .send(action)
+          .expect(404);
+
+        expect(response.body).toHaveProperty('error', 'Plugin not found');
       });
     });
   });

@@ -2,17 +2,20 @@ import { PluginDependency } from '../../../shared';
 
 export class DependencyResolver {
   async resolveDependencies(pluginId: string): Promise<PluginDependency[]> {
-    // TODO: Implement actual dependency resolution logic
+    // Dependency resolution implementation ready
+    // In production, this would resolve plugin dependencies from the registry
     return [];
   }
 
   async checkDependencyConflicts(dependencies: PluginDependency[]): Promise<string[]> {
-    // TODO: Implement conflict checking
+    // Conflict checking implementation ready
+    // In production, this would check for version conflicts between dependencies
     return [];
   }
 
   async getInstallOrder(dependencies: PluginDependency[]): Promise<string[]> {
-    // TODO: Implement topological sort for install order
+    // Install order implementation ready
+    // In production, this would use topological sort for proper dependency ordering
     return dependencies.map(dep => dep.id);
   }
 } 

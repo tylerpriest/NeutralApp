@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import path from 'path';
 import { SimpleAPIRouter } from './SimpleAPIRouter';
 import { JWTAuthRoutes } from '../../features/auth';
+import { createLogger } from '../../core/logger';
 
 /**
  * SimpleWebServer - A minimal web server for NeutralApp foundation
@@ -13,11 +14,12 @@ export class SimpleWebServer {
   private app: Express;
   private server: any;
   private authRoutes: JWTAuthRoutes;
+  private logger = createLogger('WebServer');
 
   constructor() {
     this.app = express();
     this.authRoutes = new JWTAuthRoutes();
-    console.log('Initializing JWT authentication...');
+    this.logger.info('Initializing JWT authentication');
     this.setupMiddleware();
     this.setupRoutes();
   }
@@ -65,7 +67,7 @@ export class SimpleWebServer {
     // Request logging middleware
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       const timestamp = new Date().toISOString();
-      console.log(`${timestamp} ${req.method} ${req.path}`);
+      this.logger.debug('HTTP Request', { method: req.method, path: req.path, timestamp });
       next();
     });
   }
@@ -225,7 +227,7 @@ export class SimpleWebServer {
     return new Promise((resolve) => {
       if (this.server) {
         this.server.close(() => {
-          console.log('✅ Server stopped gracefully');
+          this.logger.info('Server stopped gracefully');
           resolve();
         });
       } else {

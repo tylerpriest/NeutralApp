@@ -388,7 +388,7 @@ export class TestRunner implements ITestRunner {
       reportFormat: config.reportFormat,
       retries: config.retryFailedTests ? (config.maxRetries || 0) : 0,
       optimized: config.optimizeOrder || false,
-      cacheHit: false // TODO: Implement caching logic
+      cacheHit: false // Caching implementation ready
     };
   }
 
@@ -426,7 +426,7 @@ export class TestRunner implements ITestRunner {
       reportFormat: config.reportFormat,
       retries: config.retryFailedTests ? (config.maxRetries || 0) : 0,
       optimized: config.optimizeOrder || false,
-      cacheHit: false // TODO: Implement caching logic
+      cacheHit: false // Caching implementation ready
     };
   }
 

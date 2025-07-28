@@ -1,6 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* NeutralApp Design System */
 
-/* CSS Custom Properties */
+/* CSS Custom Properties - Keeping for backward compatibility during migration */
 :root {
   /* Color Palette */
   --color-primary: #1a1a1a;

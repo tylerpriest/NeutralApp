@@ -10,8 +10,8 @@ describe('Static Assets', () => {
 
   beforeAll(async () => {
     // Ensure build directory exists with mock index.html
-    // WebServer expects: src/client/build (not src/web/client/build)
-    buildPath = path.join(__dirname, '../../../client/build');
+    // WebServer serves from: src/dist/web/client in dev, ../client in prod
+    buildPath = path.join(__dirname, '../../../../src/dist/web/client');
     if (!fs.existsSync(buildPath)) {
       fs.mkdirSync(buildPath, { recursive: true });
     }
@@ -19,17 +19,17 @@ describe('Static Assets', () => {
     // Create mock index.html for React app
     const indexHtmlPath = path.join(buildPath, 'index.html');
     if (!fs.existsSync(indexHtmlPath)) {
-      fs.writeFileSync(indexHtmlPath, `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>NeutralApp</title>
-          </head>
-          <body>
-            <div id="root">NeutralApp</div>
-          </body>
-        </html>
-      `);
+      fs.writeFileSync(indexHtmlPath, `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeutralApp - Test</title>
+</head>
+<body>
+  <div id="root">NeutralApp Test</div>
+</body>
+</html>`);
     }
 
     server = new WebServer();
