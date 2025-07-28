@@ -29,10 +29,10 @@
   - _Requirements: 4_
 
 - [ ] 3. Modernize feature UI components (one feature at a time)
-  - [ ] 3.1 Auth feature: Refactor /src/features/auth/web/ components
-    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
-    - [ ] Remove legacy CSS
-    - [ ] Update or add tests
+  - [x] 3.1 Auth feature: Refactor /src/features/auth/web/ components
+    - [x] Use shared UI primitives and Tailwind/shadcn/ui
+    - [x] Remove legacy CSS
+    - [x] Update or add tests
   - [ ] 3.2 Plugin-manager feature: Refactor /src/features/plugin-manager/web/ components
     - [ ] Use shared UI primitives and Tailwind/shadcn/ui
     - [ ] Remove legacy CSS

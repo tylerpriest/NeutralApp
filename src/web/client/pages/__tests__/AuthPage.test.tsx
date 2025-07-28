@@ -29,10 +29,10 @@ describe('AuthPage', () => {
       renderAuthPage();
       
       expect(screen.getByText('NeutralApp')).toBeInTheDocument();
-      expect(screen.getByText('Welcome back! Please sign in to continue')).toBeInTheDocument();
+      expect(screen.getByText('Sign in to your account to continue')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Email Address')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Sign In/i })).toBeInTheDocument();
     });
 
     it('should handle successful login', async () => {
@@ -50,7 +50,7 @@ describe('AuthPage', () => {
       
       const emailInput = screen.getByPlaceholderText('Email Address');
       const passwordInput = screen.getByPlaceholderText('Password');
-      const submitButton = screen.getByRole('button', { name: 'Sign In' });
+      const submitButton = screen.getByRole('button', { name: /Sign In/i });
 
       await act(async () => {
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -83,7 +83,7 @@ describe('AuthPage', () => {
       
       const emailInput = screen.getByPlaceholderText('Email Address');
       const passwordInput = screen.getByPlaceholderText('Password');
-      const submitButton = screen.getByRole('button', { name: 'Sign In' });
+      const submitButton = screen.getByRole('button', { name: /Sign In/i });
 
       await act(async () => {
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -112,27 +112,29 @@ describe('AuthPage', () => {
     });
   });
 
-  describe('Register Mode', () => {
-    it('should switch to register mode', () => {
+  describe('Registration Mode', () => {
+    it('should render registration form', () => {
       renderAuthPage();
       
-      const signUpButton = screen.getByText('Don\'t have an account? Sign up');
+      // Switch to register mode
+      const signUpButton = screen.getByText(/Don't have an account\?/);
       fireEvent.click(signUpButton);
 
-      expect(screen.getByText('Create your account to get started')).toBeInTheDocument();
+      expect(screen.getByText('Create your account')).toBeInTheDocument();
+      expect(screen.getByText('Join NeutralApp to get started')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('First Name')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Last Name')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('Confirm Password')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Create Account' })).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Email Address')).toBeInTheDocument();
+      expect(screen.getAllByPlaceholderText(/Password/)).toHaveLength(2);
+      expect(screen.getByRole('button', { name: /Create Account/i })).toBeInTheDocument();
     });
 
     it('should handle successful registration', async () => {
-      // Mock successful registration response
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          user: { id: '2', email: 'john@example.com', name: 'John Doe' },
+          user: { id: '1', email: 'new@example.com', name: 'New User' },
           token: 'mock-jwt-token'
         })
       });
@@ -140,70 +142,54 @@ describe('AuthPage', () => {
       renderAuthPage();
       
       // Switch to register mode
-      const signUpButton = screen.getByText('Don\'t have an account? Sign up');
+      const signUpButton = screen.getByText(/Don't have an account\?/);
       fireEvent.click(signUpButton);
 
       const firstNameInput = screen.getByPlaceholderText('First Name');
       const lastNameInput = screen.getByPlaceholderText('Last Name');
       const emailInput = screen.getByPlaceholderText('Email Address');
-      const passwordInput = screen.getByPlaceholderText('Password');
-      const confirmPasswordInput = screen.getByPlaceholderText('Confirm Password');
-      const submitButton = screen.getByRole('button', { name: 'Create Account' });
+      const passwordInputs = screen.getAllByPlaceholderText(/Password/);
+      const submitButton = screen.getByRole('button', { name: /Create Account/i });
 
       await act(async () => {
         fireEvent.change(firstNameInput, { target: { value: 'John' } });
         fireEvent.change(lastNameInput, { target: { value: 'Doe' } });
-        fireEvent.change(emailInput, { target: { value: 'john@example.com' } });
-        fireEvent.change(passwordInput, { target: { value: 'password123' } });
-        fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } });
+        fireEvent.change(emailInput, { target: { value: 'new@example.com' } });
+        fireEvent.change(passwordInputs[0]!, { target: { value: 'password123' } });
+        fireEvent.change(passwordInputs[1]!, { target: { value: 'password123' } });
         fireEvent.click(submitButton);
       });
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/auth/signin', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            email: 'john@example.com', 
-            password: 'password123'
-          }),
-        });
+        expect(screen.getByText('Registration successful! Please check your email for verification.')).toBeInTheDocument();
       });
     });
   });
 
-  describe('Reset Password Mode', () => {
-    it('should switch to reset password mode', () => {
-      renderAuthPage();
-      
-      const resetButton = screen.getByText('Forgot your password?');
-      fireEvent.click(resetButton);
-
-      expect(screen.getByText('Reset your password')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('Email Address')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Send Reset Email' })).toBeInTheDocument();
-    });
-
-    it('should handle successful password reset', async () => {
-      // Mock successful password reset response
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          message: 'Password reset email sent'
-        })
-      });
-
+  describe('Password Reset Mode', () => {
+    it('should render password reset form', () => {
       renderAuthPage();
       
       // Switch to reset mode
-      const resetButton = screen.getByText('Forgot your password?');
+      const resetButton = screen.getByText(/Forgot your password\?/);
+      fireEvent.click(resetButton);
+
+      expect(screen.getByText('Reset your password')).toBeInTheDocument();
+      expect(screen.getByText('Enter your email to receive reset instructions')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Email Address')).toBeInTheDocument();
+      expect(screen.queryByPlaceholderText('Password')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Send Reset Email/i })).toBeInTheDocument();
+    });
+
+    it('should handle successful password reset', async () => {
+      renderAuthPage();
+      
+      // Switch to reset mode
+      const resetButton = screen.getByText(/Forgot your password\?/);
       fireEvent.click(resetButton);
 
       const emailInput = screen.getByPlaceholderText('Email Address');
-      const submitButton = screen.getByRole('button', { name: 'Send Reset Email' });
+      const submitButton = screen.getByRole('button', { name: /Send Reset Email/i });
 
       await act(async () => {
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -221,17 +207,27 @@ describe('AuthPage', () => {
       renderAuthPage();
       
       // Start in login mode
-      expect(screen.getByText('Welcome back! Please sign in to continue')).toBeInTheDocument();
+      expect(screen.getByText('Sign in to your account to continue')).toBeInTheDocument();
       
       // Switch to register mode
-      const signUpButton = screen.getByText('Don\'t have an account? Sign up');
+      const signUpButton = screen.getByText(/Don't have an account\?/);
       fireEvent.click(signUpButton);
-      expect(screen.getByText('Create your account to get started')).toBeInTheDocument();
+      expect(screen.getByText('Join NeutralApp to get started')).toBeInTheDocument();
       
       // Switch back to login mode
-      const signInButton = screen.getByText('Already have an account? Sign in');
+      const signInButton = screen.getByText(/Already have an account\?/);
       fireEvent.click(signInButton);
-      expect(screen.getByText('Welcome back! Please sign in to continue')).toBeInTheDocument();
+      expect(screen.getByText('Sign in to your account to continue')).toBeInTheDocument();
+      
+      // Switch to reset mode
+      const resetButton = screen.getByText(/Forgot your password\?/);
+      fireEvent.click(resetButton);
+      expect(screen.getByText('Enter your email to receive reset instructions')).toBeInTheDocument();
+      
+      // Switch back to login mode
+      const backToSignInButton = screen.getByText(/Remember your password\?/);
+      fireEvent.click(backToSignInButton);
+      expect(screen.getByText('Sign in to your account to continue')).toBeInTheDocument();
     });
 
     it('should hide demo credentials box in non-login modes', () => {
@@ -241,10 +237,21 @@ describe('AuthPage', () => {
       expect(screen.getByText('Demo Credentials')).toBeInTheDocument();
       
       // Switch to register mode
-      const signUpButton = screen.getByText('Don\'t have an account? Sign up');
+      const signUpButton = screen.getByText(/Don't have an account\?/);
       fireEvent.click(signUpButton);
       
       // Demo credentials should be hidden
+      expect(screen.queryByText('Demo Credentials')).not.toBeInTheDocument();
+      
+      // Go back to login mode first
+      const signInButton = screen.getByText(/Already have an account\?/);
+      fireEvent.click(signInButton);
+      
+      // Now switch to reset mode
+      const resetButton = screen.getByText(/Forgot your password\?/);
+      fireEvent.click(resetButton);
+      
+      // Demo credentials should still be hidden
       expect(screen.queryByText('Demo Credentials')).not.toBeInTheDocument();
     });
   });
@@ -265,7 +272,7 @@ describe('AuthPage', () => {
       
       const emailInput = screen.getByPlaceholderText('Email Address');
       const passwordInput = screen.getByPlaceholderText('Password');
-      const submitButton = screen.getByRole('button', { name: 'Sign In' });
+      const submitButton = screen.getByRole('button', { name: /Sign In/i });
 
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
       fireEvent.change(passwordInput, { target: { value: 'password123' } });

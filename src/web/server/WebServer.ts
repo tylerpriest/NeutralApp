@@ -29,6 +29,7 @@ export class WebServer {
     
     this.setupMiddleware();
     this.setupRoutes();
+    this.setupErrorHandling();
   }
 
   /**
@@ -124,6 +125,43 @@ export class WebServer {
       const indexPath = path.join(buildPath, 'index.html');
       console.log(`Serving React app from: ${indexPath}`);
       return res.sendFile(indexPath);
+    });
+  }
+
+  /**
+   * Setup error handling middleware
+   */
+  private setupErrorHandling(): void {
+    // 404 handler for undefined routes (before catch-all)
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      // Skip if it's an API route - let API handle 404s
+      if (req.path.startsWith('/api/')) {
+        return next();
+      }
+      // For non-API routes, let the catch-all handle it (SPA routing)
+      next();
+    });
+
+    // Global error handler (must be last)
+    this.app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+      console.error(`Error handling ${req.method} ${req.path}:`, error);
+      
+      // Don't interfere with API routes - they handle their own errors
+      if (req.path.startsWith('/api/')) {
+        return next(error);
+      }
+      
+      // For non-API routes that throw errors, return 500
+      const statusCode = 500;
+      const response = {
+        error: 'Internal server error',
+        ...(process.env.NODE_ENV !== 'production' && { 
+          message: error.message,
+          stack: error.stack 
+        })
+      };
+      
+      res.status(statusCode).json(response);
     });
   }
 

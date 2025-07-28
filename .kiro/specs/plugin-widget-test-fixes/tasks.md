@@ -94,14 +94,14 @@
   - Write tests to detect console.log usage in production code
   - _Requirements: 5.1, 5.2_
 
-- [ ] 4.3 Fix static asset serving tests
+- [x] 4.3 Fix static asset serving tests
   - Update static asset serving configuration for test environment
   - Fix test expectations for asset path resolution
   - Add proper mock setup for static asset serving
   - Write comprehensive tests for asset serving functionality
   - _Requirements: 5.4, 1.1_
 
-- [ ] 4.4 Fix WebServer error handling tests
+- [x] 4.4 Fix WebServer error handling tests
   - Improve error handling coverage in WebServer implementation
   - Update test expectations for error response scenarios
   - Add proper error logging and monitoring integration

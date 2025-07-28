@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Button, Input, Card, CardHeader, CardContent, LoadingSpinner } from '../../../shared/ui';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface AuthFormData {
   email: string;
@@ -30,6 +32,8 @@ const AuthPage: React.FC = () => {
   const [errors, setErrors] = useState<AuthError[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Memoize the redirect path to prevent infinite loops
   const redirectPath = useMemo(() => {
@@ -157,182 +161,266 @@ const AuthPage: React.FC = () => {
     return errors.find(error => error.field === 'general')?.message;
   };
 
+  const getModeConfig = () => {
+    switch (mode) {
+      case 'login':
+        return {
+          title: 'Welcome back',
+          subtitle: 'Sign in to your account to continue',
+          buttonText: 'Sign In',
+          buttonIcon: <ArrowRight className="w-4 h-4" />
+        };
+      case 'register':
+        return {
+          title: 'Create your account',
+          subtitle: 'Join NeutralApp to get started',
+          buttonText: 'Create Account',
+          buttonIcon: <CheckCircle className="w-4 h-4" />
+        };
+      case 'reset':
+        return {
+          title: 'Reset your password',
+          subtitle: 'Enter your email to receive reset instructions',
+          buttonText: 'Send Reset Email',
+          buttonIcon: <Mail className="w-4 h-4" />
+        };
+    }
+  };
+
+  const modeConfig = getModeConfig();
+
   return (
-    <div className="auth-page">
-      <div className="auth-container">
-        <div className="auth-header">
-          <h1 className="auth-title">NeutralApp</h1>
-          <p className="auth-subtitle">
-            {mode === 'login' && 'Welcome back! Please sign in to continue'}
-            {mode === 'register' && 'Create your account to get started'}
-            {mode === 'reset' && 'Reset your password'}
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo and Brand */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">NeutralApp</h1>
+          <p className="text-gray-600 text-sm">Modern, clean, and efficient</p>
         </div>
 
-        {getGeneralError() && (
-          <div className="auth-error-message">
-            {getGeneralError()}
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="auth-success-message">
-            {successMessage}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="auth-form" role="form">
-          {mode === 'register' && (
-            <>
-              <div className="form-row">
-                <div className="form-group">
-                  <input
-                    type="text"
-                    placeholder="First Name"
-                    className={`auth-input ${getFieldError('firstName') ? 'error' : ''}`}
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  />
-                  {getFieldError('firstName') && (
-                    <span className="field-error">{getFieldError('firstName')}</span>
-                  )}
-                </div>
-                <div className="form-group">
-                  <input
-                    type="text"
-                    placeholder="Last Name"
-                    className={`auth-input ${getFieldError('lastName') ? 'error' : ''}`}
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  />
-                  {getFieldError('lastName') && (
-                    <span className="field-error">{getFieldError('lastName')}</span>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="form-group">
-            <input
-              type="email"
-              placeholder="Email Address"
-              className={`auth-input ${getFieldError('email') ? 'error' : ''}`}
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-            />
-            {getFieldError('email') && (
-              <span className="field-error">{getFieldError('email')}</span>
-            )}
-          </div>
-
-          {mode !== 'reset' && (
-            <div className="form-group">
-              <input
-                type="password"
-                placeholder="Password"
-                className={`auth-input ${getFieldError('password') ? 'error' : ''}`}
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-              />
-              {getFieldError('password') && (
-                <span className="field-error">{getFieldError('password')}</span>
-              )}
-            </div>
-          )}
-
-          {mode === 'register' && (
-            <div className="form-group">
-              <input
-                type="password"
-                placeholder="Confirm Password"
-                className={`auth-input ${getFieldError('confirmPassword') ? 'error' : ''}`}
-                value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-              />
-              {getFieldError('confirmPassword') && (
-                <span className="field-error">{getFieldError('confirmPassword')}</span>
-              )}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="auth-button"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <span className="loading-spinner">Loading...</span>
-            ) : (
-              <>
-                {mode === 'login' && 'Sign In'}
-                {mode === 'register' && 'Create Account'}
-                {mode === 'reset' && 'Send Reset Email'}
-              </>
-            )}
-          </button>
-        </form>
-
-        <div className="auth-links">
-          {mode === 'login' && (
-            <>
-              <button
-                className="auth-link-button"
-                onClick={() => setMode('register')}
-              >
-                Don't have an account? Sign up
-              </button>
-              <button
-                className="auth-link-button"
-                onClick={() => setMode('reset')}
-              >
-                Forgot your password?
-              </button>
-            </>
-          )}
-          {mode === 'register' && (
-            <button
-              className="auth-link-button"
-              onClick={() => setMode('login')}
-            >
-              Already have an account? Sign in
-            </button>
-          )}
-          {mode === 'reset' && (
-            <button
-              className="auth-link-button"
-              onClick={() => setMode('login')}
-            >
-              Back to sign in
-            </button>
-          )}
-        </div>
-
-        {/* Demo Credentials Box - Only show in login mode */}
-        {mode === 'login' && (
-          <div className="demo-credentials-box">
-            <h3 className="demo-credentials-title">Demo Credentials</h3>
-            <p className="demo-credentials-subtitle">Use these credentials for testing:</p>
-            <div className="demo-credentials-content">
-              <div className="demo-credential-item">
-                <strong>Test User:</strong>
-                <div className="credential-details">
-                  <span>Email: <code>test@example.com</code></span>
-                  <span>Password: <code>password123</code></span>
-                </div>
-              </div>
-              <div className="demo-credential-item">
-                <strong>Development User:</strong>
-                <div className="credential-details">
-                  <span>Email: <code>any-valid-email@example.com</code></span>
-                  <span>Password: <code>password123</code></span>
-                </div>
-              </div>
-            </div>
-            <p className="demo-credentials-note">
-              <small>💡 These are demo credentials for testing purposes only.</small>
+        {/* Auth Card */}
+        <Card className="shadow-xl border-0">
+          <CardHeader className="text-center pb-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              {modeConfig.title}
+            </h2>
+            <p className="text-gray-600 text-sm">
+              {modeConfig.subtitle}
             </p>
-          </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* Error Message */}
+            {getGeneralError() && (
+              <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                <p className="text-red-700 text-sm">{getGeneralError()}</p>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {successMessage && (
+              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <p className="text-green-700 text-sm">{successMessage}</p>
+              </div>
+            )}
+
+            {/* Auth Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Registration Fields */}
+              {mode === 'register' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                                         <Input
+                       type="text"
+                       placeholder="First Name"
+                       value={formData.firstName}
+                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('firstName', e.target.value)}
+                       className={getFieldError('firstName') ? 'border-red-300 focus:border-red-500' : ''}
+                       icon={<User className="w-4 h-4" />}
+                     />
+                    {getFieldError('firstName') && (
+                      <p className="text-red-600 text-xs">{getFieldError('firstName')}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                                         <Input
+                       type="text"
+                       placeholder="Last Name"
+                       value={formData.lastName}
+                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('lastName', e.target.value)}
+                       className={getFieldError('lastName') ? 'border-red-300 focus:border-red-500' : ''}
+                       icon={<User className="w-4 h-4" />}
+                     />
+                    {getFieldError('lastName') && (
+                      <p className="text-red-600 text-xs">{getFieldError('lastName')}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                                 <Input
+                   type="email"
+                   placeholder="Email Address"
+                   value={formData.email}
+                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('email', e.target.value)}
+                   className={getFieldError('email') ? 'border-red-300 focus:border-red-500' : ''}
+                   icon={<Mail className="w-4 h-4" />}
+                 />
+                {getFieldError('email') && (
+                  <p className="text-red-600 text-xs">{getFieldError('email')}</p>
+                )}
+              </div>
+
+              {/* Password Field */}
+              {mode !== 'reset' && (
+                <div className="space-y-2">
+                  <div className="relative">
+                                         <Input
+                       type={showPassword ? 'text' : 'password'}
+                       placeholder="Password"
+                       value={formData.password}
+                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('password', e.target.value)}
+                       className={getFieldError('password') ? 'border-red-300 focus:border-red-500 pr-12' : 'pr-12'}
+                       icon={<Lock className="w-4 h-4" />}
+                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {getFieldError('password') && (
+                    <p className="text-red-600 text-xs">{getFieldError('password')}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Confirm Password Field */}
+              {mode === 'register' && (
+                <div className="space-y-2">
+                  <div className="relative">
+                                         <Input
+                       type={showConfirmPassword ? 'text' : 'password'}
+                       placeholder="Confirm Password"
+                       value={formData.confirmPassword}
+                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('confirmPassword', e.target.value)}
+                       className={getFieldError('confirmPassword') ? 'border-red-300 focus:border-red-500 pr-12' : 'pr-12'}
+                       icon={<Lock className="w-4 h-4" />}
+                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {getFieldError('confirmPassword') && (
+                    <p className="text-red-600 text-xs">{getFieldError('confirmPassword')}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 text-base font-medium"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center gap-2">
+                    <LoadingSpinner size="sm" variant="white" />
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span>{modeConfig.buttonText}</span>
+                    {modeConfig.buttonIcon}
+                  </div>
+                )}
+              </Button>
+            </form>
+
+            {/* Mode Switcher Links */}
+            <div className="space-y-3 pt-4 border-t border-gray-200">
+              {mode === 'login' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setMode('register')}
+                    className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    Don't have an account? <span className="font-medium">Sign up</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('reset')}
+                    className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    Forgot your password? <span className="font-medium">Reset it</span>
+                  </button>
+                </>
+              )}
+              {mode === 'register' && (
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Already have an account? <span className="font-medium">Sign in</span>
+                </button>
+              )}
+              {mode === 'reset' && (
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Remember your password? <span className="font-medium">Back to sign in</span>
+                </button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Demo Credentials - Only show in login mode */}
+        {mode === 'login' && (
+          <Card className="mt-6 shadow-lg border-0 bg-blue-50">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-blue-600" />
+                Demo Credentials
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Use these credentials for testing:
+              </p>
+              <div className="space-y-3">
+                <div className="bg-white rounded-lg p-3 border border-blue-200">
+                  <p className="text-sm font-medium text-gray-900 mb-1">Test User:</p>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p>Email: <code className="bg-gray-100 px-1 rounded">test@example.com</code></p>
+                    <p>Password: <code className="bg-gray-100 px-1 rounded">password123</code></p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-3 border border-blue-200">
+                  <p className="text-sm font-medium text-gray-900 mb-1">Development User:</p>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p>Email: <code className="bg-gray-100 px-1 rounded">any-valid-email@example.com</code></p>
+                    <p>Password: <code className="bg-gray-100 px-1 rounded">password123</code></p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
+                💡 These are demo credentials for testing purposes only.
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
