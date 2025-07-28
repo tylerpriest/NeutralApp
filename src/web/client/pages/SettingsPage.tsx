@@ -380,7 +380,7 @@ const SettingsPage: React.FC = () => {
   };
 
   const renderSettingItem = (setting: SettingItem) => (
-    <div key={setting.key} className="flex justify-between items-start p-6 border border-border rounded-lg bg-gray-very-light hover:border-primary/20 transition-colors">
+    <div key={setting.key} className="flex justify-between items-start p-6 border border-border rounded-lg bg-gray-50 hover:border-primary/20 transition-colors">
       <div className="flex-1 mr-6">
         <label className="block text-sm font-semibold text-gray-dark mb-1">
           {setting.label}
@@ -474,7 +474,7 @@ const SettingsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-very-light flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" />
           <p className="mt-4 text-gray-medium">Loading settings...</p>
@@ -485,7 +485,7 @@ const SettingsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-very-light flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-error mx-auto mb-4" />
           <p className="text-error mb-4">{error}</p>
@@ -500,7 +500,7 @@ const SettingsPage: React.FC = () => {
   const currentGroup = settingGroups.find(g => g.id === selectedGroup);
 
   return (
-    <div className="min-h-screen bg-gray-very-light">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">

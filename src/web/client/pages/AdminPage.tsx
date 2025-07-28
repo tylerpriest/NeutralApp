@@ -236,12 +236,12 @@ const AdminPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-very-light p-6" role="main">
+      <div className="min-h-screen bg-gray-50 p-6" role="main">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-gray-dark mb-2">Admin Dashboard</h1>
-            <p className="text-gray-medium mb-6">System monitoring and administration</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+            <p className="text-gray-600 mb-6">System monitoring and administration</p>
             <div className="bg-white rounded-lg p-8 shadow-sm border border-border">
               <p className="text-red-600 mb-6">{error}</p>
                              <Button onClick={loadAdminData} variant="default">
@@ -257,14 +257,14 @@ const AdminPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-very-light p-6" role="main">
+      <div className="min-h-screen bg-gray-50 p-6" role="main">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
-            <h1 className="text-3xl font-bold text-gray-dark mb-2">Admin Dashboard</h1>
-            <p className="text-gray-medium mb-6">System monitoring and administration</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+            <p className="text-gray-600 mb-6">System monitoring and administration</p>
             <div className="bg-white rounded-lg p-8 shadow-sm border border-border">
               <LoadingSpinner size="lg" />
-              <p className="mt-4 text-gray-medium">Loading admin data...</p>
+              <p className="mt-4 text-gray-600">Loading admin data...</p>
             </div>
           </div>
         </div>
@@ -291,7 +291,7 @@ const AdminPage: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-medium">Status</span>
+                  <span className="text-gray-600">Status</span>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(systemHealth && systemHealth.errors === 0 ? 'healthy' : 'warning')}
                     <span className="font-semibold">
@@ -302,19 +302,19 @@ const AdminPage: React.FC = () => {
                 {systemHealth && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">CPU</span>
+                      <span className="text-gray-600">CPU</span>
                       <span className="font-semibold">{Math.round(systemHealth.cpu * 100)}%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Memory</span>
+                      <span className="text-gray-600">Memory</span>
                       <span className="font-semibold">{Math.round(systemHealth.memory * 100)}%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Disk</span>
+                      <span className="text-gray-600">Disk</span>
                       <span className="font-semibold">{Math.round(systemHealth.disk * 100)}%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Uptime</span>
+                      <span className="text-gray-600">Uptime</span>
                       <span className="font-semibold">{Math.floor(systemHealth.uptime / 3600)}h</span>
                     </div>
                   </>
@@ -335,15 +335,15 @@ const AdminPage: React.FC = () => {
                 {userStats && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Total</span>
+                      <span className="text-gray-600">Total</span>
                       <span className="font-semibold">{userStats.totalUsers}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Active</span>
+                      <span className="text-gray-600">Active</span>
                       <span className="font-semibold">{userStats.activeUsers}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Growth</span>
+                      <span className="text-gray-600">Growth</span>
                       <span className="font-semibold text-green-600">+{userStats.userGrowth}%</span>
                     </div>
                   </>
@@ -354,25 +354,25 @@ const AdminPage: React.FC = () => {
             <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-3 text-lg">
-                  <div className="p-2 bg-purple-50 rounded-lg">
-                    <Package className="w-5 h-5 text-purple-600" />
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <Package className="w-5 h-5 text-blue-600" />
                   </div>
                   Plugins
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-medium">Installed</span>
+                  <span className="text-gray-600">Installed</span>
                   <span className="font-semibold">{pluginHealth?.length || 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-medium">Active</span>
+                  <span className="text-gray-600">Active</span>
                   <span className="font-semibold">
                     {pluginHealth?.filter(p => p.status === PluginStatus.ENABLED).length || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-medium">Errors</span>
+                  <span className="text-gray-600">Errors</span>
                   <span className="font-semibold text-red-600">
                     {pluginHealth?.reduce((total, p) => total + p.errors, 0) || 0}
                   </span>
@@ -423,19 +423,19 @@ const AdminPage: React.FC = () => {
                 {resourceUsage && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">CPU Usage</span>
+                      <span className="text-gray-600">CPU Usage</span>
                       <span className="font-semibold">{Math.round(resourceUsage.cpu * 100)}%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Memory Usage</span>
+                      <span className="text-gray-600">Memory Usage</span>
                       <span className="font-semibold">{Math.round(resourceUsage.memory * 100)}%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Disk Usage</span>
+                      <span className="text-gray-600">Disk Usage</span>
                       <span className="font-semibold">{Math.round(resourceUsage.disk * 100)}%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Network Usage</span>
+                      <span className="text-gray-600">Network Usage</span>
                       <span className="font-semibold">{Math.round(resourceUsage.network * 100)}%</span>
                     </div>
                   </>
@@ -456,19 +456,19 @@ const AdminPage: React.FC = () => {
                 {performanceMetrics && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Response Time</span>
+                      <span className="text-gray-600">Response Time</span>
                       <span className="font-semibold">{performanceMetrics.responseTime}ms</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Throughput</span>
+                      <span className="text-gray-600">Throughput</span>
                       <span className="font-semibold">{performanceMetrics.throughput} req/s</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Error Rate</span>
+                      <span className="text-gray-600">Error Rate</span>
                       <span className="font-semibold">{Math.round(performanceMetrics.errorRate * 100)}%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Availability</span>
+                      <span className="text-gray-600">Availability</span>
                       <span className="font-semibold">{Math.round(performanceMetrics.availability * 100)}%</span>
                     </div>
                   </>
@@ -489,11 +489,11 @@ const AdminPage: React.FC = () => {
                 {errorStats && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Total Errors</span>
+                      <span className="text-gray-600">Total Errors</span>
                       <span className="font-semibold text-red-600">{errorStats.total}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-medium">Recent Errors</span>
+                      <span className="text-gray-600">Recent Errors</span>
                       <span className="font-semibold">{errorStats.recent.length}</span>
                     </div>
                   </>
@@ -510,15 +510,15 @@ const AdminPage: React.FC = () => {
       icon: <UserCheck className="w-5 h-5" />,
       content: (
         <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-gray-dark">User List</h3>
+          <h3 className="text-xl font-semibold text-gray-900">User List</h3>
           <div className="space-y-4">
             {users?.map(user => (
               <Card key={user.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-center">
                     <div className="space-y-2">
-                      <div className="font-semibold text-gray-dark">{user.email}</div>
-                      <div className="text-sm text-gray-medium">{user.displayName}</div>
+                      <div className="font-semibold text-gray-900">{user.email}</div>
+                      <div className="text-sm text-gray-600">{user.displayName}</div>
                     </div>
                     <div className="flex gap-3">
                       <Button 
@@ -568,7 +568,7 @@ const AdminPage: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <span className="text-gray-medium">Email:</span>
+                    <span className="text-gray-600">Email:</span>
                     <p className="font-semibold">{selectedUser.email}</p>
                   </div>
                                      <Button 
@@ -591,19 +591,19 @@ const AdminPage: React.FC = () => {
       icon: <Package className="w-5 h-5" />,
       content: (
         <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-gray-dark">Plugin Health</h3>
+          <h3 className="text-xl font-semibold text-gray-900">Plugin Health</h3>
           <div className="space-y-4">
             {pluginHealth?.map(plugin => (
               <Card key={plugin.pluginId} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-center">
                     <div className="space-y-3">
-                      <div className="font-semibold text-gray-dark">{plugin.pluginId}</div>
+                      <div className="font-semibold text-gray-900">{plugin.pluginId}</div>
                       <div className="flex items-center gap-4 text-sm">
                         <span className={`px-3 py-1 rounded-full border ${getStatusColor(plugin.status)}`}>
                           {plugin.status}
                         </span>
-                        <span className="text-gray-medium">
+                        <span className="text-gray-600">
                           Performance: {Math.round(plugin.performance * 100)}%
                         </span>
                         <span className="text-red-600">
@@ -632,7 +632,7 @@ const AdminPage: React.FC = () => {
       icon: <FileText className="w-5 h-5" />,
       content: (
         <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-gray-dark">System Reports</h3>
+          <h3 className="text-xl font-semibold text-gray-900">System Reports</h3>
           <div className="flex gap-4">
                          <Button 
                onClick={handleGenerateReport}
@@ -660,7 +660,7 @@ const AdminPage: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex justify-between items-center">
                     <div className="space-y-2">
-                      <div className="font-semibold text-gray-dark">
+                      <div className="font-semibold text-gray-900">
                         {report.timestamp.toLocaleDateString()}
                       </div>
                     </div>
@@ -694,11 +694,11 @@ const AdminPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-very-light p-6" role="main">
+    <div className="min-h-screen bg-gray-50 p-6" role="main">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-dark mb-2">Admin Dashboard</h1>
-          <p className="text-gray-medium">System monitoring and administration</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+          <p className="text-gray-600">System monitoring and administration</p>
         </div>
         
         <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden">
@@ -712,7 +712,7 @@ const AdminPage: React.FC = () => {
                   className={`flex items-center gap-2 px-6 py-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
                     activeTab === tab.id 
                       ? 'border-primary text-primary bg-primary/5' 
-                      : 'border-transparent text-gray-medium hover:text-gray-dark hover:bg-gray-50'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                   onClick={() => handleTabChange(tab.id)}
                 >

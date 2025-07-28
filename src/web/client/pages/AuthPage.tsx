@@ -20,7 +20,7 @@ interface AuthError {
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isLoading, login, register, resetPassword } = useAuth();
+  const { isAuthenticated, isLoading, login, register, resetPassword, loginAsGuest } = useAuth();
   const [mode, setMode] = useState<'login' | 'register' | 'reset'>('login');
   const [formData, setFormData] = useState<AuthFormData>({
     email: '',
@@ -346,6 +346,27 @@ const AuthPage: React.FC = () => {
                 )}
               </Button>
             </form>
+
+            {/* Guest Mode Button */}
+            <div className="pt-4 border-t border-gray-200">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  loginAsGuest();
+                  console.log('AuthPage: Guest login clicked, redirect will happen automatically');
+                }}
+                className="w-full h-12 text-base font-medium border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400"
+              >
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>Continue as Guest</span>
+                </div>
+              </Button>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                Try NeutralApp without creating an account
+              </p>
+            </div>
 
             {/* Mode Switcher Links */}
             <div className="space-y-3 pt-4 border-t border-gray-200">

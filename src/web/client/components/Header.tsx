@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, isGuest, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -17,10 +17,22 @@ const Header: React.FC = () => {
         <div className="header-right">
           <div className="user-menu">
             <span className="user-name">
-              {user?.name || user?.email || 'User'}
+              {isGuest ? 'Guest User' : (user?.name || user?.email || 'User')}
             </span>
+            {isGuest && (
+              <span className="guest-badge" style={{
+                fontSize: '12px',
+                padding: '2px 8px',
+                backgroundColor: '#dbeafe',
+                color: '#1d4ed8',
+                borderRadius: '12px',
+                marginLeft: '8px'
+              }}>
+                Guest Mode
+              </span>
+            )}
             <button className="logout-button" onClick={handleLogout}>
-              Logout
+              {isGuest ? 'Exit Guest Mode' : 'Logout'}
             </button>
           </div>
         </div>

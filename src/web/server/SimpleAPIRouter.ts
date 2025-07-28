@@ -12,11 +12,11 @@ export class SimpleAPIRouter {
 
   constructor() {
     this.router = Router();
-    // Create shared DashboardManager instance
-    this.dashboardManager = new DashboardManager();
-    // Pass DashboardManager to PluginManager for widget registration
-    this.pluginManager = new PluginManager(undefined, undefined, undefined, this.dashboardManager);
+    // Create shared instances
     this.settingsService = new SettingsService();
+    this.dashboardManager = new DashboardManager();
+    // Pass both DashboardManager and SettingsService to PluginManager for proper integration
+    this.pluginManager = new PluginManager(undefined, undefined, undefined, this.dashboardManager, this.settingsService);
     this.setupRoutes();
   }
 
@@ -242,7 +242,41 @@ module.exports = {
       }
     });
 
-    // Uninstall plugin
+    // Uninstall plugin (POST route to match frontend)
+    this.router.post('/plugins/:pluginId/uninstall', async (req: Request, res: Response) => {
+      try {
+        const { pluginId } = req.params;
+        const { cleanupData } = req.body;
+        
+        if (!pluginId) {
+          return res.status(400).json({ error: 'Plugin ID is required' });
+        }
+
+        // Check if plugin exists before trying to uninstall
+        const installedPlugins = await this.pluginManager.getInstalledPlugins();
+        const pluginExists = installedPlugins.some(plugin => plugin.id === pluginId);
+        
+        if (!pluginExists) {
+          return res.status(404).json({ error: 'Plugin not found' });
+        }
+
+        // Use the actual PluginManager to uninstall the plugin
+        await this.pluginManager.uninstallPlugin(pluginId, cleanupData !== false);
+
+        return res.json({
+          success: true,
+          message: 'Plugin uninstalled successfully',
+          plugin: {
+            id: pluginId
+          }
+        });
+      } catch (error) {
+        console.error('Plugin uninstall error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+    // Uninstall plugin (DELETE route for REST compliance)
     this.router.delete('/plugins/:pluginId', async (req: Request, res: Response) => {
       try {
         const { pluginId } = req.params;
@@ -381,6 +415,58 @@ module.exports = {
         });
       } catch (error) {
         console.error('Plugin disable error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+    // Update plugin
+    this.router.post('/plugins/:pluginId/update', async (req: Request, res: Response) => {
+      try {
+        const { pluginId } = req.params;
+        
+        if (!pluginId) {
+          return res.status(400).json({ error: 'Plugin ID is required' });
+        }
+
+        // Check if plugin exists before trying to update
+        const installedPlugins = await this.pluginManager.getInstalledPlugins();
+        const pluginExists = installedPlugins.some(plugin => plugin.id === pluginId);
+        
+        if (!pluginExists) {
+          return res.status(404).json({ error: 'Plugin not found' });
+        }
+
+        // For now, simulate plugin update by reinstalling
+        // In a real implementation, this would update the plugin to the latest version
+        try {
+          // First uninstall the old version
+          await this.pluginManager.uninstallPlugin(pluginId, false);
+          
+          // Then reinstall with latest version
+          const pluginPackage = await this.pluginManager.downloadAndVerifyPlugin(pluginId);
+          const result = await this.pluginManager.installPlugin(pluginPackage);
+          
+          if (result.success) {
+            return res.json({
+              success: true,
+              message: 'Plugin updated successfully',
+              plugin: {
+                id: pluginId
+              }
+            });
+          } else {
+            return res.status(400).json({
+              error: result.error || 'Plugin update failed'
+            });
+          }
+        } catch (updateError) {
+          console.error(`Plugin update failed for ${pluginId}:`, updateError);
+          return res.status(500).json({ 
+            error: 'Plugin update failed - please try again' 
+          });
+        }
+      } catch (error) {
+        console.error('Plugin update error:', error);
         return res.status(500).json({ error: 'Internal server error' });
       }
     });

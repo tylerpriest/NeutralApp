@@ -10,11 +10,13 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isGuest: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   register: (userData: RegisterData) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
+  loginAsGuest: () => void;
 }
 
 interface RegisterData {
@@ -40,11 +42,20 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Check for existing token on mount
   useEffect(() => {
     const checkAuth = async () => {
+      // Check for guest mode first
+      const guestMode = localStorage.getItem('guest_mode');
+      if (guestMode === 'true') {
+        setIsGuest(true);
+        setIsLoading(false);
+        return;
+      }
+
       const token = localStorage.getItem('auth_token');
       if (token) {
         try {
@@ -107,8 +118,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Logout request failed:', error);
     } finally {
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('guest_mode');
       setUser(null);
+      setIsGuest(false);
     }
+  };
+
+  const loginAsGuest = (): void => {
+    localStorage.setItem('guest_mode', 'true');
+    localStorage.removeItem('auth_token');
+    setIsGuest(true);
+    setUser(null);
+    console.log('AuthContext: Logged in as guest');
   };
 
   const register = async (userData: RegisterData): Promise<boolean> => {
@@ -156,10 +177,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!user || isGuest;
 
   console.log('AuthContext: Current state:', { 
     user: !!user, 
+    isGuest,
     isAuthenticated,
     isLoading
   });
@@ -167,11 +189,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     isAuthenticated,
+    isGuest,
     isLoading,
     login,
     logout,
     register,
     resetPassword,
+    loginAsGuest,
   };
 
   return (

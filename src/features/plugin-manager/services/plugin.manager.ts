@@ -411,6 +411,12 @@ export class PluginManager implements IPluginManager {
 
   private async loadPersistedPlugins(): Promise<void> {
     try {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+        this.logger.info('localStorage not available (server-side), skipping plugin persistence load');
+        return;
+      }
+
       const data = localStorage.getItem(this.persistenceFile);
       if (data) {
         const persistedPlugins: PluginInfo[] = JSON.parse(data);
@@ -433,6 +439,12 @@ export class PluginManager implements IPluginManager {
 
   private async savePersistedPlugins(): Promise<void> {
     try {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+        this.logger.debug('localStorage not available (server-side), skipping plugin persistence save');
+        return;
+      }
+
       const data = JSON.stringify(Array.from(this.installedPlugins.values()), null, 2);
       localStorage.setItem(this.persistenceFile, data);
       this.logger.debug('Persisted installed plugins', { key: this.persistenceFile });
