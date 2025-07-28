@@ -2,7 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { SettingsService } from '../../../features/settings/services/settings.service';
 import { PluginManager } from '../../../features/plugin-manager/services/plugin.manager';
 import { Settings, SettingType, ValidationResult } from '../../../shared/types';
-import './SettingsPage.css';
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, LoadingSpinner } from '../../../shared/ui';
+import { 
+  Search, 
+  Download, 
+  RotateCcw, 
+  Settings as SettingsIcon, 
+  Palette, 
+  Globe, 
+  Bell, 
+  Shield, 
+  X,
+  Check,
+  AlertCircle
+} from 'lucide-react';
 
 // Initialize services - these can be overridden for testing
 let settingsService = new SettingsService();
@@ -19,6 +32,7 @@ interface SettingGroup {
   name: string;
   description: string;
   settings: SettingItem[];
+  icon?: React.ComponentType<any>;
 }
 
 interface SettingItem {
@@ -133,31 +147,36 @@ const SettingsPage: React.FC = () => {
         id: 'general',
         name: 'General',
         description: 'Basic application settings',
-        settings: coreSettings.filter(s => s.category === 'appearance' || s.category === 'behavior')
+        settings: coreSettings.filter(s => s.category === 'appearance' || s.category === 'behavior'),
+        icon: SettingsIcon
       },
       {
         id: 'appearance',
         name: 'Appearance',
         description: 'Visual and display settings',
-        settings: coreSettings.filter(s => s.category === 'appearance')
+        settings: coreSettings.filter(s => s.category === 'appearance'),
+        icon: Palette
       },
       {
         id: 'localization',
         name: 'Localization',
         description: 'Language and regional settings',
-        settings: coreSettings.filter(s => s.category === 'localization')
+        settings: coreSettings.filter(s => s.category === 'localization'),
+        icon: Globe
       },
       {
         id: 'notifications',
         name: 'Notifications',
         description: 'Notification preferences',
-        settings: coreSettings.filter(s => s.category === 'notifications')
+        settings: coreSettings.filter(s => s.category === 'notifications'),
+        icon: Bell
       },
       {
         id: 'security',
         name: 'Security',
         description: 'Security and privacy settings',
-        settings: coreSettings.filter(s => s.category === 'security')
+        settings: coreSettings.filter(s => s.category === 'security'),
+        icon: Shield
       }
     ];
   };
@@ -195,7 +214,8 @@ const SettingsPage: React.FC = () => {
             id: `plugin-${plugin.id}`,
             name: plugin.name,
             description: `Settings for ${plugin.name}`,
-            settings
+            settings,
+            icon: SettingsIcon
           });
         }
       }
@@ -300,23 +320,24 @@ const SettingsPage: React.FC = () => {
     switch (setting.type) {
       case SettingType.BOOLEAN:
         return (
-          <label className="toggle-switch">
+          <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
+              className="sr-only peer"
               checked={setting.value}
               onChange={(e) => handleChange(e.target.checked)}
             />
-            <span className="toggle-slider"></span>
+            <div className="w-11 h-6 bg-gray-light peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           </label>
         );
 
       case SettingType.NUMBER:
         return (
-          <input
+          <Input
             type="number"
-            className="setting-input"
             value={setting.value}
             onChange={(e) => handleChange(Number(e.target.value))}
+            className="w-full"
           />
         );
 
@@ -324,7 +345,7 @@ const SettingsPage: React.FC = () => {
         if (setting.options) {
           return (
             <select
-              className="setting-input"
+              className="flex h-10 w-full rounded-sm border border-border bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={setting.value}
               onChange={(e) => handleChange(e.target.value)}
               aria-label={setting.label}
@@ -338,38 +359,43 @@ const SettingsPage: React.FC = () => {
           );
         }
         return (
-          <input
+          <Input
             type="text"
-            className="setting-input"
             value={setting.value}
             onChange={(e) => handleChange(e.target.value)}
+            className="w-full"
           />
         );
 
       default:
         return (
-          <input
+          <Input
             type="text"
-            className="setting-input"
             value={setting.value}
             onChange={(e) => handleChange(e.target.value)}
+            className="w-full"
           />
         );
     }
   };
 
   const renderSettingItem = (setting: SettingItem) => (
-    <div key={setting.key} className="setting-item">
-      <div className="setting-info">
-        <label className="setting-label">{setting.label}</label>
-        <p className="setting-description">{setting.description}</p>
+    <div key={setting.key} className="flex justify-between items-start p-6 border border-border rounded-lg bg-gray-very-light hover:border-primary/20 transition-colors">
+      <div className="flex-1 mr-6">
+        <label className="block text-sm font-semibold text-gray-dark mb-1">
+          {setting.label}
+        </label>
+        <p className="text-sm text-gray-medium leading-relaxed">
+          {setting.description}
+        </p>
         {setting.validation && !setting.validation.isValid && (
-          <div className="setting-error">
+          <div className="flex items-center gap-2 mt-2 text-sm text-error">
+            <AlertCircle className="w-4 h-4" />
             {setting.validation.errors.join(', ')}
           </div>
         )}
       </div>
-      <div className="setting-control">
+      <div className="flex-shrink-0 min-w-[200px]">
         {renderSettingInput(setting)}
       </div>
     </div>
@@ -379,25 +405,34 @@ const SettingsPage: React.FC = () => {
     if (!showResetDialog) return null;
 
     return (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <h3>Reset Settings</h3>
-          <p>Are you sure you want to reset all settings to their default values? This action cannot be undone.</p>
-          <div className="modal-actions">
-            <button
-              className="cancel-button"
-              onClick={() => setShowResetDialog(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="confirm-button"
-              onClick={handleResetSettings}
-            >
-              Reset All Settings
-            </button>
-          </div>
-        </div>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <Card className="w-full max-w-md mx-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <RotateCcw className="w-5 h-5" />
+              Reset Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-medium">
+              Are you sure you want to reset all settings to their default values? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowResetDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleResetSettings}
+              >
+                Reset All Settings
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };
@@ -406,38 +441,43 @@ const SettingsPage: React.FC = () => {
     if (!showExportDialog) return null;
 
     return (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <h3>Export Settings</h3>
-          <p>Export all current settings to a JSON file for backup or migration.</p>
-          <div className="modal-actions">
-            <button
-              className="cancel-button"
-              onClick={() => setShowExportDialog(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="confirm-button"
-              onClick={handleExportSettings}
-            >
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <Card className="w-full max-w-md mx-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download className="w-5 h-5" />
               Export Settings
-            </button>
-          </div>
-        </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-medium">
+              Export all current settings to a JSON file for backup or migration.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowExportDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleExportSettings}
+              >
+                Export Settings
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };
 
-    if (isLoading) {
+  if (isLoading) {
     return (
-      <div className="settings-page" role="main">
-        <div className="settings-content">
-          <h1>Settings</h1>
-          <div className="loading-state">
-            <div className="loading-spinner" data-testid="loading-spinner"></div>
-            <p>Loading settings...</p>
-          </div>
+      <div className="min-h-screen bg-gray-very-light flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-medium">Loading settings...</p>
         </div>
       </div>
     );
@@ -445,15 +485,13 @@ const SettingsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="settings-page" role="main">
-        <div className="settings-content">
-          <h1>Settings</h1>
-          <div className="error-state">
-            <p>{error}</p>
-            <button onClick={loadSettings} className="retry-button">
-              Try again
-            </button>
-          </div>
+      <div className="min-h-screen bg-gray-very-light flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-error mx-auto mb-4" />
+          <p className="text-error mb-4">{error}</p>
+          <Button onClick={loadSettings}>
+            Try again
+          </Button>
         </div>
       </div>
     );
@@ -462,77 +500,115 @@ const SettingsPage: React.FC = () => {
   const currentGroup = settingGroups.find(g => g.id === selectedGroup);
 
   return (
-    <div className="settings-page" role="main">
-      <div className="settings-content">
-        <div className="settings-header">
-          <h1>Settings</h1>
-          <p>Configure your application preferences</p>
+    <div className="min-h-screen bg-gray-very-light">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-primary mb-2">Settings</h1>
+          <p className="text-gray-medium">Configure your application preferences</p>
         </div>
 
-        <div className="settings-toolbar">
-          <div className="search-section">
-            <input
-              type="text"
-              placeholder="Search settings..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
-          <div className="settings-actions">
-            <button
-              className="export-button"
-              onClick={() => setShowExportDialog(true)}
-            >
-              Export
-            </button>
-            <button
-              className="reset-button"
-              onClick={() => setShowResetDialog(true)}
-            >
-              Reset to Defaults
-            </button>
-          </div>
-        </div>
-
-        <div className="settings-layout">
-          <div className="settings-sidebar">
-            <nav className="settings-navigation" role="navigation">
-              {settingGroups.map(group => (
-                <button
-                  key={group.id}
-                  className={`nav-item ${selectedGroup === group.id ? 'active' : ''}`}
-                  onClick={() => setSelectedGroup(group.id)}
-                >
-                  <div className="nav-item-content">
-                    <span className="nav-item-name">{group.name}</span>
-                    <span className="nav-item-description">{group.description}</span>
-                  </div>
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          <div className="settings-main">
-            {currentGroup && (
-              <div className="settings-group">
-                <div className="group-header">
-                  <h2>{currentGroup.name}</h2>
-                  <p>{currentGroup.description}</p>
-                </div>
-                <div className="settings-form">
-                  {currentGroup.settings.map(renderSettingItem)}
+        {/* Toolbar */}
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+              <div className="flex-1 max-w-md w-full">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-medium" />
+                  <Input
+                    type="text"
+                    placeholder="Search settings..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
               </div>
-            )}
-          </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowExportDialog(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Export
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowResetDialog(true)}
+                  className="flex items-center gap-2 text-error border-error hover:bg-error hover:text-white"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Reset to Defaults
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Settings Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
+          {/* Sidebar */}
+          <Card>
+            <CardContent className="p-0">
+              <nav className="flex flex-col">
+                {settingGroups.map(group => {
+                  const IconComponent = group.icon || SettingsIcon;
+                  return (
+                    <button
+                      key={group.id}
+                      className={`flex items-center gap-3 p-4 text-left border-b border-border last:border-b-0 transition-colors hover:bg-gray-light ${
+                        selectedGroup === group.id ? 'bg-primary text-white' : ''
+                      }`}
+                      onClick={() => setSelectedGroup(group.id)}
+                    >
+                      <IconComponent className="w-5 h-5" />
+                      <div className="flex-1">
+                        <div className="font-semibold">{group.name}</div>
+                        <div className="text-sm opacity-80">{group.description}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </nav>
+            </CardContent>
+          </Card>
+
+          {/* Main Content */}
+          <Card>
+            <CardContent className="p-8">
+              {currentGroup && (
+                <div>
+                  <div className="mb-8 pb-6 border-b border-border">
+                    <h2 className="text-2xl font-semibold text-gray-dark mb-2">{currentGroup.name}</h2>
+                    <p className="text-gray-medium">{currentGroup.description}</p>
+                  </div>
+                  <div className="space-y-6">
+                    {currentGroup.settings.map(renderSettingItem)}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Notification */}
         {notification && (
-          <div className={`notification ${notification.type}`}>
-            {notification.message}
-            <button onClick={() => setNotification(null)}>×</button>
+          <div className={`fixed top-6 right-6 p-4 rounded-lg text-white font-medium z-50 flex items-center gap-3 max-w-md shadow-lg ${
+            notification.type === 'success' ? 'bg-success' : 'bg-error'
+          }`}>
+            {notification.type === 'success' ? (
+              <Check className="w-5 h-5" />
+            ) : (
+              <AlertCircle className="w-5 h-5" />
+            )}
+            <span className="flex-1">{notification.message}</span>
+            <button 
+              onClick={() => setNotification(null)}
+              className="text-white/80 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 

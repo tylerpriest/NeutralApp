@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 
+// Performance metrics monitoring tests for comprehensive system monitoring
 test.describe('Performance E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test

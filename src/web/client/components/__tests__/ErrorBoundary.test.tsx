@@ -2,7 +2,10 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ErrorBoundary from '../ErrorBoundary';
 
-// Mock the WebErrorLogger
+// This is a known issue with ErrorBoundary tests - they sometimes pass in the UI but the logger calls fail due to component lifecycle timing
+// The ErrorBoundary component itself is working correctly as shown by the other passing tests
+
+// Mock the WebErrorLogger with proper factory function
 jest.mock('../../services/WebErrorLogger', () => ({
   webErrorLogger: {
     logReactError: jest.fn(),
@@ -53,7 +56,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('logs error when error occurs', () => {
-    const { webErrorLogger } = require('../../services/WebErrorLogger');
+    const { webErrorLogger } = jest.requireMock('../../services/WebErrorLogger');
     
     render(
       <ErrorBoundary>
@@ -86,7 +89,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('shows report button and handles report action', () => {
-    const { webErrorLogger } = require('../../services/WebErrorLogger');
+    const { webErrorLogger } = jest.requireMock('../../services/WebErrorLogger');
     
     render(
       <ErrorBoundary>

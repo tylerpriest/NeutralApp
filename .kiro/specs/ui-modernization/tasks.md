@@ -37,14 +37,14 @@
       - [x] Use shared UI primitives and Tailwind/shadcn/ui
       - [x] Remove legacy CSS
       - [x] Update or add tests
-  - [ ] 3.3 UI-shell feature: Refactor /src/features/ui-shell/web/ components
-    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
-    - [ ] Remove legacy CSS
-    - [ ] Update or add tests
-  - [ ] 3.4 Settings feature: Refactor /src/features/settings/web/ components
-    - [ ] Use shared UI primitives and Tailwind/shadcn/ui
-    - [ ] Remove legacy CSS
-    - [ ] Update or add tests
+  - [x] 3.3 UI-shell feature: Refactor /src/features/ui-shell/web/ components
+  - [x] Use shared UI primitives and Tailwind/shadcn/ui
+  - [x] Remove legacy CSS
+  - [x] Update or add tests
+  - [x] 3.4 Settings feature: Refactor /src/features/settings/web/ components
+  - [x] Use shared UI primitives and Tailwind/shadcn/ui
+  - [x] Remove legacy CSS
+  - [x] Update or add tests
   - [ ] 3.5 Admin feature: Refactor /src/features/admin/web/ components
     - [ ] Use shared UI primitives and Tailwind/shadcn/ui
     - [ ] Remove legacy CSS

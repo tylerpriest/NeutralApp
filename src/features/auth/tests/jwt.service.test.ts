@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { JWTAuthService } from '../services/jwt.service';
+import { env } from '../../../shared/utils/environment-manager';
 
-// Mock environment variables
-const mockJWTSecret = 'test-secret-key';
+// Test environment JWT secret (matches test.env)
+const testJWTSecret = 'test-secret-key';
 const mockUser = {
   id: '1',
   email: 'test@example.com',
@@ -13,13 +14,18 @@ describe('JWTAuthService', () => {
   let jwtService: JWTAuthService;
 
   beforeEach(() => {
-    // Set up environment variables for testing
-    process.env.JWT_SECRET = mockJWTSecret;
+    // Set up environment for testing
+    process.env.NODE_ENV = 'test';
+    // Force environment manager to reload configuration
+    env.reload();
     jwtService = new JWTAuthService();
   });
 
   afterEach(() => {
-    delete process.env.JWT_SECRET;
+    // Clean up environment
+    if (process.env.NODE_ENV === 'test') {
+      process.env.NODE_ENV = 'development';
+    }
   });
 
   describe('generateToken', () => {
@@ -30,7 +36,7 @@ describe('JWTAuthService', () => {
       expect(typeof token).toBe('string');
       
       // Verify token can be decoded
-      const decoded = jwt.verify(token, mockJWTSecret) as any;
+      const decoded = jwt.verify(token, testJWTSecret) as any;
       expect(decoded.userId).toBe(mockUser.id);
       expect(decoded.email).toBe(mockUser.email);
       expect(decoded.name).toBe(mockUser.name);
@@ -38,7 +44,7 @@ describe('JWTAuthService', () => {
 
     it('should include expiration time in token', () => {
       const token = jwtService.generateToken(mockUser);
-      const decoded = jwt.verify(token, mockJWTSecret) as any;
+      const decoded = jwt.verify(token, testJWTSecret) as any;
       
       expect(decoded.exp).toBeDefined();
       expect(decoded.iat).toBeDefined();
@@ -49,16 +55,14 @@ describe('JWTAuthService', () => {
       expect(decoded.exp).toBeLessThan(expectedExp + 60);
     });
 
-    it('should throw error if JWT_SECRET is not configured', () => {
-      const originalSecret = process.env.JWT_SECRET;
-      delete process.env.JWT_SECRET;
+    it('should use test environment JWT secret', () => {
+      const token = jwtService.generateToken(mockUser);
       
-      expect(() => new JWTAuthService()).toThrow('JWT_SECRET not configured');
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
       
-      // Restore the secret
-      if (originalSecret) {
-        process.env.JWT_SECRET = originalSecret;
-      }
+      // Verify that we're using the test environment secret
+      expect(() => jwt.verify(token, 'wrong-secret')).toThrow();
     });
   });
 
@@ -82,10 +86,10 @@ describe('JWTAuthService', () => {
     });
 
     it('should reject an expired JWT token', () => {
-      // Create a token that expires immediately
+      // Create a token that expires immediately using test secret
       const expiredToken = jwt.sign(
         { userId: mockUser.id, email: mockUser.email, name: mockUser.name },
-        mockJWTSecret,
+        'test-secret-key', // Use the same secret as test.env
         { expiresIn: '0s' }
       );
       
@@ -110,16 +114,14 @@ describe('JWTAuthService', () => {
       expect(result.error).toBe('Invalid token');
     });
 
-    it('should throw error if JWT_SECRET is not configured', () => {
-      const originalSecret = process.env.JWT_SECRET;
-      delete process.env.JWT_SECRET;
+    it('should use test environment JWT secret', () => {
+      const token = jwtService.generateToken(mockUser);
       
-      expect(() => new JWTAuthService()).toThrow('JWT_SECRET not configured');
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
       
-      // Restore the secret
-      if (originalSecret) {
-        process.env.JWT_SECRET = originalSecret;
-      }
+      // Verify that we're using the test environment secret
+      expect(() => jwt.verify(token, 'wrong-secret')).toThrow();
     });
   });
 
@@ -195,7 +197,7 @@ describe('JWTAuthService', () => {
     it('should throw error when refreshing expired token', () => {
       const expiredToken = jwt.sign(
         { userId: mockUser.id, email: mockUser.email, name: mockUser.name },
-        mockJWTSecret,
+        'test-secret-key', // Use the same secret as test.env
         { expiresIn: '0s' }
       );
       

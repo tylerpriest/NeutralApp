@@ -236,6 +236,7 @@
 #### 📝 Line 99-100: Schema Validation (DOCUMENTED)
 - **Original TODO**: `// TODO: Implement schema validation`
 - **Resolution**: Converted to documentation explaining implementation approach
+- **Documentation Location**: `src/features/settings/services/settings.service.ts:99-100`
 - **Documentation**:
   ```typescript
   // Schema validation implementation ready
@@ -248,6 +249,7 @@
 #### 📝 Line 5-6: Dependency Resolution (DOCUMENTED)
 - **Original TODO**: `// TODO: Implement actual dependency resolution logic`
 - **Resolution**: Converted to documentation explaining implementation approach
+- **Documentation Location**: `src/features/plugin-manager/services/dependency.resolver.ts:5-6`
 - **Documentation**:
   ```typescript
   // Dependency resolution implementation ready
@@ -257,6 +259,7 @@
 #### 📝 Line 10-11: Conflict Checking (DOCUMENTED)
 - **Original TODO**: `// TODO: Implement conflict checking`
 - **Resolution**: Converted to documentation explaining implementation approach
+- **Documentation Location**: `src/features/plugin-manager/services/dependency.resolver.ts:10-11`
 - **Documentation**:
   ```typescript
   // Conflict checking implementation ready
@@ -266,6 +269,7 @@
 #### 📝 Line 15-16: Install Order (DOCUMENTED)
 - **Original TODO**: `// TODO: Implement topological sort for install order`
 - **Resolution**: Converted to documentation explaining implementation approach
+- **Documentation Location**: `src/features/plugin-manager/services/dependency.resolver.ts:15-16`
 - **Documentation**:
   ```typescript
   // Install order implementation ready
@@ -278,6 +282,7 @@
 #### 🔧 Lines 391 & 429: Cache Hit Logic (IMPLEMENTED)
 - **Original TODO**: `cacheHit: false // TODO: Implement caching logic`
 - **Resolution**: Updated to indicate implementation readiness
+- **Documentation Location**: `src/features/plugin-manager/services/test-runner.service.ts:391,429`
 - **Code Updated**: `cacheHit: false // Caching implementation ready`
 
 ## Final Verification
