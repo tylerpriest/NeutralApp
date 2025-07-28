@@ -172,25 +172,32 @@ const SettingsPage: React.FC = () => {
       }
 
       for (const plugin of installedPlugins) {
+        // Get the plugin settings
         const pluginSettings = await settingsService.getPluginSettings(plugin.id);
         
-        // Create plugin group even if no settings exist yet
-        const settings: SettingItem[] = Object.entries(pluginSettings || {}).map(([key, value]) => ({
-          key,
-          label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-          description: `Setting for ${plugin.name}`,
-          type: typeof value === 'boolean' ? SettingType.BOOLEAN : 
-                 typeof value === 'number' ? SettingType.NUMBER : SettingType.STRING,
-          value,
-          category: 'plugin'
-        }));
-
-        pluginGroups.push({
-          id: `plugin-${plugin.id}`,
-          name: plugin.name,
-          description: `Settings for ${plugin.name}`,
-          settings
+        // Create plugin group with existing settings
+        const settings: SettingItem[] = Object.entries(pluginSettings || {}).map(([key, value]) => {
+          return {
+            key,
+            label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+            description: `Setting for ${plugin.name}`,
+            type: typeof value === 'boolean' ? SettingType.BOOLEAN : 
+                   typeof value === 'number' ? SettingType.NUMBER : 
+                   Array.isArray(value) ? SettingType.ARRAY : SettingType.STRING,
+            value,
+            category: 'plugin'
+          };
         });
+
+        // Add plugin group if it has settings
+        if (settings.length > 0) {
+          pluginGroups.push({
+            id: `plugin-${plugin.id}`,
+            name: plugin.name,
+            description: `Settings for ${plugin.name}`,
+            settings
+          });
+        }
       }
 
       return pluginGroups;

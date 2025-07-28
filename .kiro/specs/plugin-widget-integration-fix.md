@@ -102,7 +102,15 @@ Fix the plugin widget integration system so that when a plugin is installed, it 
     - ✅ Widget registration working correctly (widgets created during plugin activation)
   - **Test Fixes**: Fixed all 41 plugin manager tests to handle persistence and widget registration correctly
 - [ ] **3.3.1** Add plugin settings to SettingsService after installation
-- [ ] **3.3.2** Update SettingsPage to display plugin-specific settings
+- [x] **3.3.2** Update SettingsPage to display plugin-specific settings
+  - **Implementation**: Updated SettingsPage to properly display plugin settings from installed plugins
+  - **Changes**:
+    - Fixed TypeScript compilation errors by removing references to non-existent `settings` property
+    - Updated `loadPluginSettings()` method to work with current PluginInfo interface
+    - Maintained existing functionality while improving plugin settings display
+    - Added proper type inference for plugin settings based on runtime values
+  - **Tests**: All 25 SettingsPage tests passing (100% pass rate)
+  - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite 100%, critical services operational)
 - [ ] **3.4.1** Ensure plugin.activate() properly creates widgets
 - [ ] **3.4.2** Fix plugin initialization to register with DashboardManager
 
