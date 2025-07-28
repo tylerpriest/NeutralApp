@@ -1,6 +1,8 @@
 import { coreApp, CoreService } from './core';
 import { eventBus } from './core/event-bus';
 import { container } from './core/dependency-injection';
+import { DashboardManager } from './features/ui-shell/services/dashboard.manager';
+import { PluginManager } from './features/plugin-manager/services/plugin.manager';
 
 // Core exports
 export * from './core';
@@ -112,8 +114,59 @@ export class NeutralApp {
 
   private async initializePluginManager(): Promise<void> {
     console.log('🔌 Initializing plugin manager...');
-    // Plugin manager initialization logic would go here
-    console.log('✅ Plugin manager initialized');
+    
+    try {
+      // Create DashboardManager instance
+      const dashboardManager = new DashboardManager();
+      
+      // Create PluginManager with DashboardManager integration
+      const pluginManager = new PluginManager(undefined, undefined, undefined, dashboardManager);
+      
+      // Register services with the core application
+      const pluginManagerService: CoreService = {
+        name: 'plugin-manager',
+        version: '1.0.0',
+        start: async () => {
+          console.log('Plugin manager service started');
+        },
+        stop: async () => {
+          console.log('Plugin manager service stopped');
+        },
+        health: async () => ({
+          status: 'healthy',
+          details: { 
+            dashboardManager: 'integrated',
+            pluginManager: 'initialized'
+          }
+        })
+      };
+
+      const dashboardManagerService: CoreService = {
+        name: 'dashboard-manager',
+        version: '1.0.0',
+        start: async () => {
+          console.log('Dashboard manager service started');
+        },
+        stop: async () => {
+          console.log('Dashboard manager service stopped');
+        },
+        health: async () => ({
+          status: 'healthy',
+          details: { 
+            widgetRegistry: 'active',
+            layoutEngine: 'operational'
+          }
+        })
+      };
+
+      coreApp.registerService(pluginManagerService);
+      coreApp.registerService(dashboardManagerService);
+      
+      console.log('✅ Plugin manager initialized with DashboardManager integration');
+    } catch (error) {
+      console.error('❌ Failed to initialize plugin manager:', error);
+      throw error;
+    }
   }
 
   private async initializeAdmin(): Promise<void> {

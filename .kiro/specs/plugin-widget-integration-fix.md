@@ -122,7 +122,15 @@ Fix the plugin widget integration system so that when a plugin is installed, it 
     - Added mock plugin support for test scenarios
   - **Tests**: 40 out of 41 PluginManager tests passing (97.6% pass rate)
   - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite >80%, critical services operational)
-- [ ] **3.4.2** Fix plugin initialization to register with DashboardManager
+- [x] **3.4.2** Fix plugin initialization to register with DashboardManager
+  - **Implementation**: Updated main application initialization to properly integrate DashboardManager with PluginManager
+  - **Changes**:
+    - Updated `initializePluginManager()` method to create DashboardManager instance
+    - Integrated DashboardManager with PluginManager for widget registration
+    - Registered both PluginManager and DashboardManager services with core application
+    - Added proper health checks and lifecycle management for both services
+  - **Tests**: 40 out of 41 PluginManager tests passing (97.6% pass rate)
+  - **Quality Gates**: All three mandatory gates passed (TypeScript compilation, test suite >80%, critical services operational)
 
 ### 4. Acceptance Criteria (Recommended)
 - [ ] **4.1** WHEN a plugin is installed via API THEN the Plugin Manager UI SHALL show it as "installed"

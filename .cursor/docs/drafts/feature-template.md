@@ -28,13 +28,13 @@
 - [ ] **3.3.1** [Task implementing requirement 2.3]
 
 ### 4. Acceptance Criteria
-- [ ] **4.1** WHEN [condition] THEN the system SHALL [behavior]
-- [ ] **4.2** WHEN [condition] THEN the system SHALL [behavior]
-- [ ] **4.3** WHEN [condition] THEN the system SHALL [behavior]
+- **4.1** WHEN [condition] THEN the system SHALL [behavior]
+- **4.2** WHEN [condition] THEN the system SHALL [behavior]
+- **4.3** WHEN [condition] THEN the system SHALL [behavior]
 
 ### 5. Dependencies
-- [ ] **5.1** [Prerequisite 1 - what must be in place first]
-- [ ] **5.2** [Prerequisite 2 - external services, packages, etc.]
+- **5.1** [Prerequisite 1 - what must be in place first]
+- **5.2** [Prerequisite 2 - external services, packages, etc.]
 
 ### 6. Success Metrics
 - **Performance**: [measurable performance criteria]
