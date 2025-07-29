@@ -49,8 +49,8 @@ const RecentlyReadWidget: React.FC<RecentlyReadWidgetProps> = ({
           
           // Sort by last read date and filter recent ones
           const recent = allBooks
-            .filter(book => book.readingProgress.lastReadDate || book.readingProgress.currentPosition > 0)
-            .sort((a, b) => {
+            .filter((book: any) => book.readingProgress.lastReadDate || book.readingProgress.currentPosition > 0)
+            .sort((a: any, b: any) => {
               const aDate = new Date(a.readingProgress.lastReadDate || a.lastModified);
               const bDate = new Date(b.readingProgress.lastReadDate || b.lastModified);
               return bDate.getTime() - aDate.getTime();

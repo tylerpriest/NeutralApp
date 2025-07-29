@@ -68,7 +68,7 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
   });
 
   const contentRef = useRef<HTMLDivElement>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     loadBook();
