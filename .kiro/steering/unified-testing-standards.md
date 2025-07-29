@@ -2,12 +2,23 @@
 
 ## Overview
 
-This steering document provides implementation guidance for the unified testing hierarchy defined in `.cursor/rules/007-unified-testing-hierarchy.mdc`. It focuses on practical application and preventing false success in tests.
+This steering document provides implementation guidance for the unified testing hierarchy defined in `.cursor/rules/002-unified-testing-hierarchy.mdc`. It focuses on practical application and preventing false success in tests.
 
 ## Testing Philosophy
 
 ### Core Principle: Value-Driven Testing
 **Every test must validate that the system delivers real value to users and meets business objectives.** Tests that pass but don't ensure the system actually works for users are worthless and dangerous.
+
+### SBE/ATDD Core Philosophy
+**EXAMPLES FIRST, IMPLEMENTATION SECOND** - Start with concrete examples of how the system should behave, then implement to make those examples pass. This ensures the system is built to deliver real user value from the beginning.
+
+### The Three Amigos Approach
+- **Business Analyst**: Defines what value the feature should deliver
+- **Developer**: Ensures the examples are technically feasible
+- **Tester**: Ensures the examples are testable and cover edge cases
+
+### Executable Specifications
+User Acceptance Tests are your **executable specifications** - concrete examples of how the system should behave that can be automated and run continuously. These specifications drive the development process and ensure the system delivers real value.
 
 ### The False Success Problem
 Many teams write tests that:
@@ -21,10 +32,10 @@ Many teams write tests that:
 ### 1. User Acceptance Tests (UAT) - Start Here
 
 #### Purpose
-Test that users can accomplish their goals and get the promised business value.
+Test that users can accomplish their goals and get the promised business value. These are your **executable specifications** that drive development.
 
 #### Implementation Guidelines
-- **Write UAT first** before any other tests
+- **Write UAT first** before any other tests (Examples First, Implementation Second)
 - **Focus on complete user journeys** that deliver value
 - **Test business outcomes**, not technical implementation
 - **Include error scenarios** that users actually encounter
