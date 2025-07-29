@@ -10,7 +10,7 @@
     "build": "npm run build:client",
     "build:server": "tsc",
     "build:client": "rm -rf dist/web/client && vite build",
-    "vercel-build": "npm run build:full",
+    "vercel-build": "npm run build:client",
     "build:full": "npm run build:server && npm run build:client",
     "build:production": "ts-node scripts/build-production.ts --env=production --optimize",
     "build:staging": "ts-node scripts/build-production.ts --env=staging --optimize",
