@@ -75,6 +75,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.log('AuthContext: Session check response status:', response.status);
           
           if (response.ok) {
+            // Check content type to ensure we're getting JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+              const textContent = await response.text();
+              if (textContent.includes('<html') || textContent.includes('<!DOCTYPE')) {
+                console.error('AuthContext: Server returned HTML instead of JSON');
+                localStorage.removeItem('auth_token');
+                return;
+              }
+            }
+            
             const data = await response.json();
             console.log('AuthContext: Session check successful, user:', data.user);
             setUser(data.user);
@@ -110,6 +121,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('AuthContext: Response ok:', response.ok);
 
       if (response.ok) {
+        // Check content type to ensure we're getting JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const textContent = await response.text();
+          if (textContent.includes('<html') || textContent.includes('<!DOCTYPE')) {
+            console.error('AuthContext: Login response returned HTML instead of JSON');
+            return false;
+          }
+        }
+        
         const data = await response.json();
         console.log('AuthContext: Login response data:', data);
         
@@ -123,8 +144,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('AuthContext: Login successful, user set:', data.user);
         return true;
       } else {
-        const error = await response.json();
-        console.error('Login failed:', error.error);
+        // Try to get error details
+        let errorMessage = 'Login failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          // If JSON parsing fails, try to get text content
+          try {
+            const textContent = await response.text();
+            if (textContent.includes('<html') || textContent.includes('<!DOCTYPE')) {
+              errorMessage = 'Server returned HTML instead of JSON. Please check if the API is running correctly.';
+            } else {
+              errorMessage = `Server error: ${textContent.substring(0, 200)}`;
+            }
+          } catch (textError) {
+            errorMessage = `Login failed (Status: ${response.status})`;
+          }
+        }
+        console.error('Login failed:', errorMessage);
         return false;
       }
     } catch (error) {
