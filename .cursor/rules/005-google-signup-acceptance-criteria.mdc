@@ -1,0 +1,348 @@
+# Google Signup Acceptance Criteria - EXAMPLE TEMPLATE
+
+## IMPORTANT: This is an EXAMPLE/TEMPLATE
+**This file demonstrates how to write comprehensive acceptance criteria for any user story. The Google signup is just an example - you can use this same pattern for any feature in your application.**
+
+## Example User Story
+**As a first-time visitor, I want to sign up with Google so I can explore the dashboard instantly.**
+
+## Example Acceptance Criteria (Gherkin Format)
+**This shows the pattern for writing comprehensive acceptance criteria that cover all scenarios:**
+
+### Feature Structure
+```gherkin
+@authentication @oauth @google
+Feature: Google Sign-up
+  As a first-time visitor
+  I want to sign up with Google
+  So that I can explore the dashboard instantly
+
+  Background:
+    Given I am on the landing page
+    And I have not signed up before
+```
+
+### Tag System
+**Use comprehensive tags to organize and filter tests:**
+- `@authentication @oauth @google` - Feature-level tags
+- `@happy-path @critical` - Priority scenarios
+- `@error-handling` - Error scenarios
+- `@accessibility @screen-reader @wcag` - Accessibility requirements
+- `@performance @load-time` - Performance constraints
+- `@network @error-handling` - Network issues
+- `@session @security` - Security and session management
+- `@onboarding @user-experience` - User experience
+- `@edge-case` - Edge cases
+
+### 1. Happy Path - Successful Google Signup
+```gherkin
+Scenario: Successful Google signup and dashboard access
+  Given I am a first-time visitor on the landing page
+  And I have a valid Google account
+  When I click "Sign up with Google"
+  Then I should be redirected to Google OAuth consent screen
+  And I should see the app requesting necessary permissions
+  When I approve the OAuth request
+  Then I should be redirected back to the application
+  And I should be automatically logged in
+  And I should be taken to the dashboard page
+  And I should see a welcome message with my name
+  And I should see available plugins to explore
+  And the page should load within 2 seconds
+  And I should be able to interact with the dashboard immediately
+```
+
+### 2. Invalid Credential Path - OAuth Failure (Scenario Outline)
+```gherkin
+@error-handling @oauth-failure
+Scenario Outline: OAuth failure scenarios
+  Given I have <credential_type> Google credentials
+  When I click "Sign up with Google"
+  Then I should be redirected to Google OAuth consent screen
+  When Google returns <error_type>
+  Then I should be redirected back to the landing page
+  And I should see a user-friendly error message
+  And the error message should not expose technical details
+  And I should be given the option to try again
+  And I should be given the option to use email signup instead
+  And my session should not be in a broken state
+
+  Examples:
+    | credential_type | error_type                    |
+    | invalid         | authentication error          |
+    | expired         | token expired error           |
+    | suspended       | account suspended error       |
+    | restricted      | access denied error           |
+```
+
+### 3. OAuth Denial Path - User Rejects Permissions
+```gherkin
+@error-handling @user-denial
+Scenario: User denies OAuth permissions
+  When I click "Sign up with Google"
+  Then I should be redirected to Google OAuth consent screen
+  When I deny the OAuth request or close the popup
+  Then I should be returned to the landing page
+  And I should see a helpful message explaining the benefits of signing up
+  And I should see the option to try signing up again
+  And I should see alternative signup methods (email, other providers)
+  And I should not see any error messages or broken states
+  And the page should remain fully functional
+```
+
+### 4. Accessibility Requirements
+```gherkin
+@accessibility @screen-reader @wcag
+Scenario: Accessibility compliance for signup flow
+  Given I am using a screen reader
+  When I navigate to the "Sign up with Google" button
+  Then the button should have proper ARIA labels
+  And the button should be keyboard accessible
+  And the button should have sufficient color contrast
+  When I activate the signup flow
+  Then all OAuth redirects should be announced to screen readers
+  And the dashboard should be fully navigable by keyboard
+  And all interactive elements should have proper focus indicators
+  And the page should meet WCAG 2.1 AA standards
+```
+
+### 5. Performance Constraints
+```gherkin
+@performance @load-time
+Scenario: Performance requirements for signup flow
+  When I click "Sign up with Google"
+  Then the OAuth redirect should happen within 1 second
+  And the Google consent screen should load within 2 seconds
+  When I approve the OAuth request
+  Then I should be redirected back within 1 second
+  And the dashboard should load within 2 seconds
+  And the page should be fully interactive within 3 seconds total
+  And the signup flow should work on slow network connections (3G)
+  And the signup flow should work on mobile devices
+```
+
+### 6. Network Failure Handling
+```gherkin
+@network @error-handling
+Scenario: Network failure during signup process
+  Given my network connection is unstable
+  When I click "Sign up with Google"
+  And the network request fails
+  Then I should see a user-friendly error message
+  And I should be given the option to retry
+  And I should not lose my place on the page
+  And the error should be logged for debugging
+  When I retry the signup
+  Then the process should continue from where it left off
+  And I should not have to start over completely
+```
+
+### 7. Session Management
+```gherkin
+@session @security
+Scenario: Proper session establishment after signup
+  Given I successfully complete Google signup
+  When I am redirected to the dashboard
+  Then my session should be properly established
+  And I should remain logged in when I refresh the page
+  And I should remain logged in when I navigate to other pages
+  And my session should persist for at least 24 hours
+  And I should be able to log out when desired
+  And my session should be secure and encrypted
+```
+
+### 8. User Onboarding Flow
+```gherkin
+@onboarding @user-experience
+Scenario: Seamless onboarding after signup
+  Given I have just completed Google signup
+  When I arrive at the dashboard
+  Then I should see a welcome message with my name
+  And I should see a brief tour of available features
+  And I should see recommended plugins to get started
+  And I should see clear next steps for exploring the app
+  And I should not be overwhelmed with too many options
+  And I should be able to dismiss the onboarding elements
+  And I should be able to access help if needed
+```
+
+## Example Edge Cases to Consider
+**These are examples of edge cases you should think about for any feature:**
+
+### 1. **Browser Compatibility Issues (Scenario Outline)**
+```gherkin
+@edge-case @browser-compatibility
+Scenario Outline: Browser compatibility issues
+  Given I am using <browser_type> with <restriction_type>
+  When I click "Sign up with Google"
+  Then I should see <expected_behavior>
+  And I should be given <alternative_option>
+
+  Examples:
+    | browser_type | restriction_type           | expected_behavior                    | alternative_option        |
+    | Chrome       | disabled popups            | popup blocked message               | redirect flow option      |
+    | Firefox      | disabled third-party cookies| cookie warning message             | email signup option       |
+    | Safari       | strict privacy settings    | privacy warning message            | alternative auth option   |
+    | Edge         | corporate restrictions     | network restriction message        | contact admin option      |
+```
+
+### 2. **Account State Issues (Scenario Outline)**
+```gherkin
+@edge-case @account-state
+Scenario Outline: Account state issues
+  Given I have a Google account that is <account_state>
+  When I click "Sign up with Google"
+  Then I should see <appropriate_message>
+  And I should be given <resolution_option>
+
+  Examples:
+    | account_state | appropriate_message           | resolution_option           |
+    | already exists| account already exists message| login option               |
+    | suspended     | account suspended message     | contact support option     |
+    | requires verification| verification required message| verification flow option |
+    | restricted    | access restricted message     | alternative signup option  |
+```
+
+### 3. **Technical Edge Cases**
+- OAuth provider is temporarily unavailable
+- User's device has limited storage or memory
+- User is on a corporate network with restrictions
+- User's timezone or locale settings cause issues
+
+### 4. **Security Edge Cases**
+```gherkin
+@security @edge-case
+Scenario: Security edge case - session hijacking
+  Given I am on an insecure network (public WiFi)
+  When I click "Sign up with Google"
+  Then I should see a security warning
+  And I should be advised to use a secure connection
+  And the OAuth flow should use HTTPS
+  And my session should be encrypted
+  And I should be warned about potential security risks
+```
+
+## Example Test Implementation
+**These show how to implement tests for the acceptance criteria above:**
+
+### E2E Test Example
+```typescript
+describe('Google Signup User Story', () => {
+  test('User can sign up with Google and explore dashboard instantly', async () => {
+    // Given: User is on landing page
+    await page.goto('/');
+    
+    // When: User clicks sign up with Google
+    await page.click('[data-testid="google-signup"]');
+    
+    // Then: OAuth flow should work
+    await expect(page).toHaveURL(/accounts\.google\.com/);
+    
+    // When: User completes OAuth (mock or real)
+    await mockGoogleOAuthSuccess();
+    
+    // Then: User should be on dashboard with value
+    await expect(page).toHaveURL('/dashboard');
+    await expect(page.locator('text=Welcome')).toBeVisible();
+    await expect(page.locator('text=Available Plugins')).toBeVisible();
+    
+    // And: Performance should be acceptable
+    const loadTime = await page.evaluate(() => performance.now());
+    expect(loadTime).toBeLessThan(2000); // 2 seconds
+  });
+  
+  test('User gets helpful error when OAuth fails', async () => {
+    await page.goto('/');
+    await page.click('[data-testid="google-signup"]');
+    
+    // Mock OAuth failure
+    await mockGoogleOAuthFailure();
+    
+    await expect(page.locator('text=Unable to sign up right now')).toBeVisible();
+    await expect(page.locator('text=Please try again')).toBeVisible();
+    await expect(page.locator('[data-testid="retry-signup"]')).toBeVisible();
+  });
+});
+```
+
+### Integration Test Example
+```typescript
+describe('Google Signup Integration', () => {
+  test('OAuth flow integrates with user management', async () => {
+    const mockGoogleUser = {
+      id: 'google-123',
+      email: 'user@example.com',
+      name: 'Test User'
+    };
+    
+    // Mock Google OAuth response
+    mockGoogleOAuth(mockGoogleUser);
+    
+    // Test the integration
+    const result = await authService.handleGoogleSignup(mockGoogleUser);
+    
+    expect(result.user.email).toBe(mockGoogleUser.email);
+    expect(result.user.name).toBe(mockGoogleUser.name);
+    expect(result.session).toBeDefined();
+    expect(result.user.isFirstTime).toBe(true);
+  });
+});
+```
+
+## Example Success Metrics
+**These are examples of how to measure success for any feature:**
+
+### Functional Success
+- ✅ All acceptance criteria pass automated tests
+- ✅ OAuth flow works with real Google accounts
+- ✅ Error scenarios are handled gracefully
+- ✅ Performance constraints are met
+
+### User Experience Success
+- ✅ Average signup completion time < 30 seconds
+- ✅ Signup success rate > 95%
+- ✅ Error recovery rate > 90%
+- ✅ User satisfaction score > 4.5/5
+
+### Technical Success
+- ✅ Zero security vulnerabilities in OAuth flow
+- ✅ 100% uptime for signup functionality
+- ✅ Proper error logging and monitoring
+- ✅ Session management works correctly
+
+## How to Use This Template
+
+### For Any User Story:
+1. **Replace the example user story** with your actual user story
+2. **Adapt the acceptance criteria** to match your feature's requirements
+3. **Customize the edge cases** based on your specific context
+4. **Modify the test examples** to work with your actual implementation
+5. **Adjust success metrics** to match your business goals
+
+### Template Structure:
+- **Feature Structure**: Include proper Gherkin format with tags and Background
+- **Tag System**: Use comprehensive tags for test organization and filtering
+- **User Story**: Define who wants what and why
+- **Acceptance Criteria**: Cover happy path, error paths, accessibility, performance
+- **Scenario Outlines**: Use for parameterized testing of similar scenarios
+- **Edge Cases**: Think about real-world scenarios users might encounter
+- **Test Examples**: Show how to implement automated tests
+- **Success Metrics**: Define how to measure success
+
+### Best Practices:
+- **Use Background sections** to reduce repetition across scenarios
+- **Apply comprehensive tagging** for test organization and selective execution
+- **Convert similar scenarios to Scenario Outlines** with Examples tables
+- **Include specific test data** in Examples tables for better testability
+- **Add performance constraints** with specific time limits
+- **Consider security edge cases** for authentication features
+
+## Metadata
+priority: critical
+category: acceptance_criteria_template
+scope: all_features
+enforcement: mandatory
+description: Template for writing comprehensive acceptance criteria for any user story with Gherkin format and edge case coverage
+globs: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"]
+alwaysApply: true
+---

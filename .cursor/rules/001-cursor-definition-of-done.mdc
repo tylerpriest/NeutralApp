@@ -1,0 +1,130 @@
+# Cursor IDE Definition of Done - Optimized Workflow
+
+Streamlined for maximum Cursor IDE efficiency, AI-assisted development, and context optimization to leverage Cursor's intelligent code completion and analysis capabilities.
+
+<rule>
+name: cursor_optimized_workflow
+filters:
+  - type: event
+    pattern: "user_request|task_start|development_request"
+  - type: command
+    pattern: "implement|develop|fix|add|complete|done|build|create"
+
+actions:
+  - type: react
+    event: "task_start"
+    priority: critical
+    action: |
+      # ⚡ CURSOR IDE OPTIMIZED WORKFLOW
+      
+      **🎯 AI-ASSISTED EFFICIENCY-FIRST DEVELOPMENT**
+      
+      **Step 1: 📋 Smart Context Gathering (Cursor AI Integration)**
+      - **Intelligent File Reading**: Use Cursor's AI to understand codebase structure and dependencies
+      - **Semantic Search**: Leverage Cursor's codebase understanding for targeted information gathering
+      - **Context Preservation**: Maintain AI context across multiple files and operations
+      - **Dependency Analysis**: Use Cursor's dependency tracking to identify blockers and requirements
+      
+      **Step 2: 🏗 AI-Assisted Implementation (Cursor Code Generation)**
+      - **AI Code Generation**: Leverage Cursor's AI for boilerplate and repetitive code patterns
+      - **Intelligent Refactoring**: Use Cursor's refactoring tools for clean, maintainable code
+      - **Real-time TypeScript**: Utilize Cursor's TypeScript integration for immediate error detection
+      - **Smart Component Creation**: Use Cursor's AI to generate components following established patterns
+      - **File Organization**: Follow Cursor's recommended file structure and naming conventions
+      
+      **Step 3: 🔄 Continuous AI Validation (Cursor Quality Assurance)**
+      - **Real-time Error Detection**: Leverage Cursor's live error highlighting and suggestions
+      - **AI-Powered Testing**: Use Cursor's AI to generate and improve test cases
+      - **Code Quality Analysis**: Utilize Cursor's built-in code quality tools and suggestions
+      - **Performance Optimization**: Leverage Cursor's performance analysis and optimization suggestions
+      
+      **CURSOR IDE OPTIMIZATION STRATEGIES:**
+      - **AI Context Leverage**: Maintain rich context for better AI assistance
+      - **Intelligent Code Completion**: Use Cursor's AI suggestions for faster development
+      - **Smart Refactoring**: Leverage Cursor's refactoring tools for clean code evolution
+      - **Real-time Feedback**: Utilize Cursor's immediate error detection and suggestions
+      - **AI-Powered Testing**: Use Cursor's AI to generate comprehensive test coverage
+
+  - type: react
+    event: "implementation_complete"
+    priority: critical
+    action: |
+      # 🚦 CURSOR-OPTIMIZED QUALITY GATES
+      
+      **AI-ASSISTED VALIDATION APPROACH**
+      
+      **🔴 GATE 1: TypeScript & Compilation (Cursor Real-time)**
+      - **Leverage**: Cursor's real-time TypeScript error detection
+      - **Strategy**: Fix errors as they appear using Cursor's AI suggestions, defer cosmetic type issues
+      - **Cursor Advantage**: Immediate feedback and intelligent error resolution
+      - **Success Criteria**: Clean TypeScript compilation with no blocking errors
+      
+      **🟡 GATE 2: AI-Generated Testing (Cursor Test Integration)**
+      - **Leverage**: Cursor's AI test generation capabilities
+      - **Strategy**: Generate comprehensive tests using Cursor's AI assistance, expand coverage in subsequent iterations
+      - **Cursor Advantage**: AI-powered test case generation and optimization
+      - **Success Criteria**: High test coverage with meaningful test cases
+      
+      **🟢 GATE 3: Build & Performance (Cursor Analysis)**
+      - **Leverage**: Cursor's build integration and performance analysis
+      - **Strategy**: Use Cursor's performance insights for optimization
+      - **Cursor Advantage**: Built-in performance monitoring and optimization suggestions
+      - **Success Criteria**: Clean build with optimal performance metrics
+      
+      **🔵 GATE 4: Code Quality & Standards (Cursor Quality Tools)**
+      - **Leverage**: Cursor's code quality analysis and linting integration
+      - **Strategy**: Use Cursor's suggestions for code quality improvements
+      - **Cursor Advantage**: Real-time code quality feedback and automated fixes
+      - **Success Criteria**: High code quality with consistent standards
+      
+      **⚡ CURSOR AUTONOMOUS CONTINUATION**
+      - Maintain AI context for seamless task progression
+      - Use Cursor's AI for next task identification and planning
+      - Leverage Cursor's intelligent code completion for rapid development
+      - Optimize for continuous AI-assisted progress
+
+  - type: suggest
+    message: |
+      ### ⚡ Cursor IDE Optimized Checklist
+      
+      **📋 AI-ASSISTED PLANNING:**
+      - [ ] Leverage Cursor's AI for codebase understanding
+      - [ ] Use semantic search for targeted information gathering
+      - [ ] Maintain rich AI context for better assistance
+      
+      **🏗 CURSOR-ENHANCED IMPLEMENTATION:**
+      - [ ] Use Cursor's AI for code generation and boilerplate
+      - [ ] Leverage intelligent refactoring tools
+      - [ ] Utilize real-time TypeScript error detection
+      - [ ] Follow Cursor's recommended patterns and conventions
+      
+      **🚦 AI-POWERED QUALITY GATES:**
+      - [ ] 🔴 TypeScript: Real-time error resolution with AI assistance
+      - [ ] 🟡 Testing: AI-generated comprehensive test coverage
+      - [ ] 🟢 Build: Performance optimization using Cursor's analysis
+      - [ ] 🔵 Quality: Code quality improvements with AI suggestions
+      
+      **⚡ CURSOR AUTONOMOUS CONTINUATION:**
+      - [ ] Maintain AI context for seamless progression
+      - [ ] Use Cursor's AI for next task identification
+      - [ ] Leverage intelligent code completion for rapid development
+
+examples:
+  - input: "Implement authentication feature"
+    output: "Starting Cursor-optimized workflow: AI-assisted codebase analysis, intelligent component generation, real-time TypeScript validation"
+  - input: "Fix all TypeScript errors before proceeding"
+    output: "Cursor approach: Real-time error detection with AI-powered resolution, intelligent refactoring suggestions"
+
+metadata:
+  priority: critical
+  category: cursor_optimized
+  scope: all_development
+  enforcement: progressive
+  description: Cursor IDE optimized workflow for AI-assisted development and quality assurance
+  globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+  alwaysApply: true
+  version: 4.0
+  type: cursor_optimized
+  optimization: ai_assisted
+  ide: cursor
+---

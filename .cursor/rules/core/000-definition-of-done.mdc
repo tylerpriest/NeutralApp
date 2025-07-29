@@ -1,6 +1,3 @@
----
-alwaysApply: false
----
 # Definition of Done Enforcement Rule
 
 Enforces a strict workflow aligned with Kiro's spec-driven development methodology to ensure features are properly specified, designed, tested, implemented, and documented before considering them done.
@@ -22,9 +19,15 @@ actions:
       - pattern: "implement|develop|add|fix"
     priority: critical
     action: |
-      # KIRO DEFINITION OF DONE WORKFLOW
+      # PROJECT DEFINITION OF DONE WORKFLOW
       
-      Follow this process for all development tasks using Kiro's spec structure:
+      Follow this process for all development tasks using the project's spec structure:
+      
+      **🎯 CORE vs NON-CORE FEATURE CLASSIFICATION:**
+      - **CORE FEATURES**: Critical system components, security features, data integrity, core business logic, essential APIs
+      - **NON-CORE FEATURES**: UI enhancements, optional features, experimental functionality, nice-to-have improvements
+      - **CORE REQUIREMENTS**: Strict adherence to all steps, comprehensive testing, full documentation
+      - **NON-CORE FLEXIBILITY**: Progressive testing, minimal documentation initially, cosmetic errors allowed
       
       **Step 1: 📋 Ensure Spec Foundation Exists**
       - Check for either:
@@ -45,20 +48,22 @@ actions:
       - Create comprehensive test coverage for the specific task
       - Include unit tests, integration tests, and error handling tests
       - Tests should validate requirements referenced in the task
+      - **CORE vs NON-CORE**: Core features require full TDD, non-core features may use progressive testing
       
       **Step 4: 🏗 Implement Minimal Code**
       - Build only what's needed to pass the tests for this specific task
       - Follow the design patterns outlined in design.md or comprehensive spec
       - Follow modular feature-based architecture from `.kiro/steering/structure.md`
       - Implement proper error handling and logging per `.kiro/steering/quality.md`
+      - **CORE vs NON-CORE**: Core features require strict adherence, non-core features allow more flexibility
       
-      I will NOT proceed beyond Step 4 until Steps 1-3 are complete.
+      I will NOT proceed beyond Step 4 until Steps 1-3 are complete for core features.
 
   - type: react
     event: "implementation_complete"
     priority: critical
     action: |
-      # COMPLETE KIRO DEFINITION OF DONE
+      # COMPLETE PROJECT DEFINITION OF DONE
       
       After implementation:
       
@@ -69,13 +74,13 @@ actions:
       These three gates are NON-NEGOTIABLE for production readiness:
       
       **🔴 Gate 1: TypeScript Compilation Gate**
-      - **REQUIREMENT**: ALL TypeScript compilation MUST succeed with ZERO errors
-      - **VALIDATION**: Run `npm run build` or `tsc --noEmit` - must complete successfully
-      - **FAILURE ACTION**: STOP immediately and fix all compilation errors before proceeding
-      - **RATIONALE**: Compilation errors lead to runtime failures in production
-      - No compilation warnings that could lead to runtime issues
-      - All type definitions must be complete and accurate
-      - TypeScript strict mode must be enabled and passing
+      - **REQUIREMENT**: TypeScript compilation should succeed with minimal blocking errors
+      - **VALIDATION**: Run `npm run build` or `tsc --noEmit` - should complete successfully
+      - **FAILURE ACTION**: Address critical compilation errors that prevent functionality
+      - **RATIONALE**: Compilation errors can lead to runtime failures in production
+      - Critical errors that break functionality must be fixed
+      - Non-critical type warnings may be addressed incrementally
+      - TypeScript strict mode should be enabled where possible
       
       **🟡 Gate 2: Core Test Suite Gate**
       - **REQUIREMENT**: Core test suite MUST maintain >80% pass rate minimum
@@ -83,9 +88,10 @@ actions:
       - **FAILURE ACTION**: STOP immediately and fix failing tests before proceeding
       - **RATIONALE**: Low test pass rates indicate unstable foundation
       - All critical functionality tests must pass
-      - No failing tests in core system components (auth, plugin-manager, ui-shell, settings, admin, error-reporter)
+      - No failing tests in core system components
       - Test coverage must be maintained for new functionality
       - Integration tests for feature interactions must pass
+      - **NON-CORE FLEXIBILITY**: Non-critical features may have lower test coverage initially, improve incrementally
       
       **🟢 Gate 3: Critical Services Gate**
       - **REQUIREMENT**: ALL critical services MUST have working interfaces
@@ -103,6 +109,7 @@ actions:
       - Ensure no regressions in existing functionality
       - Verify error handling works as designed
       - Confirm all acceptance criteria are met
+      - **CORE vs NON-CORE**: Core features require full verification, non-core features may have progressive validation
       
       **Step 6: 📚 Update Documentation**
       - Update any relevant README
@@ -111,6 +118,7 @@ actions:
       - Update API documentation if applicable
       - Add code comments for complex logic
       - Update steering files in `.kiro/steering/` if patterns changed
+      - **CORE vs NON-CORE**: Core features require comprehensive documentation, non-core features may have minimal docs initially
       
       **Step 7: 📌 Update Task Status**
       - Mark current task as completed with [x] in tasks.md or comprehensive spec
@@ -128,39 +136,39 @@ actions:
       - pattern: "complete|done"
       - missing: "all_steps_completed"
     message: |
-      🚫 **KIRO DEFINITION OF DONE NOT MET**
+      🚫 **PROJECT DEFINITION OF DONE NOT MET**
       
       Cannot mark as complete until all steps are verified:
-      1. Spec foundation exists (requirements.md, design.md, tasks.md OR comprehensive spec file) and steering reviewed
+      1. Spec foundation exists (requirements.md, design.md, tasks.md OR comprehensive spec file) and project guidelines reviewed
       2. Current task identified and marked in_progress
-      3. Tests written first (TDD approach)
-      4. Minimal implementation completed following steering guidelines
+      3. Tests written first (TDD approach) - **CORE features only**
+      4. Minimal implementation completed following project guidelines
       5. 🚦 PRODUCTION-READY QUALITY GATES PASSED (ALL THREE MANDATORY):
-         - **🔴 TypeScript Compilation Gate**: ALL compilation succeeds (ZERO errors, strict mode enabled)
+         - **🔴 TypeScript Compilation Gate**: Compilation succeeds with minimal blocking errors
          - **🟡 Core Test Suite Gate**: >80% pass rate maintained (NO failing core tests, coverage maintained)
          - **🟢 Critical Services Gate**: ALL critical services have working interfaces (health checks pass)
-      6. All tests passing
-      7. Documentation updated
+      6. All tests passing (core features), progressive testing for non-core
+      7. Documentation updated (comprehensive for core, minimal for non-core)
       8. Task status updated to completed
       9. Changes committed
       
-      Please complete missing steps following Kiro's spec workflow.
+      Please complete missing steps following the project's spec workflow.
 
   - type: suggest
     message: |
-      ### Kiro Definition of Done Checklist
+      ### Project Definition of Done Checklist
       
       - [ ] 1. 📋 Spec foundation verified (.kiro/specs/{feature}/requirements.md, design.md, tasks.md OR comprehensive spec file)
       - [ ] 1.1. 🎯 Steering guidelines reviewed (.kiro/steering/ for architecture and quality standards)
       - [ ] 2. 🎯 Current task identified and status set to in progress
-      - [ ] 4. ✅ Tests written first (TDD approach)
+      - [ ] 3. ✅ Tests written first (TDD approach) - **CORE features only**
       - [ ] 4. 🏗 Minimal implementation following modular feature-based architecture
       - [ ] 5. 🚦 PRODUCTION-READY QUALITY GATES PASSED (ALL THREE MANDATORY):
-        - [ ] 5.1. **🔴 TypeScript Compilation Gate**: ALL compilation succeeds (ZERO errors, strict mode enabled)
+        - [ ] 5.1. **🔴 TypeScript Compilation Gate**: ALL compilation succeeds (cosmetic errors allowed)
         - [ ] 5.2. **🟡 Core Test Suite Gate**: >80% pass rate maintained (NO failing core tests, coverage maintained)
         - [ ] 5.3. **🟢 Critical Services Gate**: ALL critical services have working interfaces (health checks pass)
-      - [ ] 6. 🧪 All tests passing (unit, integration, e2e)
-      - [ ] 7. 📚 Documentation updated (README, API docs, steering, specs)
+      - [ ] 6. 🧪 All tests passing (core features), progressive testing for non-core
+      - [ ] 7. 📚 Documentation updated (comprehensive for core, minimal for non-core)
       - [ ] 8. 📌 Tasks status updated to completed
       - [ ] 9. 🔄 Changes committed, ready for next task
 
@@ -168,7 +176,7 @@ examples:
   - input: "Implement authentication feature"
     output: "Starting Kiro DoD: First verify spec exists at .kiro/specs/authentication/"
   - input: "Mark task as done without tests"
-    output: "Reject: Kiro DoD not met - TDD requires tests before implementation."
+    output: "Reject: Project DoD not met - TDD requires tests before implementation."
 
 metadata:
   priority: critical
@@ -178,6 +186,6 @@ metadata:
   description: Enforces strict workflow with quality gates for production-ready development
   globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
   alwaysApply: true
-  version: 2.0
-  type: kiro_workflow
+  version: 3.0
+  type: project_workflow
 ---

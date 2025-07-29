@@ -1,0 +1,160 @@
+# Value-Driven Testing - Acceptance Criteria Templates
+
+## Core Principle
+**TEST BUSINESS VALUE, NOT JUST CODE** - Every test must validate that the system delivers real value to users and meets business objectives.
+
+## Acceptance Criteria Framework
+
+### User Story Template
+```
+As a [user type], I want [goal/desire] so that [benefit/value]
+```
+
+### Acceptance Criteria Template (Gherkin)
+```gherkin
+Feature: [Feature Name]
+  As a [user type]
+  I want [goal/desire]
+  So that [benefit/value]
+
+  Scenario: [Happy Path Scenario]
+    Given [precondition that sets up user context]
+    When [user action that delivers value]
+    Then [expected outcome that provides value]
+    And [additional value or business outcome]
+
+  Scenario: [Error Path Scenario]
+    Given [precondition]
+    When [action that could fail]
+    Then [user-friendly error handling]
+    And [clear path to recovery]
+
+  Scenario: [Edge Case Scenario]
+    Given [edge case condition]
+    When [user action]
+    Then [graceful handling that maintains value]
+```
+
+## Example: Google Signup User Story
+```gherkin
+Feature: Google Signup for First-time Visitors
+  As a first-time visitor
+  I want to sign up with Google
+  So that I can explore the dashboard instantly
+
+  Scenario: Successful Google signup
+    Given I am on the landing page
+    When I click "Sign up with Google"
+    Then I should be redirected to Google OAuth
+    And after successful authentication, I should be on the dashboard
+    And I should see a welcome message
+    And I should see available plugins to explore
+    And the page should load within 2 seconds
+
+  Scenario: OAuth denial handling
+    Given I am on the landing page
+    When I click "Sign up with Google"
+    And I deny the OAuth request
+    Then I should be returned to the landing page
+    And I should see a helpful message about the benefits of signing up
+    And I should have the option to try again
+
+  Scenario: Network failure during signup
+    Given I am on the landing page
+    When I click "Sign up with Google"
+    And the network request fails
+    Then I should see a user-friendly error message
+    And I should be given the option to retry
+    And I should not lose my place on the page
+
+  Scenario: Accessibility compliance
+    Given I am using a screen reader
+    When I navigate to the signup button
+    Then the button should have proper ARIA labels
+    And the signup flow should be fully navigable by keyboard
+    And all form elements should have proper labels
+
+  Scenario: Performance constraint
+    Given I am on the landing page
+    When I click "Sign up with Google"
+    Then the OAuth redirect should happen within 1 second
+    And the dashboard should load within 2 seconds after authentication
+    And the page should be interactive within 3 seconds total
+```
+
+## Anti-Patterns to Avoid
+
+### 1. **Implementation Testing**
+```typescript
+// ❌ ANTI-PATTERN: Tests how it's built, not what it does
+test('Component uses useState hook', () => {
+  const component = render(<Component data={mockData} />);
+  expect(component.container.innerHTML).toContain('useState');
+});
+```
+
+### 2. **Mock-Heavy Testing**
+```typescript
+// ❌ ANTI-PATTERN: Tests that always pass with perfect mocks
+const mockApi = {
+  get: jest.fn().mockResolvedValue({ data: perfectData })
+};
+// Test passes but doesn't validate real user experience
+```
+
+### 3. **Technical Detail Testing**
+```typescript
+// ❌ ANTI-PATTERN: Tests technical implementation, not user value
+test('API returns correct HTTP status', async () => {
+  const response = await api.get('/users');
+  expect(response.status).toBe(200);
+  // Doesn't test if user can actually accomplish their goal
+});
+```
+
+### 4. **Happy Path Only**
+```typescript
+// ❌ ANTI-PATTERN: Only tests success scenarios
+test('User can sign up', async () => {
+  await successfulSignup();
+  expect(screen.getByText('Welcome')).toBeInTheDocument();
+  // No testing of error scenarios that users actually encounter
+});
+```
+
+## Test Writing Checklist
+
+Before writing any test, ask:
+- [ ] Does this test validate that users can accomplish their goals?
+- [ ] Does this test verify business value delivery?
+- [ ] Does this test cover realistic error scenarios?
+- [ ] Does this test ensure acceptable performance?
+- [ ] Does this test validate accessibility requirements?
+- [ ] Would this test catch real problems users would encounter?
+- [ ] Does this test provide confidence that the feature works in production?
+
+## Success Metrics
+
+### Quality Gates:
+- ✅ User acceptance tests pass (users can accomplish their goals)
+- ✅ Business outcome tests pass (system delivers measurable value)
+- ✅ Error scenarios are handled gracefully (maintains user experience)
+- ✅ Performance constraints are met (delivers value within acceptable time)
+
+### Definition of Done:
+A feature is only "done" when:
+1. **User Acceptance Tests**: Users can accomplish their stated goals
+2. **Business Outcome Tests**: System delivers measurable business value
+3. **Error Handling Tests**: System handles failures gracefully
+4. **Performance Tests**: System meets performance constraints
+5. **Accessibility Tests**: System is usable by all users
+
+## Metadata
+priority: critical
+category: testing_philosophy
+scope: acceptance_criteria
+enforcement: mandatory
+description: Value-driven testing approach that validates business outcomes and user value delivery
+globs: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"]
+alwaysApply: true
+---

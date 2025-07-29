@@ -1,11 +1,11 @@
-# Integration-First Testing Rule
+# Integration-First Testing Techniques
 
 ## Core Principle
 **TEST INTEGRATION BEFORE ISOLATION** - Start with how components work together, not how they work alone. Integration tests catch real problems; unit tests catch theoretical problems.
 
-## Testing Hierarchy (Priority Order)
+## Integration Testing Approach
 
-### 1. **Integration Tests (HIGHEST PRIORITY)**
+### 1. **Start with Integration Tests**
 ```typescript
 // ✅ CORRECT: Test how components work together
 test('User can see reading widgets on dashboard', async () => {
@@ -22,58 +22,80 @@ test('User can see reading widgets on dashboard', async () => {
 });
 ```
 
-### 2. **End-to-End Tests (HIGH PRIORITY)**
+### 2. **Test Component Cooperation**
 ```typescript
-// ✅ CORRECT: Test complete user journey
-test('User installs plugin and sees widgets', async () => {
-  // Test the entire flow
-  await installPlugin('reading-core');
-  await navigateToDashboard();
-  await expectWidgetsToAppear();
-});
-```
-
-### 3. **Unit Tests (LOWER PRIORITY)**
-```typescript
-// ✅ CORRECT: Only after integration tests pass
-test('Widget handles empty data gracefully', () => {
-  render(<Widget data={null} />);
-  expect(screen.getByText('No data available')).toBeInTheDocument();
-});
-```
-
-## Implementation Strategy
-
-### Step 1: Integration Tests
-```typescript
-// Start here - test the full integration
+// ✅ CORRECT: Test that components work together to deliver value
 describe('Dashboard Integration', () => {
-  test('shows reading widgets when plugin installed', async () => {
-    // Test the real scenario
-  });
-  
-  test('shows welcome screen when no plugins', async () => {
-    // Test the real scenario
+  test('Dashboard shows user-relevant content based on plugins', async () => {
+    // Mock realistic user state
+    mockUserState({
+      installedPlugins: ['reading-core'],
+      preferences: { theme: 'dark' }
+    });
+    
+    render(<DashboardPage />);
+    
+    // Test that integration delivers value
+    await waitFor(() => {
+      expect(screen.getByText('📚 Book Library')).toBeInTheDocument();
+      expect(screen.getByText('🕒 Recently Read')).toBeInTheDocument();
+    });
+    
+    // Test that widgets are actually functional
+    await userEvent.click(screen.getByText('Add Book'));
+    expect(screen.getByText('Add New Book')).toBeInTheDocument();
   });
 });
 ```
 
-### Step 2: Component Integration Tests
+### 3. **Test Service Integration**
 ```typescript
-// Test how components work together
-describe('Widget Factory Integration', () => {
-  test('renders correct widgets for each plugin', () => {
-    // Test widget factory with real plugin IDs
+// ✅ CORRECT: Test that services work together
+describe('Plugin System Integration', () => {
+  test('Plugin installation updates dashboard widgets', async () => {
+    // Test the full service integration
+    await installPlugin('reading-core');
+    await refreshDashboard();
+    
+    // Verify the integration worked
+    expect(screen.getByText('📚 Book Library')).toBeInTheDocument();
+    expect(screen.getByText('🕒 Recently Read')).toBeInTheDocument();
   });
 });
 ```
 
-### Step 3: Unit Tests (Only After Integration Passes)
+## Integration Testing Techniques
+
+### Realistic Mocking Strategy
 ```typescript
-// Only write unit tests after integration works
-describe('Individual Widget Tests', () => {
-  test('handles edge cases', () => {
-    // Test specific edge cases
+// ✅ GOOD: Use realistic mocks that simulate real behavior
+const mockPluginManager = {
+  getInstalledPlugins: jest.fn().mockResolvedValue([
+    { id: 'reading-core', status: 'enabled', version: '1.0.0' }
+  ]),
+  installPlugin: jest.fn().mockImplementation(async (pluginId) => {
+    // Simulate real installation process
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return { success: true, pluginId };
+  })
+};
+```
+
+### Error Scenario Integration
+```typescript
+// ✅ GOOD: Test integration error scenarios
+describe('Integration Error Handling', () => {
+  test('Dashboard handles plugin service failures gracefully', async () => {
+    // Mock service failure
+    mockPluginServiceFailure();
+    
+    render(<DashboardPage />);
+    
+    // Test that integration handles errors gracefully
+    await waitFor(() => {
+      expect(screen.getByText('Unable to load plugins')).toBeInTheDocument();
+      expect(screen.getByText('Please try again later')).toBeInTheDocument();
+    });
   });
 });
 ```
