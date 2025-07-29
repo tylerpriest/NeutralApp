@@ -23,13 +23,47 @@ const DashboardPage: React.FC = () => {
       setError(null);
       
       const response = await fetch('/api/dashboard/widgets');
+      
+      // Check if response is ok
       if (!response.ok) {
-        throw new Error('Failed to fetch widgets');
+        // Try to get error details
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          // If JSON parsing fails, try to get text content
+          try {
+            const textContent = await response.text();
+            if (textContent.includes('<html') || textContent.includes('<!DOCTYPE')) {
+              errorMessage = 'Server returned HTML instead of JSON. Please check if the API is running correctly.';
+            } else {
+              errorMessage = `Server error: ${textContent.substring(0, 200)}`;
+            }
+          } catch (textError) {
+            errorMessage = `Failed to fetch widgets (Status: ${response.status})`;
+          }
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      // Check content type to ensure we're getting JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textContent = await response.text();
+        if (textContent.includes('<html') || textContent.includes('<!DOCTYPE')) {
+          throw new Error('Server returned HTML instead of JSON. Please check if the API is running correctly.');
+        } else {
+          throw new Error(`Unexpected content type: ${contentType}`);
+        }
       }
       
       const data = await response.json();
       setWidgets(data.widgets || []);
     } catch (err) {
+      console.error('Dashboard loading error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load dashboard');
     } finally {
       setLoading(false);
