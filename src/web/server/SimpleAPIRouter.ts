@@ -199,6 +199,162 @@ module.exports = {
             },
             signature: 'test-plugin-signature'
           };
+        } else if (pluginId === 'weather-widget') {
+          pluginPackage = {
+            id: pluginId,
+            version: version || '2.1.0',
+            code: `// Weather Widget plugin code`,
+            manifest: {
+              id: pluginId,
+              name: 'Weather Widget',
+              version: version || '2.1.0',
+              description: 'Display current weather information in your dashboard.',
+              author: 'Weather Corp',
+              main: 'index.js',
+              dependencies: [],
+              permissions: [
+                {
+                  name: 'network:http',
+                  description: 'Access weather APIs',
+                  required: true
+                }
+              ],
+              api: []
+            },
+            signature: 'weather-widget-signature'
+          };
+        } else if (pluginId === 'task-manager') {
+          pluginPackage = {
+            id: pluginId,
+            version: version || '1.5.2',
+            code: `// Task Manager plugin code`,
+            manifest: {
+              id: pluginId,
+              name: 'Task Manager',
+              version: version || '1.5.2',
+              description: 'Organize and track your tasks with a beautiful interface.',
+              author: 'Productivity Inc',
+              main: 'index.js',
+              dependencies: [],
+              permissions: [
+                {
+                  name: 'storage:local',
+                  description: 'Store task data locally',
+                  required: true
+                }
+              ],
+              api: []
+            },
+            signature: 'task-manager-signature'
+          };
+        } else if (pluginId === 'reading-core') {
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Read the actual plugin code
+          const pluginPath = path.join(process.cwd(), 'src/plugins/reading-core/reading-core.js');
+          let pluginCode = `// Reading Core plugin code - fallback implementation
+            console.log('Reading Core Plugin loaded (fallback)');`;
+          
+          try {
+            if (fs.existsSync(pluginPath)) {
+              pluginCode = fs.readFileSync(pluginPath, 'utf8');
+            }
+          } catch (error) {
+            console.warn('Could not load reading-core plugin file:', error);
+          }
+          
+          pluginPackage = {
+            id: pluginId,
+            version: version || '1.0.0',
+            code: pluginCode,
+            manifest: {
+              id: pluginId,
+              name: 'Reading Core',
+              version: version || '1.0.0',
+              description: 'Provides comprehensive book library management with metadata handling, categories, search functionality, and cross-plugin communication APIs',
+              author: 'NeutralApp Team',
+              main: 'reading-core.js',
+              dependencies: [],
+              permissions: [
+                {
+                  name: 'storage:local',
+                  description: 'Store book library data',
+                  required: true
+                },
+                {
+                  name: 'storage:persistent',
+                  description: 'Persist library data across sessions',
+                  required: true
+                },
+                {
+                  name: 'ui:widget:create',
+                  description: 'Create library management widgets',
+                  required: true
+                },
+                {
+                  name: 'events:publish',
+                  description: 'Publish reading events to other plugins',
+                  required: true
+                },
+                {
+                  name: 'events:subscribe', 
+                  description: 'Subscribe to events from other plugins',
+                  required: true
+                }
+              ],
+              api: []
+            },
+            signature: 'reading-core-signature'
+          };
+        } else if (pluginId === 'reading-ui') {
+          pluginPackage = {
+            id: pluginId,
+            version: version || '1.0.0',
+            code: `// Reading UI plugin code`,
+            manifest: {
+              id: pluginId,
+              name: 'Reading UI',
+              version: version || '1.0.0',
+              description: 'User interface components for reading and book management',
+              author: 'NeutralApp Team',
+              main: 'index.js',
+              dependencies: [{ id: 'reading-core', version: '1.0.0', required: true }],
+              permissions: [
+                {
+                  name: 'ui:widget:create',
+                  description: 'Create reading UI widgets',
+                  required: true
+                }
+              ],
+              api: []
+            },
+            signature: 'reading-ui-signature'
+          };
+        } else if (pluginId === 'reading-persistence') {
+          pluginPackage = {
+            id: pluginId,
+            version: version || '1.0.0',
+            code: `// Reading Persistence plugin code`,
+            manifest: {
+              id: pluginId,
+              name: 'Reading Persistence',
+              version: version || '1.0.0',
+              description: 'Data persistence layer for reading progress and book storage',
+              author: 'NeutralApp Team',
+              main: 'index.js',
+              dependencies: [{ id: 'reading-core', version: '1.0.0', required: true }],
+              permissions: [
+                {
+                  name: 'storage:persistent',
+                  description: 'Store reading progress persistently',
+                  required: true
+                }
+              ],
+              api: []
+            },
+            signature: 'reading-persistence-signature'
+          };
         } else {
           // Fallback for other plugins
           pluginPackage = {

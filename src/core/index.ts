@@ -8,7 +8,7 @@ export interface CoreService {
   version: string;
   start(): Promise<void>;
   stop(): Promise<void>;
-  health(): Promise<{ status: 'healthy' | 'unhealthy'; details?: any }>;
+  health(): Promise<{ status: 'healthy' | 'unhealthy'; details?: Record<string, unknown> }>;
 }
 
 // Core application lifecycle
@@ -63,8 +63,8 @@ export class CoreApplication {
     console.log('✅ NeutralApp core services stopped successfully');
   }
 
-  async health(): Promise<{ status: 'healthy' | 'unhealthy'; services: Record<string, any> }> {
-    const serviceHealth: Record<string, any> = {};
+  async health(): Promise<{ status: 'healthy' | 'unhealthy'; services: Record<string, unknown> }> {
+    const serviceHealth: Record<string, unknown> = {};
     let allHealthy = true;
 
     for (const [name, service] of this.services) {

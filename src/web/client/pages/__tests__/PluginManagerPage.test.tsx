@@ -96,8 +96,8 @@ describe('PluginManagerPage', () => {
       await waitFor(() => {
         expect(screen.getByText('Test Plugin 1')).toBeInTheDocument();
         expect(screen.getByText('A test plugin for testing purposes')).toBeInTheDocument();
-        expect(screen.getByText('by Test Author')).toBeInTheDocument();
-        expect(screen.getAllByText('v1.0.0')).toHaveLength(2); // Both plugins have v1.0.0
+        expect(screen.getByText('v1.0.0 by Test Author')).toBeInTheDocument();
+        expect(screen.getByText('v2.0.0 by Another Author')).toBeInTheDocument();
       });
     });
   });

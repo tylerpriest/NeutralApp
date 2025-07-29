@@ -37,16 +37,16 @@ const Header: React.FC = () => {
               fontSize: '14px',
               color: '#1a1a1a',
               fontWeight: '500'
-            }}>Guest User</span>
+            }}>{user?.name || 'Guest User'}</span>
           </div>
           <span style={{
             fontSize: '12px',
             color: '#6b7280',
-            backgroundColor: '#f3f4f6',
+            backgroundColor: isGuest ? '#f3f4f6' : '#dbeafe',
             padding: '4px 8px',
             borderRadius: '4px',
             fontWeight: '500'
-          }}>Guest Mode</span>
+          }}>{isGuest ? 'Guest Mode' : 'Authenticated'}</span>
         </div>
         <button
           onClick={handleLogout}
@@ -66,7 +66,7 @@ const Header: React.FC = () => {
           }}
         >
           <LogOut size={16} />
-          Exit Guest Mode
+          {isGuest ? 'Exit Guest Mode' : 'Logout'}
         </button>
       </div>
     </header>

@@ -33,6 +33,61 @@ export const PLUGIN_REGISTRY: Record<string, PluginRegistryInfo> = {
     manifest: './demo-hello-world/manifest.json',
     category: 'demo',
     tags: ['demo', 'hello-world', 'reference']
+  },
+  'weather-widget': {
+    id: 'weather-widget',
+    name: 'Weather Widget',
+    version: '2.1.0',
+    description: 'Display current weather information in your dashboard.',
+    author: 'Weather Corp',
+    entryPoint: './weather-widget/index.js',
+    manifest: './weather-widget/manifest.json',
+    category: 'utility',
+    tags: ['weather', 'widget', 'dashboard']
+  },
+  'task-manager': {
+    id: 'task-manager',
+    name: 'Task Manager',
+    version: '1.5.2',
+    description: 'Organize and track your tasks with a beautiful interface.',
+    author: 'Productivity Inc',
+    entryPoint: './task-manager/index.js',
+    manifest: './task-manager/manifest.json',
+    category: 'utility',
+    tags: ['tasks', 'productivity', 'management']
+  },
+  'reading-core': {
+    id: 'reading-core',
+    name: 'Reading Core',
+    version: '1.0.0',
+    description: 'Provides comprehensive book library management with metadata handling, categories, search functionality, and cross-plugin communication APIs',
+    author: 'NeutralApp Team',
+    entryPoint: './reading-core/index.js',
+    manifest: './reading-core/manifest.json',
+    category: 'reading',
+    tags: ['reading', 'books', 'library', 'core']
+  },
+  'reading-ui': {
+    id: 'reading-ui',
+    name: 'Reading UI',
+    version: '1.0.0',
+    description: 'User interface components for reading and book management',
+    author: 'NeutralApp Team',
+    entryPoint: './reading-ui/index.js',
+    manifest: './reading-ui/manifest.json',
+    category: 'reading',
+    tags: ['reading', 'ui', 'interface']
+  },
+  'reading-persistence': {
+    id: 'reading-persistence',
+    name: 'Reading Persistence',
+    version: '1.0.0',
+    description: 'Data persistence layer for reading progress and book storage',
+    author: 'NeutralApp Team',
+    entryPoint: './reading-persistence/index.js',
+    manifest: './reading-persistence/manifest.json',
+    category: 'reading',
+    tags: ['reading', 'persistence', 'storage']
   }
 };
 
@@ -53,7 +108,12 @@ export const PLUGIN_CATEGORIES: Record<string, PluginCategoryInfo> = {
   utility: {
     name: 'Utility Plugins',
     description: 'Utility and helper plugins',
-    plugins: []
+    plugins: ['weather-widget', 'task-manager']
+  },
+  reading: {
+    name: 'Reading Plugins',
+    description: 'Book management and reading experience plugins',
+    plugins: ['reading-core', 'reading-ui', 'reading-persistence']
   },
   integration: {
     name: 'Integration Plugins',

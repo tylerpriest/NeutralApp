@@ -1,0 +1,103 @@
+{
+  "id": "reading-core",
+  "name": "Reading Core",
+  "version": "1.0.0",
+  "description": "Provides comprehensive book library management with metadata handling, categories, search functionality, and cross-plugin communication APIs",
+  "author": "NeutralApp Team",
+  "entryPoint": "index.js",
+  "dependencies": [],
+  "permissions": [
+    {
+      "name": "storage:local",
+      "description": "Store book library data",
+      "required": true
+    },
+    {
+      "name": "storage:persistent", 
+      "description": "Persist library data across sessions",
+      "required": true
+    },
+    {
+      "name": "ui:widget:create",
+      "description": "Create library management widgets",
+      "required": true
+    },
+    {
+      "name": "events:publish",
+      "description": "Publish reading events to other plugins",
+      "required": true
+    },
+    {
+      "name": "events:subscribe",
+      "description": "Subscribe to events from other plugins",
+      "required": true
+    }
+  ],
+  "settings": {
+    "defaultView": {
+      "type": "string",
+      "default": "grid",
+      "description": "Default library view mode (grid, list, compact)",
+      "options": ["grid", "list", "compact"]
+    },
+    "sortBy": {
+      "type": "string", 
+      "default": "title",
+      "description": "Default sort order for books",
+      "options": ["title", "author", "dateAdded", "lastRead", "progress"]
+    },
+    "enableCategories": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable book categorization features"
+    },
+    "autoBackup": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically backup library data"
+    }
+  },
+  "widgets": [
+    {
+      "id": "reading-core-library",
+      "title": "Book Library",
+      "type": "custom",
+      "size": { "width": 4, "height": 3 },
+      "position": { "x": 0, "y": 0 },
+      "resizable": true
+    },
+    {
+      "id": "reading-core-recent",
+      "title": "Recently Read",
+      "type": "custom", 
+      "size": { "width": 2, "height": 2 },
+      "position": { "x": 4, "y": 0 },
+      "resizable": true
+    }
+  ],
+  "api": [
+    {
+      "name": "library",
+      "description": "Book library management API",
+      "methods": [
+        "addBook",
+        "removeBook", 
+        "updateBook",
+        "getBook",
+        "getAllBooks",
+        "searchBooks",
+        "getBooksByCategory"
+      ]
+    },
+    {
+      "name": "categories",
+      "description": "Book categorization API",
+      "methods": [
+        "createCategory",
+        "deleteCategory",
+        "assignBookToCategory",
+        "removeBookFromCategory"
+      ]
+    }
+  ]
+}
