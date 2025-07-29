@@ -4,7 +4,7 @@
   "description": "A domain-agnostic, ultra-modular application shell",
   "main": "dist/index.js",
   "engines": {
-    "node": "22.x"
+    "node": "18.x"
   },
   "scripts": {
     "build": "npm run build:client",
