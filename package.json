@@ -47,6 +47,7 @@
     "dev:client": "vite",
     "dev:server": "npm run build:server && node dist/web/server/index.js",
     "dev:hot": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:unified": "concurrently \"ENABLE_HOT_RELOAD=true npm run dev:server\" \"npm run dev:client\"",
     "dev:build": "npm run build && node dist/web/server/index.js",
     "start": "node dist/web/server/index.js",
     "lint": "eslint src/**/*.ts",

@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { SimpleAPIRouter } from './SimpleAPIRouter';
 import { JWTAuthRoutes, JWTAuthMiddleware } from '../../features/auth';
 import { DashboardManager } from '../../features/ui-shell/services/dashboard.manager';
@@ -106,26 +107,42 @@ export class WebServer {
     // Other API routes
     this.app.use('/api', this.apiRouter.getRouter());
 
-    // Serve static files from React build (Vite output directory)
-    // Handle both development and production paths
-    const buildPath = process.env.NODE_ENV === 'production' 
-      ? path.join(__dirname, '../client')
-      : path.join(__dirname, '../../../dist/web/client');
-    
-    this.app.use(express.static(buildPath));
-
-    // React app catch-all handler (for client-side routing)
-    this.app.get('*', (req: Request, res: Response) => {
-      // Skip API routes
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API endpoint not found' });
-      }
+    // Development mode: Proxy to Vite dev server for hot reloading
+    if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_HOT_RELOAD === 'true') {
+      console.log('🔥 Development mode: Proxying to Vite dev server for hot reloading');
       
-      // Serve React app for all other routes
-      const indexPath = path.join(buildPath, 'index.html');
-      console.log(`Serving React app from: ${indexPath}`);
-      return res.sendFile(indexPath);
-    });
+      // Proxy all non-API requests to Vite dev server
+      this.app.use('/', createProxyMiddleware({
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        ws: true, // Enable WebSocket proxying for HMR
+        pathFilter: (path) => {
+          // Don't proxy API routes or health checks
+          return !path.startsWith('/api/') && !path.startsWith('/health');
+        },
+
+      }));
+    } else {
+      // Production mode: Serve static files from React build
+      const buildPath = process.env.NODE_ENV === 'production' 
+        ? path.join(__dirname, '../client')
+        : path.join(__dirname, '../../../dist/web/client');
+      
+      this.app.use(express.static(buildPath));
+
+      // React app catch-all handler (for client-side routing)
+      this.app.get('*', (req: Request, res: Response) => {
+        // Skip API routes
+        if (req.path.startsWith('/api/')) {
+          return res.status(404).json({ error: 'API endpoint not found' });
+        }
+        
+        // Serve React app for all other routes
+        const indexPath = path.join(buildPath, 'index.html');
+        console.log(`📦 Serving React app from: ${indexPath}`);
+        return res.sendFile(indexPath);
+      });
+    }
   }
 
   /**
