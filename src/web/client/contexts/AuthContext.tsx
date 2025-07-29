@@ -48,15 +48,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check for existing token on mount
   useEffect(() => {
     const checkAuth = async () => {
+      console.log('AuthContext: Checking authentication on mount...');
+      
       // Check for guest mode first
       const guestMode = localStorage.getItem('guest_mode');
+      console.log('AuthContext: Guest mode in localStorage:', guestMode);
+      
       if (guestMode === 'true') {
+        console.log('AuthContext: Setting guest mode');
         setIsGuest(true);
         setIsLoading(false);
         return;
       }
 
       const token = localStorage.getItem('auth_token');
+      console.log('AuthContext: Token in localStorage:', token ? 'exists' : 'none');
+      
       if (token) {
         try {
           const response = await fetch('/api/auth/session', {
@@ -65,10 +72,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
           });
           
+          console.log('AuthContext: Session check response status:', response.status);
+          
           if (response.ok) {
             const data = await response.json();
+            console.log('AuthContext: Session check successful, user:', data.user);
             setUser(data.user);
+            setIsGuest(false);
           } else {
+            console.log('AuthContext: Session check failed, removing token');
             localStorage.removeItem('auth_token');
           }
         } catch (error) {
@@ -94,11 +106,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('AuthContext: Response status:', response.status);
+      console.log('AuthContext: Response ok:', response.ok);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('AuthContext: Login response data:', data);
+        
+        // Clear any existing guest mode
+        localStorage.removeItem('guest_mode');
+        
         localStorage.setItem('auth_token', data.token);
         setUser(data.user);
-        console.log('AuthContext: Login successful');
+        setIsGuest(false);
+        
+        console.log('AuthContext: Login successful, user set:', data.user);
         return true;
       } else {
         const error = await response.json();
