@@ -12,7 +12,7 @@ export default defineConfig({
     // Ensure index.html is copied
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'src/web/client/index.html')
+        main: path.resolve(__dirname, 'index.html')
       },
       output: {
         manualChunks: {

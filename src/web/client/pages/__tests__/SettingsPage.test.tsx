@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SettingsPage, { setServices } from '../SettingsPage';
+import SettingsPage from '../SettingsPage';
 import { SettingsService } from '../../../../features/settings/services/settings.service';
 import { PluginManager } from '../../../../features/plugin-manager/services/plugin.manager';
 import { SettingType } from '../../../../shared/types';
@@ -115,8 +115,7 @@ describe('SettingsPage', () => {
     mockSettingsInstance.getPluginSettings.mockResolvedValue({});
     mockPluginInstance.getInstalledPlugins.mockResolvedValue([]);
 
-    // Set up services for testing
-    setServices(mockSettingsInstance, mockPluginInstance);
+    // Services are no longer used in the simplified SettingsPage component
   });
 
   describe('Initial Rendering', () => {
