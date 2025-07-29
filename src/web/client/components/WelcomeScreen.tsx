@@ -1,7 +1,19 @@
 import React from 'react';
 import { Package, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const WelcomeScreen: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleBrowsePlugins = () => {
+    navigate('/plugins');
+  };
+
+  const handleLearnMore = () => {
+    // Open documentation in new tab
+    window.open('https://github.com/your-org/neutral-app', '_blank');
+  };
+
   return (
     <div style={{
       display: 'flex',
@@ -89,7 +101,7 @@ const WelcomeScreen: React.FC = () => {
             cursor: 'pointer',
             transition: 'all 0.2s ease',
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }}>
+          }} onClick={handleBrowsePlugins}>
             <Package size={18} />
             Browse Plugins
           </button>
@@ -107,7 +119,7 @@ const WelcomeScreen: React.FC = () => {
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'all 0.2s ease'
-          }}>
+          }} onClick={handleLearnMore}>
             <BookOpen size={18} />
             Learn More
           </button>

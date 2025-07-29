@@ -13,11 +13,18 @@ export class JWTAuthService implements JWTAuthServiceInterface {
   private readonly tokenExpiration: string = '30d';
 
   // Test user credentials (in production, this would come from a database)
-  private readonly testUser: User = {
-    id: '1',
-    email: 'test@example.com',
-    name: 'Test User'
-  };
+  private readonly testUsers: User[] = [
+    {
+      id: '1',
+      email: 'test@example.com',
+      name: 'Test User'
+    },
+    {
+      id: 'admin1',
+      email: 'admin@example.com',
+      name: 'System Administrator'
+    }
+  ];
 
   constructor() {
     const secret = env.get('JWT_SECRET');
@@ -107,13 +114,14 @@ export class JWTAuthService implements JWTAuthServiceInterface {
     }
 
     // Check against test credentials
-    if (email === this.testUser.email && password === 'password123') {
-      const token = this.generateToken(this.testUser);
+    const user = this.testUsers.find(u => u.email === email);
+    if (user && password === 'password123') {
+      const token = this.generateToken(user);
       
       return {
         success: true,
         token,
-        user: this.testUser,
+        user: user,
         error: null
       };
     }

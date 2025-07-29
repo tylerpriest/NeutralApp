@@ -23,19 +23,49 @@ const PluginManagerPage: React.FC = () => {
   const loadPlugins = async () => {
     try {
       setLoading(true);
-      // Mock data for now
+      
+      // Try to load from API first
+      try {
+        const response = await fetch('/api/plugins');
+        if (response.ok) {
+          const data = await response.json();
+          const availablePlugins = data.available || [];
+          const installedPlugins = data.installed || [];
+          
+          // Merge available and installed plugins
+          const mergedPlugins: Plugin[] = availablePlugins.map((plugin: any) => {
+            const installed = installedPlugins.find((ip: any) => ip.id === plugin.id);
+            return {
+              id: plugin.id,
+              name: plugin.name,
+              description: plugin.description,
+              version: plugin.version,
+              author: plugin.author,
+              installed: !!installed,
+              enabled: installed?.status === 'enabled'
+            };
+          });
+          
+          setPlugins(mergedPlugins);
+          return;
+        }
+      } catch (error) {
+        console.warn('Failed to load plugins from API, using mock data:', error);
+      }
+      
+      // Fallback to mock data
       const mockPlugins: Plugin[] = [
         {
-          id: '1',
-          name: 'Hello World Plugin',
-          description: 'A simple demo plugin that displays a greeting message.',
+          id: 'demo-hello-world',
+          name: 'Hello World Demo',
+          description: 'A simple demo plugin to validate the plugin system',
           version: '1.0.0',
           author: 'NeutralApp Team',
-          installed: true,
-          enabled: true
+          installed: false,
+          enabled: false
         },
         {
-          id: '2',
+          id: 'weather-widget',
           name: 'Weather Widget',
           description: 'Display current weather information in your dashboard.',
           version: '2.1.0',
@@ -44,7 +74,7 @@ const PluginManagerPage: React.FC = () => {
           enabled: false
         },
         {
-          id: '3',
+          id: 'task-manager',
           name: 'Task Manager',
           description: 'Organize and track your tasks with a beautiful interface.',
           version: '1.5.2',
@@ -53,7 +83,19 @@ const PluginManagerPage: React.FC = () => {
           enabled: false
         }
       ];
-      setPlugins(mockPlugins);
+      
+      // Load saved state from localStorage
+      try {
+        const savedPlugins = JSON.parse(localStorage.getItem('installed_plugins') || '[]');
+        const updatedPlugins = mockPlugins.map(plugin => {
+          const saved = savedPlugins.find((sp: any) => sp.id === plugin.id);
+          return saved ? { ...plugin, ...saved } : plugin;
+        });
+        setPlugins(updatedPlugins);
+      } catch (error) {
+        console.warn('Failed to load saved plugin state:', error);
+        setPlugins(mockPlugins);
+      }
     } catch (error) {
       console.error('Failed to load plugins:', error);
     } finally {
@@ -61,22 +103,122 @@ const PluginManagerPage: React.FC = () => {
     }
   };
 
-  const handleInstall = (pluginId: string) => {
-    setPlugins(prev => prev.map(plugin => 
-      plugin.id === pluginId ? { ...plugin, installed: true, enabled: true } : plugin
-    ));
+  const handleInstall = async (pluginId: string) => {
+    try {
+      // Try to install via API
+      try {
+        const response = await fetch('/api/plugins/install', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ pluginId }),
+        });
+        
+        if (response.ok) {
+          // Refresh plugins after successful installation
+          await loadPlugins();
+          return;
+        }
+      } catch (error) {
+        console.warn('Failed to install plugin via API, using local state:', error);
+      }
+      
+      // Fallback to local state update
+      setPlugins(prev => {
+        const updated = prev.map(plugin => 
+          plugin.id === pluginId ? { ...plugin, installed: true, enabled: true } : plugin
+        );
+        
+        // Save to localStorage
+        localStorage.setItem('installed_plugins', JSON.stringify(
+          updated.filter(p => p.installed)
+        ));
+        
+        return updated;
+      });
+    } catch (error) {
+      console.error('Failed to install plugin:', error);
+    }
   };
 
-  const handleUninstall = (pluginId: string) => {
-    setPlugins(prev => prev.map(plugin => 
-      plugin.id === pluginId ? { ...plugin, installed: false, enabled: false } : plugin
-    ));
+  const handleUninstall = async (pluginId: string) => {
+    try {
+      // Try to uninstall via API
+      try {
+        const response = await fetch(`/api/plugins/${pluginId}`, {
+          method: 'DELETE',
+        });
+        
+        if (response.ok) {
+          // Refresh plugins after successful uninstallation
+          await loadPlugins();
+          return;
+        }
+      } catch (error) {
+        console.warn('Failed to uninstall plugin via API, using local state:', error);
+      }
+      
+      // Fallback to local state update
+      setPlugins(prev => {
+        const updated = prev.map(plugin => 
+          plugin.id === pluginId ? { ...plugin, installed: false, enabled: false } : plugin
+        );
+        
+        // Save to localStorage
+        localStorage.setItem('installed_plugins', JSON.stringify(
+          updated.filter(p => p.installed)
+        ));
+        
+        return updated;
+      });
+    } catch (error) {
+      console.error('Failed to uninstall plugin:', error);
+    }
   };
 
-  const handleToggle = (pluginId: string) => {
-    setPlugins(prev => prev.map(plugin => 
-      plugin.id === pluginId ? { ...plugin, enabled: !plugin.enabled } : plugin
-    ));
+  const handleToggle = async (pluginId: string) => {
+    try {
+      const plugin = plugins.find(p => p.id === pluginId);
+      if (!plugin) return;
+      
+      const newEnabled = !plugin.enabled;
+      
+      // Try to enable/disable via API
+      try {
+        const response = await fetch(`/api/plugins/${pluginId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ enabled: newEnabled }),
+        });
+        
+        if (response.ok) {
+          // Refresh plugins after successful toggle
+          await loadPlugins();
+          return;
+        }
+      } catch (error) {
+        console.warn('Failed to toggle plugin via API, using local state:', error);
+      }
+      
+      // Fallback to local state update
+      setPlugins(prev => {
+        const updated = prev.map(plugin => 
+          plugin.id === pluginId ? { ...plugin, enabled: newEnabled } : plugin
+        );
+        
+        // Save to localStorage
+        localStorage.setItem('installed_plugins', JSON.stringify(
+          updated.filter(p => p.installed)
+        ));
+        
+        return updated;
+      });
+    } catch (error) {
+      console.error('Failed to toggle plugin:', error);
+    }
   };
 
   const filteredPlugins = plugins.filter(plugin =>

@@ -50,17 +50,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkAuth = async () => {
       console.log('AuthContext: Checking authentication on mount...');
       
-      // Check for guest mode first
-      const guestMode = localStorage.getItem('guest_mode');
-      console.log('AuthContext: Guest mode in localStorage:', guestMode);
-      
-      if (guestMode === 'true') {
-        console.log('AuthContext: Setting guest mode - THIS IS THE PROBLEM!');
-        setIsGuest(true);
-        setIsLoading(false);
-        return;
-      }
-
       const token = localStorage.getItem('auth_token');
       console.log('AuthContext: Token in localStorage:', token ? 'exists' : 'none');
       
@@ -82,6 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               if (textContent.includes('<html') || textContent.includes('<!DOCTYPE')) {
                 console.error('AuthContext: Server returned HTML instead of JSON');
                 localStorage.removeItem('auth_token');
+                localStorage.removeItem('guest_mode');
                 return;
               }
             }
@@ -90,13 +80,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log('AuthContext: Session check successful, user:', data.user);
             setUser(data.user);
             setIsGuest(false);
+            // Clear any guest mode if we have a valid session
+            localStorage.removeItem('guest_mode');
           } else {
             console.log('AuthContext: Session check failed, removing token');
             localStorage.removeItem('auth_token');
+            localStorage.removeItem('guest_mode');
           }
         } catch (error) {
           console.error('Session check failed:', error);
           localStorage.removeItem('auth_token');
+          localStorage.removeItem('guest_mode');
+        }
+      } else {
+        // Check for guest mode only if no token exists
+        const guestMode = localStorage.getItem('guest_mode');
+        console.log('AuthContext: Guest mode in localStorage:', guestMode);
+        
+        if (guestMode === 'true') {
+          console.log('AuthContext: Setting guest mode');
+          setIsGuest(true);
         }
       }
       setIsLoading(false);

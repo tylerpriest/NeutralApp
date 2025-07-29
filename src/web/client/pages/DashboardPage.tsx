@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import WelcomeScreen from '../components/WelcomeScreen';
+import WidgetFactory from '../components/WidgetFactory';
 
 interface Widget {
   id: string;
-  type: string;
+  pluginId: string;
   title: string;
-  content: string;
+  size: { width: number; height: number };
 }
 
 const DashboardPage: React.FC = () => {
@@ -22,49 +23,45 @@ const DashboardPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/dashboard/widgets');
-      
-      // Check if response is ok
-      if (!response.ok) {
-        // Try to get error details
-        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (jsonError) {
-          // If JSON parsing fails, try to get text content
-          try {
-            const textContent = await response.text();
-            if (textContent.includes('<html') || textContent.includes('<!DOCTYPE')) {
-              errorMessage = 'Server returned HTML instead of JSON. Please check if the API is running correctly.';
-            } else {
-              errorMessage = `Server error: ${textContent.substring(0, 200)}`;
-            }
-          } catch (textError) {
-            errorMessage = `Failed to fetch widgets (Status: ${response.status})`;
-          }
+      // Try to load widgets from API
+      try {
+        const response = await fetch('/api/plugins');
+        if (response.ok) {
+          const data = await response.json();
+          const installedPlugins = data.installed || [];
+          
+          // Create widgets for enabled plugins
+          const dashboardWidgets: Widget[] = installedPlugins
+            .filter((plugin: any) => plugin.status === 'enabled')
+            .map((plugin: any) => ({
+              id: `${plugin.id}-widget`,
+              pluginId: plugin.id,
+              title: `${plugin.name} Widget`,
+              size: { width: 2, height: 1 }
+            }));
+          
+          setWidgets(dashboardWidgets);
+          return;
         }
-        
-        throw new Error(errorMessage);
+      } catch (error) {
+        console.warn('Failed to load widgets from API, using mock data:', error);
       }
       
-      // Check content type to ensure we're getting JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const textContent = await response.text();
-        if (textContent.includes('<html') || textContent.includes('<!DOCTYPE')) {
-          throw new Error('Server returned HTML instead of JSON. Please check if the API is running correctly.');
-        } else {
-          throw new Error(`Unexpected content type: ${contentType}`);
-        }
-      }
+      // Fallback to mock data - check localStorage for installed plugins
+      const installedPlugins = JSON.parse(localStorage.getItem('installed_plugins') || '[]');
+      const mockWidgets: Widget[] = installedPlugins
+        .filter((plugin: any) => plugin.enabled)
+        .map((plugin: any) => ({
+          id: `${plugin.id}-widget`,
+          pluginId: plugin.id,
+          title: `${plugin.name} Widget`,
+          size: { width: 2, height: 1 }
+        }));
       
-      const data = await response.json();
-      setWidgets(data.widgets || []);
-    } catch (err) {
-      console.error('Dashboard loading error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+      setWidgets(mockWidgets);
+    } catch (error) {
+      console.error('Failed to load dashboard:', error);
+      setError('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -89,7 +86,7 @@ const DashboardPage: React.FC = () => {
             width: '32px',
             height: '32px',
             border: '3px solid #f3f4f6',
-            borderTop: '3px solid #6b7280',
+            borderTop: '3px solid #1a1a1a',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }} />
@@ -97,7 +94,9 @@ const DashboardPage: React.FC = () => {
             fontSize: '14px',
             color: '#6b7280',
             margin: 0
-          }}>Loading dashboard...</p>
+          }}>
+            Loading dashboard...
+          </p>
         </div>
       </div>
     );
@@ -171,7 +170,7 @@ const DashboardPage: React.FC = () => {
     return <WelcomeScreen />;
   }
 
-  // If widgets exist, show dashboard grid
+  // Show widgets in a grid layout
   return (
     <div style={{
       padding: '24px',
@@ -179,37 +178,43 @@ const DashboardPage: React.FC = () => {
       margin: '0 auto'
     }}>
       <div style={{
+        marginBottom: '32px'
+      }}>
+        <h1 style={{
+          fontSize: '28px',
+          fontWeight: 'bold',
+          color: '#1a1a1a',
+          margin: '0 0 8px 0'
+        }}>
+          Dashboard
+        </h1>
+        <p style={{
+          fontSize: '16px',
+          color: '#6b7280',
+          margin: 0
+        }}>
+          Your installed plugins and widgets
+        </p>
+      </div>
+
+      <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '24px',
-        marginBottom: '32px'
+        gap: '24px'
       }}>
         {widgets.map((widget) => (
           <div
             key={widget.id}
             style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '12px',
-              padding: '24px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              minHeight: '200px',
+              gridColumn: `span ${widget.size.width}`,
+              gridRow: `span ${widget.size.height}`
             }}
           >
-            <h3 style={{
-              fontSize: '18px',
-              fontWeight: '600',
-              color: '#1a1a1a',
-              margin: '0 0 16px 0'
-            }}>
-              {widget.title}
-            </h3>
-            <div style={{
-              fontSize: '14px',
-              color: '#6b7280',
-              lineHeight: '1.6'
-            }}>
-              {widget.content}
-            </div>
+            <WidgetFactory
+              pluginId={widget.pluginId}
+              title={widget.title}
+            />
           </div>
         ))}
       </div>

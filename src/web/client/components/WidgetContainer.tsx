@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { DashboardWidget, DashboardLayout, WidgetSize, WidgetPosition } from '../../../shared/types';
-import { useWidgetComponent } from './WidgetFactory';
+import WidgetFactory from './WidgetFactory';
 import { Button } from '../../../shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
@@ -112,37 +112,36 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   return (
     <div className="w-full min-h-[400px] p-4 bg-gray-50 rounded-lg" data-testid="widget-container">
       <div className="widget-grid" style={gridStyle}>
-                 {widgets.map((widget) => {
-           const WidgetComponent = useWidgetComponent(widget);
-           
-           return (
-             <Card
-               key={widget.id}
-               className={`
-                 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden
-                 transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5
-                 ${errorStates[widget.id] ? 'border-red-300 bg-red-50' : ''}
-               `}
-               style={{
-                 gridColumn: `span ${widget.size?.width || 1}`,
-                 gridRow: `span ${widget.size?.height || 1}`
-               }}
-             >
-               <CardHeader className="p-3 bg-gray-50 border-b border-gray-200">
-                 <CardTitle className="text-sm font-semibold text-gray-700 m-0">
-                   {widget.title}
-                 </CardTitle>
-               </CardHeader>
-               <CardContent className="p-4 h-full flex flex-col">
-                 <WidgetErrorBoundary widget={widget}>
-                   <div className="flex-1 overflow-auto">
-                     <WidgetComponent widget={widget} />
-                   </div>
-                 </WidgetErrorBoundary>
-               </CardContent>
-             </Card>
-           );
-         })}
+        {widgets.map((widget) => (
+          <Card
+            key={widget.id}
+            className={`
+              bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden
+              transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5
+              ${errorStates[widget.id] ? 'border-red-300 bg-red-50' : ''}
+            `}
+            style={{
+              gridColumn: `span ${widget.size?.width || 1}`,
+              gridRow: `span ${widget.size?.height || 1}`
+            }}
+          >
+            <CardHeader className="p-3 bg-gray-50 border-b border-gray-200">
+              <CardTitle className="text-sm font-semibold text-gray-700 m-0">
+                {widget.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 h-full flex flex-col">
+              <WidgetErrorBoundary widget={widget}>
+                <div className="flex-1 overflow-auto">
+                  <WidgetFactory 
+                    pluginId={widget.pluginId} 
+                    title={widget.title}
+                  />
+                </div>
+              </WidgetErrorBoundary>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

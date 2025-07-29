@@ -742,32 +742,89 @@ const AuthPage: React.FC = () => {
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
+            gap: '12px',
             fontSize: '12px'
           }}>
-            <div>
-              <span style={{ color: '#9ca3af' }}>Email:</span>{' '}
-              <code style={{
-                color: '#10b981',
-                backgroundColor: '#064e3b',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '11px'
+            {/* Regular User */}
+            <div style={{
+              border: '1px solid #4b5563',
+              borderRadius: '8px',
+              padding: '12px',
+              backgroundColor: '#1f2937'
+            }}>
+              <div style={{
+                fontSize: '11px',
+                color: '#6b7280',
+                marginBottom: '4px',
+                fontWeight: '500'
               }}>
-                test@example.com
-              </code>
+                Regular User
+              </div>
+              <div>
+                <span style={{ color: '#9ca3af' }}>Email:</span>{' '}
+                <code style={{
+                  color: '#10b981',
+                  backgroundColor: '#064e3b',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontSize: '11px'
+                }}>
+                  test@example.com
+                </code>
+              </div>
+              <div>
+                <span style={{ color: '#9ca3af' }}>Password:</span>{' '}
+                <code style={{
+                  color: '#10b981',
+                  backgroundColor: '#064e3b',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontSize: '11px'
+                }}>
+                  password123
+                </code>
+              </div>
             </div>
-            <div>
-              <span style={{ color: '#9ca3af' }}>Password:</span>{' '}
-              <code style={{
-                color: '#10b981',
-                backgroundColor: '#064e3b',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '11px'
+            
+            {/* Admin User */}
+            <div style={{
+              border: '1px solid #4b5563',
+              borderRadius: '8px',
+              padding: '12px',
+              backgroundColor: '#1f2937'
+            }}>
+              <div style={{
+                fontSize: '11px',
+                color: '#6b7280',
+                marginBottom: '4px',
+                fontWeight: '500'
               }}>
-                password123
-              </code>
+                Admin User
+              </div>
+              <div>
+                <span style={{ color: '#9ca3af' }}>Email:</span>{' '}
+                <code style={{
+                  color: '#f59e0b',
+                  backgroundColor: '#451a03',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontSize: '11px'
+                }}>
+                  admin@example.com
+                </code>
+              </div>
+              <div>
+                <span style={{ color: '#9ca3af' }}>Password:</span>{' '}
+                <code style={{
+                  color: '#f59e0b',
+                  backgroundColor: '#451a03',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontSize: '11px'
+                }}>
+                  password123
+                </code>
+              </div>
             </div>
           </div>
           <p style={{

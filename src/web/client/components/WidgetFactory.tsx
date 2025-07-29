@@ -1,71 +1,195 @@
 import React from 'react';
-import { DashboardWidget } from '../../../shared/types';
 
-// Default widget component for plugins that don't provide custom components
-const DefaultWidgetComponent: React.FC<{ widget: DashboardWidget }> = ({ widget }) => {
+interface WidgetProps {
+  pluginId: string;
+  title: string;
+  data?: any;
+}
+
+const WidgetFactory: React.FC<WidgetProps> = ({ pluginId, title, data }) => {
+  // Demo Hello World Widget
+  if (pluginId === 'demo-hello-world') {
+    return <DemoHelloWorldWidget title={title} />;
+  }
+  
+  // Weather Widget
+  if (pluginId === 'weather-widget') {
+    return <WeatherWidget title={title} />;
+  }
+  
+  // Task Manager Widget
+  if (pluginId === 'task-manager') {
+    return <TaskManagerWidget title={title} />;
+  }
+  
+  // Default widget
   return (
-    <div className="default-widget">
-      <div className="default-widget-content">
-        <h4>{widget.title}</h4>
-        <p>Plugin: {widget.pluginId}</p>
-        <p>This is a default widget for {widget.title}.</p>
-        <p>Plugin-specific content will be loaded here.</p>
-      </div>
+    <div style={{
+      padding: '16px',
+      backgroundColor: '#ffffff',
+      borderRadius: '8px',
+      border: '1px solid #e5e7eb',
+      height: '100%'
+    }}>
+      <h3 style={{
+        fontSize: '16px',
+        fontWeight: '600',
+        color: '#1a1a1a',
+        margin: '0 0 12px 0'
+      }}>
+        {title}
+      </h3>
+      <p style={{
+        fontSize: '14px',
+        color: '#6b7280',
+        margin: 0
+      }}>
+        Plugin widget content will appear here.
+      </p>
     </div>
   );
 };
 
-// Hello World specific widget component
-const HelloWorldWidgetComponent: React.FC<{ widget: DashboardWidget }> = ({ widget }) => {
-  const [timestamp, setTimestamp] = React.useState(new Date());
+// Demo Hello World Widget Component
+const DemoHelloWorldWidget: React.FC<{ title: string }> = ({ title }) => {
+  const [currentTime, setCurrentTime] = React.useState(new Date());
 
   React.useEffect(() => {
-    const interval = setInterval(() => {
-      setTimestamp(new Date());
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="hello-world-widget">
-      <div className="hello-world-content">
-        <h4>Hello World!</h4>
-        <p>Current time: {timestamp.toLocaleTimeString()}</p>
-        <p>This widget is from the {widget.pluginId} plugin.</p>
+    <div style={{
+      padding: '16px',
+      backgroundColor: '#ffffff',
+      borderRadius: '8px',
+      border: '1px solid #e5e7eb',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      textAlign: 'center'
+    }}>
+      <h3 style={{
+        fontSize: '16px',
+        fontWeight: '600',
+        color: '#1a1a1a',
+        margin: '0 0 12px 0'
+      }}>
+        {title}
+      </h3>
+      <div style={{
+        fontSize: '24px',
+        fontWeight: 'bold',
+        color: '#10b981',
+        marginBottom: '8px'
+      }}>
+        Hello World!
+      </div>
+      <div style={{
+        fontSize: '12px',
+        color: '#6b7280'
+      }}>
+        {currentTime.toLocaleTimeString()}
       </div>
     </div>
   );
 };
 
-// Widget component registry
-const widgetComponents: Record<string, React.ComponentType<{ widget: DashboardWidget }>> = {
-  'Demo Hello WorldComponent': HelloWorldWidgetComponent,
-  'HelloWorldComponent': HelloWorldWidgetComponent,
-  'default': DefaultWidgetComponent
+// Weather Widget Component
+const WeatherWidget: React.FC<{ title: string }> = ({ title }) => {
+  return (
+    <div style={{
+      padding: '16px',
+      backgroundColor: '#ffffff',
+      borderRadius: '8px',
+      border: '1px solid #e5e7eb',
+      height: '100%'
+    }}>
+      <h3 style={{
+        fontSize: '16px',
+        fontWeight: '600',
+        color: '#1a1a1a',
+        margin: '0 0 12px 0'
+      }}>
+        {title}
+      </h3>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        <div style={{
+          fontSize: '32px'
+        }}>
+          🌤️
+        </div>
+        <div>
+          <div style={{
+            fontSize: '20px',
+            fontWeight: '600',
+            color: '#1a1a1a'
+          }}>
+            72°F
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: '#6b7280'
+          }}>
+            Sunny
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-// Widget factory function
-export const createWidgetComponent = (widget: DashboardWidget): React.ComponentType<{ widget: DashboardWidget }> => {
-  // Try to find a specific component for this widget
-  const specificComponent = widgetComponents[widget.component];
-  if (specificComponent) {
-    return specificComponent;
-  }
-
-  // Try to find a component by plugin ID
-  const pluginComponent = widgetComponents[`${widget.pluginId}Component`];
-  if (pluginComponent) {
-    return pluginComponent;
-  }
-
-  // Fall back to default component
-  return widgetComponents.default || DefaultWidgetComponent;
+// Task Manager Widget Component
+const TaskManagerWidget: React.FC<{ title: string }> = ({ title }) => {
+  return (
+    <div style={{
+      padding: '16px',
+      backgroundColor: '#ffffff',
+      borderRadius: '8px',
+      border: '1px solid #e5e7eb',
+      height: '100%'
+    }}>
+      <h3 style={{
+        fontSize: '16px',
+        fontWeight: '600',
+        color: '#1a1a1a',
+        margin: '0 0 12px 0'
+      }}>
+        {title}
+      </h3>
+      <div style={{
+        fontSize: '14px',
+        color: '#6b7280',
+        marginBottom: '8px'
+      }}>
+        Tasks: 3 completed, 2 pending
+      </div>
+      <div style={{
+        width: '100%',
+        height: '4px',
+        backgroundColor: '#e5e7eb',
+        borderRadius: '2px',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          width: '60%',
+          height: '100%',
+          backgroundColor: '#10b981',
+          borderRadius: '2px'
+        }} />
+      </div>
+    </div>
+  );
 };
 
-// Hook to get widget component
-export const useWidgetComponent = (widget: DashboardWidget) => {
-  return React.useMemo(() => createWidgetComponent(widget), [widget.component, widget.pluginId]);
-};
-
-export default createWidgetComponent; 
+export default WidgetFactory; 
