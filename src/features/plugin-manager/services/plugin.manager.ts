@@ -219,6 +219,15 @@ export class PluginManager implements IPluginManager {
 
   async enablePlugin(pluginId: string): Promise<void> {
     try {
+      // Check if plugin is already enabled to prevent duplicate operations
+      const installedPlugins = await this.getInstalledPlugins();
+      const plugin = installedPlugins.find(p => p.id === pluginId);
+      
+      if (plugin && plugin.status === PluginStatus.ENABLED) {
+        this.logger.info(`Plugin is already enabled, skipping enable operation`, { pluginId });
+        return;
+      }
+      
       await this.pluginRegistry.updatePluginStatus(pluginId, PluginStatus.ENABLED);
       
       // Load and activate the plugin

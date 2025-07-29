@@ -1,60 +1,154 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '../../../shared/ui/button';
 import { Package, BookOpen } from 'lucide-react';
 
 const WelcomeScreen: React.FC = () => {
-  const navigate = useNavigate();
-
-  const handleBrowsePlugins = () => {
-    navigate('/plugins');
-  };
-
-  const handleLearnMore = () => {
-    // In a real app, this would navigate to documentation
-    window.open('/docs', '_blank');
-  };
-
   return (
-    <div className="flex items-center justify-center min-h-screen p-8 bg-gray-50" data-testid="welcome-screen">
-      <div className="max-w-2xl text-center bg-white p-12 rounded-lg shadow-lg">
-        <div className="mb-8" data-testid="welcome-illustration">
-          <div className="text-6xl mb-4">📦</div>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100%',
+      padding: '48px 24px',
+      textAlign: 'center'
+    }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        maxWidth: '600px',
+        width: '100%'
+      }}>
+        {/* Icon */}
+        <div style={{
+          width: '64px',
+          height: '64px',
+          backgroundColor: '#f3f4f6',
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '24px',
+          color: '#6b7280'
+        }}>
+          <Package size={32} />
         </div>
-        
-        <h1 className="text-4xl font-bold text-gray-900 mb-2 leading-tight">
+
+        {/* Main Title */}
+        <h1 style={{
+          fontSize: '32px',
+          fontWeight: 'bold',
+          color: '#1a1a1a',
+          margin: '0 0 8px 0',
+          lineHeight: '1.2'
+        }}>
           Welcome to NeutralApp
         </h1>
-        <h2 className="text-xl font-medium text-gray-700 mb-6 leading-relaxed">
+
+        {/* Subtitle */}
+        <h2 style={{
+          fontSize: '20px',
+          fontWeight: '600',
+          color: '#6b7280',
+          margin: '0 0 16px 0',
+          lineHeight: '1.3'
+        }}>
           Get started by installing your first plugin
         </h2>
-        
-        <p className="text-base text-gray-600 mb-8 leading-relaxed">
+
+        {/* Description */}
+        <p style={{
+          fontSize: '16px',
+          color: '#6b7280',
+          lineHeight: '1.6',
+          margin: '0 0 32px 0',
+          maxWidth: '480px'
+        }}>
           Plugins add functionality to your dashboard. Browse our plugin marketplace to find the perfect tools for your workflow.
         </p>
-        
-        <div className="flex gap-4 justify-center mb-8">
-          <Button 
-            onClick={handleBrowsePlugins}
-            className="min-w-[140px] px-6 py-3 text-base font-semibold"
-          >
-            <Package className="w-4 h-4 mr-2" />
+
+        {/* Action Buttons */}
+        <div style={{
+          display: 'flex',
+          gap: '16px',
+          marginBottom: '48px',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <button style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 24px',
+            backgroundColor: '#1a1a1a',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            <Package size={18} />
             Browse Plugins
-          </Button>
+          </button>
           
-          <Button 
-            onClick={handleLearnMore}
-            variant="outline"
-            className="min-w-[140px] px-6 py-3 text-base font-semibold"
-          >
-            <BookOpen className="w-4 h-4 mr-2" />
+          <button style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 24px',
+            backgroundColor: '#ffffff',
+            color: '#1a1a1a',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}>
+            <BookOpen size={18} />
             Learn More
-          </Button>
+          </button>
         </div>
-        
-        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-md p-8 mt-6">
-          <p className="font-semibold text-gray-700 mb-1">No plugins installed yet</p>
-          <p className="text-gray-600">Install plugins to see widgets here</p>
+
+        {/* Plugin Area */}
+        <div style={{
+          width: '100%',
+          maxWidth: '800px',
+          minHeight: '300px',
+          border: '2px dashed #e5e7eb',
+          borderRadius: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#ffffff',
+          padding: '48px 24px'
+        }}>
+          <div style={{
+            fontSize: '48px',
+            color: '#d1d5db',
+            marginBottom: '16px'
+          }}>
+            📦
+          </div>
+          <p style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: '#6b7280',
+            margin: '0 0 8px 0'
+          }}>
+            No plugins installed yet
+          </p>
+          <p style={{
+            fontSize: '14px',
+            color: '#9ca3af',
+            margin: 0
+          }}>
+            Install plugins to see widgets here
+          </p>
         </div>
       </div>
     </div>

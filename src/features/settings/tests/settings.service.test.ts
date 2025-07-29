@@ -382,6 +382,17 @@ describe('SettingsService', () => {
       
       // Set up default mock behaviors
       mockValidator.sanitizeValue.mockImplementation((value: any) => value);
+      mockValidator.validateSchema.mockImplementation(async (schema: any) => {
+        // Check for invalid types in schema (schema is the settings object itself)
+        if (schema) {
+          for (const [key, setting] of Object.entries(schema as any)) {
+            if ((setting as any).type === 'invalid-type') {
+              return { isValid: false, errors: ['Invalid setting type: invalid-type'] };
+            }
+          }
+        }
+        return { isValid: true, errors: [] };
+      });
       mockStorage.keys.mockResolvedValue([]); // Default to empty keys
       mockStorage.set.mockResolvedValue(undefined);
       mockStorage.get.mockResolvedValue(null);
@@ -617,7 +628,7 @@ describe('SettingsService', () => {
 
     it('should validate setting values against schema', async () => {
       await expect(settingsService.setPluginSetting('demo-hello-world', 'updateInterval', 'not-a-number'))
-        .rejects.toThrow('Invalid value type for setting updateInterval');
+        .rejects.toThrow("Setting 'updateInterval' must be a non-negative number");
 
       // The current implementation allows setting any key (no schema validation for existence)
       // This is intentional behavior for flexibility

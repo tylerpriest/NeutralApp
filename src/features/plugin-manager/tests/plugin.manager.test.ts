@@ -492,13 +492,21 @@ describe('PluginManager', () => {
 
     it('should log plugin failure details', async () => {
       const mockError = new Error('Plugin crashed');
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const loggerSpy = jest.spyOn(console, 'error').mockImplementation();
 
       pluginManager.handlePluginFailure('failing-plugin', mockError);
 
-      expect(consoleSpy).toHaveBeenCalledWith('Plugin failing-plugin failed:', mockError);
+      // Check that the structured logger was called with appropriate data
+      expect(loggerSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[ERROR]'),
+        expect.stringContaining('Plugin failed'),
+        expect.objectContaining({
+          pluginId: 'failing-plugin',
+          error: 'Plugin crashed'
+        })
+      );
 
-      consoleSpy.mockRestore();
+      loggerSpy.mockRestore();
     });
   });
 
@@ -757,9 +765,7 @@ describe('PluginManager', () => {
     });
 
     it('should create widgets when plugin is activated', async () => {
-      // Set up the plugin to be enabled
-      installedPlugins[0]!.status = PluginStatus.ENABLED;
-      
+      // Plugin starts as INSTALLED (from beforeEach), enable should create widgets
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined, mockDashboardManager);
       await pluginManager.enablePlugin('demo-hello-world');
       
@@ -772,7 +778,7 @@ describe('PluginManager', () => {
         ...installedPlugins[0]!, // Use the mock plugin
         id: 'multi-widget-plugin',
         name: 'Multi Widget Plugin',
-        status: PluginStatus.ENABLED
+        status: PluginStatus.INSTALLED
       };
       
       installedPlugins.push(multiWidgetPlugin);
@@ -792,7 +798,7 @@ describe('PluginManager', () => {
     });
 
     it('should handle widget creation errors during activation gracefully', async () => {
-      installedPlugins[0]!.status = PluginStatus.ENABLED;
+      // Plugin starts as INSTALLED, we'll enable it to test widget creation error handling
       const mockDashboardManager = {
         registerWidget: jest.fn().mockImplementation(() => {
           throw new Error('Widget creation failed');
@@ -830,7 +836,7 @@ describe('PluginManager', () => {
     });
 
     it('should create widgets with proper permissions from plugin manifest', async () => {
-      installedPlugins[0]!.status = PluginStatus.ENABLED;
+      // Plugin starts as INSTALLED, we'll enable it to test permissions
       installedPlugins[0]!.permissions = [
         { name: 'read:data', description: 'Read data', required: true },
         { name: 'write:data', description: 'Write data', required: false },
@@ -855,7 +861,7 @@ describe('PluginManager', () => {
     });
 
     it('should handle plugin activation when dashboard manager is not available', async () => {
-      installedPlugins[0]!.status = PluginStatus.ENABLED;
+      // Plugin starts as INSTALLED, we'll enable it to test activation without dashboard manager
       const pluginManager = new PluginManager(mockPluginRegistry, undefined, undefined); // No dashboard manager
 
       // Plugin activation should still succeed
@@ -865,7 +871,7 @@ describe('PluginManager', () => {
     });
 
     it('should create widgets with proper component naming convention', async () => {
-      installedPlugins[0]!.status = PluginStatus.ENABLED;
+      // Plugin starts as INSTALLED, we'll enable it to test component naming
       const mockDashboardManager = {
         registerWidget: jest.fn(),
         handlePluginUninstall: jest.fn(),
@@ -898,7 +904,7 @@ describe('PluginManager', () => {
         downloads: 100,
         dependencies: [],
         permissions: [],
-        status: PluginStatus.ENABLED 
+        status: PluginStatus.INSTALLED 
       };
       const plugin2: PluginInfo = { 
         id: 'plugin-2', 
@@ -910,7 +916,7 @@ describe('PluginManager', () => {
         downloads: 100,
         dependencies: [],
         permissions: [],
-        status: PluginStatus.ENABLED 
+        status: PluginStatus.INSTALLED 
       };
       installedPlugins.push(plugin1, plugin2);
       
@@ -951,7 +957,7 @@ describe('PluginManager', () => {
     });
 
     it('should create widgets with proper size constraints', async () => {
-      installedPlugins[0]!.status = PluginStatus.ENABLED;
+      // Plugin starts as INSTALLED, we'll enable it to test size constraints
       const mockDashboardManager = {
         registerWidget: jest.fn(),
         handlePluginUninstall: jest.fn(),
@@ -990,9 +996,9 @@ describe('PluginManager', () => {
       // Clear the mock to reset the call count
       mockDashboardManager.registerWidget.mockClear();
       
-      // Try to enable same plugin again - should register widget again
+      // Try to enable same plugin again - should NOT register widget again (prevents duplicates)
       await pluginManager.enablePlugin('demo-hello-world');
-      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(2); // Called twice for both enable calls
+      expect(mockDashboardManager.registerWidget).toHaveBeenCalledTimes(0); // No new registration for already enabled plugin
       
       // Disable and re-enable should register widget again
       await pluginManager.disablePlugin('demo-hello-world');

@@ -22,8 +22,8 @@ test.describe('Visual Regression Tests', () => {
       await page.goto('/auth');
       await page.waitForLoadState('networkidle');
       
-      // Wait for the form to be visible
-      await page.waitForSelector('.auth-form');
+      // Wait for the form to be visible (using the new design selectors)
+      await page.waitForSelector('input[placeholder="Email Address"]');
       
       // Take screenshot of the entire auth page
       await expect(page).toHaveScreenshot('auth-login-page.png');
@@ -36,7 +36,7 @@ test.describe('Visual Regression Tests', () => {
       
       // Switch to register mode
       await page.click('text=Don\'t have an account? Sign up');
-      await page.waitForSelector('.auth-form');
+      await page.waitForSelector('input[placeholder="First Name"]');
       
       // Take screenshot of the register form
       await expect(page).toHaveScreenshot('auth-register-form.png');
@@ -49,7 +49,7 @@ test.describe('Visual Regression Tests', () => {
       
       // Switch to reset password mode
       await page.click('text=Forgot your password?');
-      await page.waitForSelector('.auth-form');
+      await page.waitForSelector('input[placeholder="Email Address"]');
       
       // Take screenshot of the reset password form
       await expect(page).toHaveScreenshot('auth-reset-password-form.png');

@@ -1,732 +1,447 @@
 import React, { useState, useEffect } from 'react';
-import { AdminDashboard } from '../../../features/admin/services/admin.dashboard';
-import { SystemMonitor } from '../../../features/admin/services/system.monitor';
-import { UserManager } from '../../../features/admin/services/user.manager';
-import { SystemReportGenerator } from '../../../features/admin/services/system.report.generator';
-import {
-  SystemHealthMetrics,
-  UserStatistics,
-  PluginHealthStatus,
-  ResourceMetrics,
-  PerformanceData,
-  ErrorStatistics,
-  SystemReport,
-  UserProfile,
-  AdminAction,
-  SystemAlert,
-  PluginStatus
-} from '../../../shared/types';
-import { Button, Card, CardContent, CardHeader, CardTitle, LoadingSpinner } from '../../../shared/ui';
-import ErrorReportingInterface from '../components/ErrorReportingInterface';
-import {
-  Activity,
-  Users,
-  Package,
-  Monitor,
-  UserCheck,
-  FileText,
-  AlertTriangle,
-  Play,
-  Square,
-  Eye,
-  UserX,
-  UserPlus,
-  Download,
-  Settings,
-  Shield,
-  BarChart3,
-  Cpu,
-  HardDrive,
-  Wifi,
-  Clock,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  RefreshCw
-} from 'lucide-react';
+import { Shield, Users, Activity, Database, Settings, AlertTriangle } from 'lucide-react';
 
-interface TabData {
+interface SystemMetric {
   id: string;
-  label: string;
-  icon: React.ReactNode;
-  content: React.ReactNode;
+  name: string;
+  value: string;
+  unit: string;
+  status: 'good' | 'warning' | 'error';
+  trend: 'up' | 'down' | 'stable';
+}
+
+interface UserActivity {
+  id: string;
+  user: string;
+  action: string;
+  timestamp: string;
+  status: 'success' | 'warning' | 'error';
 }
 
 const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Overview data
-  const [systemHealth, setSystemHealth] = useState<SystemHealthMetrics | null>(null);
-  const [userStats, setUserStats] = useState<UserStatistics | null>(null);
-  const [pluginHealth, setPluginHealth] = useState<PluginHealthStatus[]>([]);
-  
-  // System monitor data
-  const [resourceUsage, setResourceUsage] = useState<ResourceMetrics | null>(null);
-  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceData | null>(null);
-  const [errorStats, setErrorStats] = useState<ErrorStatistics | null>(null);
-  const [isMonitoring, setIsMonitoring] = useState(true);
-  
-  // User management data
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [showUserDetails, setShowUserDetails] = useState(false);
-  
-  // Reports data
-  const [reports, setReports] = useState<SystemReport[]>([]);
-  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-
-  // Service instances
-  const adminDashboard = new AdminDashboard();
-  const systemMonitor = new SystemMonitor();
-  const userManager = new UserManager();
-  const reportGenerator = new SystemReportGenerator();
+  const [metrics, setMetrics] = useState<SystemMetric[]>([]);
+  const [activities, setActivities] = useState<UserActivity[]>([]);
 
   useEffect(() => {
-    loadAdminData();
-    setupMonitoring();
-    
-    return () => {
-      systemMonitor.destroy();
-      // Cleanup monitoring interval will be handled by the component unmount
-    };
+    loadSystemData();
   }, []);
 
-  const loadAdminData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const [health, stats, plugins, resources, performance, errors, userList] = await Promise.all([
-        adminDashboard.getSystemHealth(),
-        adminDashboard.getUserStatistics(),
-        adminDashboard.getPluginHealth(),
-        systemMonitor.getResourceUsage(),
-        systemMonitor.getPerformanceMetrics(),
-        systemMonitor.getErrorRates(),
-        userManager.getUserProfiles()
-      ]);
-      
-      setSystemHealth(health);
-      setUserStats(stats);
-      setPluginHealth(plugins);
-      setResourceUsage(resources);
-      setPerformanceMetrics(performance);
-      setErrorStats(errors);
-      setUsers(userList);
-      
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load admin data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const setupMonitoring = () => {
-    // Set up real-time monitoring updates
-    const monitoringInterval = setInterval(async () => {
-      if (isMonitoring) {
-        try {
-          const [resources, performance, errors] = await Promise.all([
-            systemMonitor.getResourceUsage(),
-            systemMonitor.getPerformanceMetrics(),
-            systemMonitor.getErrorRates()
-          ]);
-          
-          setResourceUsage(resources);
-          setPerformanceMetrics(performance);
-          setErrorStats(errors);
-        } catch (err) {
-          console.error('Error updating monitoring data:', err);
-        }
+  const loadSystemData = () => {
+    // Mock data
+    const mockMetrics: SystemMetric[] = [
+      {
+        id: '1',
+        name: 'CPU Usage',
+        value: '45',
+        unit: '%',
+        status: 'good',
+        trend: 'stable'
+      },
+      {
+        id: '2',
+        name: 'Memory Usage',
+        value: '78',
+        unit: '%',
+        status: 'warning',
+        trend: 'up'
+      },
+      {
+        id: '3',
+        name: 'Disk Space',
+        value: '92',
+        unit: '%',
+        status: 'error',
+        trend: 'up'
+      },
+      {
+        id: '4',
+        name: 'Active Users',
+        value: '156',
+        unit: '',
+        status: 'good',
+        trend: 'up'
       }
-    }, 30000); // Update every 30 seconds
+    ];
 
-    systemMonitor.subscribeToAlerts((alert: SystemAlert) => {
-      // Handle system alerts
-      console.log('System alert:', alert);
-    });
-  };
+    const mockActivities: UserActivity[] = [
+      {
+        id: '1',
+        user: 'admin@neutralapp.com',
+        action: 'Plugin installed: Weather Widget',
+        timestamp: '2 minutes ago',
+        status: 'success'
+      },
+      {
+        id: '2',
+        user: 'guest@neutralapp.com',
+        action: 'Login attempt failed',
+        timestamp: '5 minutes ago',
+        status: 'warning'
+      },
+      {
+        id: '3',
+        user: 'system',
+        action: 'Database backup completed',
+        timestamp: '1 hour ago',
+        status: 'success'
+      },
+      {
+        id: '4',
+        user: 'admin@neutralapp.com',
+        action: 'Settings updated',
+        timestamp: '2 hours ago',
+        status: 'success'
+      }
+    ];
 
-  const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId);
-  };
-
-  const handleStartMonitoring = () => {
-    systemMonitor.startMonitoring();
-    setIsMonitoring(true);
-  };
-
-  const handleStopMonitoring = () => {
-    systemMonitor.stopMonitoring();
-    setIsMonitoring(false);
-  };
-
-  const handleViewUserDetails = async (user: UserProfile) => {
-    setSelectedUser(user);
-    setShowUserDetails(true);
-  };
-
-  const handlePerformAdminAction = async (userId: string, actionType: string) => {
-    try {
-      const action: AdminAction = {
-        type: actionType,
-        description: `${actionType} action performed by admin`,
-        confirmation: true
-      };
-      await userManager.performAdminAction(userId, action);
-      await loadAdminData(); // Refresh data
-    } catch (err) {
-      console.error('Failed to perform admin action:', err);
-    }
-  };
-
-  const handleGenerateReport = async () => {
-    try {
-      setIsGeneratingReport(true);
-      const report = await reportGenerator.generateBasicReport();
-      setReports(prev => [report, ...prev]);
-    } catch (err) {
-      console.error('Failed to generate report:', err);
-    } finally {
-      setIsGeneratingReport(false);
-    }
-  };
-
-  const handleExportReport = async (report: SystemReport) => {
-    try {
-      // For now, just log the export action since the interface expects DetailedSystemReport
-      console.log('Exporting report:', report);
-    } catch (err) {
-      console.error('Failed to export report:', err);
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'healthy':
-      case 'enabled':
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
-      case 'error':
-      case 'disabled':
-        return <XCircle className="w-4 h-4 text-red-600" />;
-      default:
-        return <Activity className="w-4 h-4 text-gray-600" />;
-    }
+    setMetrics(mockMetrics);
+    setActivities(mockActivities);
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'healthy':
-      case 'enabled':
-        return 'text-green-600 bg-green-50 border-green-200';
+    switch (status) {
+      case 'good':
+      case 'success':
+        return '#059669';
       case 'warning':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+        return '#d97706';
       case 'error':
-      case 'disabled':
-        return 'text-red-600 bg-red-50 border-red-200';
+        return '#dc2626';
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
+        return '#6b7280';
     }
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6" role="main">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600 mb-6">System monitoring and administration</p>
-            <div className="bg-white rounded-lg p-8 shadow-sm border border-border">
-              <p className="text-red-600 mb-6">{error}</p>
-                             <Button onClick={loadAdminData} variant="default">
-                 <RefreshCw className="w-4 h-4 mr-2" />
-                 Retry
-               </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const getStatusBgColor = (status: string) => {
+    switch (status) {
+      case 'good':
+      case 'success':
+        return '#d1fae5';
+      case 'warning':
+        return '#fef3c7';
+      case 'error':
+        return '#fee2e2';
+      default:
+        return '#f3f4f6';
+    }
+  };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6" role="main">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600 mb-6">System monitoring and administration</p>
-            <div className="bg-white rounded-lg p-8 shadow-sm border border-border">
-              <LoadingSpinner size="lg" />
-              <p className="mt-4 text-gray-600">Loading admin data...</p>
+  const renderOverview = () => (
+    <div style={{ padding: '24px' }}>
+      <h2 style={{
+        fontSize: '24px',
+        fontWeight: '600',
+        color: '#1a1a1a',
+        margin: '0 0 24px 0'
+      }}>
+        System Overview
+      </h2>
+      
+      {/* Metrics Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '24px',
+        marginBottom: '32px'
+      }}>
+        {metrics.map((metric) => (
+          <div
+            key={metric.id}
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '12px',
+              padding: '24px',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '16px'
+            }}>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: '500',
+                color: '#374151',
+                margin: 0
+              }}>
+                {metric.name}
+              </h3>
+              <span style={{
+                fontSize: '12px',
+                color: getStatusColor(metric.status),
+                backgroundColor: getStatusBgColor(metric.status),
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontWeight: '500'
+              }}>
+                {metric.status}
+              </span>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const tabs: TabData[] = [
-    {
-      id: 'overview',
-      label: 'Overview',
-      icon: <Activity className="w-5 h-5" />,
-      content: (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <Activity className="w-5 h-5 text-blue-600" />
-                  </div>
-                  System Health
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Status</span>
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(systemHealth && systemHealth.errors === 0 ? 'healthy' : 'warning')}
-                    <span className="font-semibold">
-                      {systemHealth && systemHealth.errors === 0 ? 'Healthy' : 'Warning'}
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '8px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                fontWeight: 'bold',
+                color: '#1a1a1a'
+              }}>
+                {metric.value}
+              </span>
+              <span style={{
+                fontSize: '16px',
+                color: '#6b7280'
+              }}>
+                {metric.unit}
                     </span>
                   </div>
-                </div>
-                {systemHealth && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">CPU</span>
-                      <span className="font-semibold">{Math.round(systemHealth.cpu * 100)}%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Memory</span>
-                      <span className="font-semibold">{Math.round(systemHealth.memory * 100)}%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Disk</span>
-                      <span className="font-semibold">{Math.round(systemHealth.disk * 100)}%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Uptime</span>
-                      <span className="font-semibold">{Math.floor(systemHealth.uptime / 3600)}h</span>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg">
-                  <div className="p-2 bg-green-50 rounded-lg">
-                    <Users className="w-5 h-5 text-green-600" />
-                  </div>
-                  Users
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {userStats && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Total</span>
-                      <span className="font-semibold">{userStats.totalUsers}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Active</span>
-                      <span className="font-semibold">{userStats.activeUsers}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Growth</span>
-                      <span className="font-semibold text-green-600">+{userStats.userGrowth}%</span>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <Package className="w-5 h-5 text-blue-600" />
-                  </div>
-                  Plugins
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Installed</span>
-                  <span className="font-semibold">{pluginHealth?.length || 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Active</span>
-                  <span className="font-semibold">
-                    {pluginHealth?.filter(p => p.status === PluginStatus.ENABLED).length || 0}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              marginTop: '8px'
+            }}>
+              <span style={{
+                fontSize: '12px',
+                color: metric.trend === 'up' ? '#059669' : metric.trend === 'down' ? '#dc2626' : '#6b7280'
+              }}>
+                {metric.trend === 'up' ? '↗' : metric.trend === 'down' ? '↘' : '→'}
+                  </span>
+              <span style={{
+                fontSize: '12px',
+                color: '#6b7280'
+              }}>
+                {metric.trend === 'up' ? 'Increasing' : metric.trend === 'down' ? 'Decreasing' : 'Stable'}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Errors</span>
-                  <span className="font-semibold text-red-600">
-                    {pluginHealth?.reduce((total, p) => total + p.errors, 0) || 0}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
-        </div>
-      )
-    },
-    {
-      id: 'monitor',
-      label: 'System Monitor',
-      icon: <Monitor className="w-5 h-5" />,
-      content: (
-        <div className="space-y-6">
-          <div className="flex gap-4">
-                         <Button 
-               onClick={isMonitoring ? handleStopMonitoring : handleStartMonitoring}
-               variant={isMonitoring ? "secondary" : "default"}
-               className="flex items-center gap-2"
-             >
-              {isMonitoring ? (
-                <>
-                  <Square className="w-4 h-4" />
-                  Stop Monitoring
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4" />
-                  Start Monitoring
-                </>
-              )}
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <Cpu className="w-5 h-5 text-blue-600" />
-                  </div>
-                  Resource Usage
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {resourceUsage && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">CPU Usage</span>
-                      <span className="font-semibold">{Math.round(resourceUsage.cpu * 100)}%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Memory Usage</span>
-                      <span className="font-semibold">{Math.round(resourceUsage.memory * 100)}%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Disk Usage</span>
-                      <span className="font-semibold">{Math.round(resourceUsage.disk * 100)}%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Network Usage</span>
-                      <span className="font-semibold">{Math.round(resourceUsage.network * 100)}%</span>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-            
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg">
-                  <div className="p-2 bg-green-50 rounded-lg">
-                    <TrendingUp className="w-5 h-5 text-green-600" />
-                  </div>
-                  Performance Metrics
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {performanceMetrics && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Response Time</span>
-                      <span className="font-semibold">{performanceMetrics.responseTime}ms</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Throughput</span>
-                      <span className="font-semibold">{performanceMetrics.throughput} req/s</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Error Rate</span>
-                      <span className="font-semibold">{Math.round(performanceMetrics.errorRate * 100)}%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Availability</span>
-                      <span className="font-semibold">{Math.round(performanceMetrics.availability * 100)}%</span>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-            
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-3 text-lg">
-                  <div className="p-2 bg-red-50 rounded-lg">
-                    <AlertCircle className="w-5 h-5 text-red-600" />
-                  </div>
-                  Error Statistics
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {errorStats && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Total Errors</span>
-                      <span className="font-semibold text-red-600">{errorStats.total}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Recent Errors</span>
-                      <span className="font-semibold">{errorStats.recent.length}</span>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: 'users',
-      label: 'User Management',
-      icon: <UserCheck className="w-5 h-5" />,
-      content: (
-        <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-gray-900">User List</h3>
-          <div className="space-y-4">
-            {users?.map(user => (
-              <Card key={user.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center">
-                    <div className="space-y-2">
-                      <div className="font-semibold text-gray-900">{user.email}</div>
-                      <div className="text-sm text-gray-600">{user.displayName}</div>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button 
-                        onClick={() => handleViewUserDetails(user)}
-                        variant="secondary"
-                        size="sm"
-                        className="flex items-center gap-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View Details
-                      </Button>
-                      <Button 
-                        onClick={() => handlePerformAdminAction(user.id, 'suspend_user')}
-                        variant="secondary"
-                        size="sm"
-                        className="flex items-center gap-2 text-red-600 hover:text-red-700"
-                      >
-                        <UserX className="w-4 h-4" />
-                        Suspend
-                      </Button>
-                      <Button 
-                        onClick={() => handlePerformAdminAction(user.id, 'activate_user')}
-                        variant="secondary"
-                        size="sm"
-                        className="flex items-center gap-2 text-green-600 hover:text-green-700"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        Activate
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             ))}
           </div>
           
-          {showUserDetails && selectedUser && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <Card className="max-w-md w-full mx-4">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 rounded-lg">
-                      <UserCheck className="w-5 h-5 text-blue-600" />
+      {/* Recent Activity */}
+      <div style={{
+        backgroundColor: '#ffffff',
+        borderRadius: '12px',
+        padding: '24px',
+        border: '1px solid #e5e7eb',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}>
+        <h3 style={{
+          fontSize: '18px',
+          fontWeight: '600',
+          color: '#1a1a1a',
+          margin: '0 0 16px 0'
+        }}>
+          Recent Activity
+        </h3>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          {activities.map((activity) => (
+            <div
+              key={activity.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px',
+                backgroundColor: '#fafafa',
+                borderRadius: '8px'
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: getStatusColor(activity.status)
+                }} />
+                <div>
+                  <p style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#1a1a1a',
+                    margin: '0 0 2px 0'
+                  }}>
+                    {activity.action}
+                  </p>
+                  <p style={{
+                    fontSize: '12px',
+                    color: '#6b7280',
+                    margin: 0
+                  }}>
+                    {activity.user} • {activity.timestamp}
+                  </p>
                     </div>
-                    {selectedUser.displayName}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <span className="text-gray-600">Email:</span>
-                    <p className="font-semibold">{selectedUser.email}</p>
                   </div>
-                                     <Button 
-                     onClick={() => setShowUserDetails(false)}
-                     variant="default"
-                     className="w-full"
-                   >
-                    Close
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
-          )}
+          ))}
         </div>
-      )
-    },
-    {
-      id: 'plugins',
-      label: 'Plugin Management',
-      icon: <Package className="w-5 h-5" />,
-      content: (
-        <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-gray-900">Plugin Health</h3>
-          <div className="space-y-4">
-            {pluginHealth?.map(plugin => (
-              <Card key={plugin.pluginId} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center">
-                    <div className="space-y-3">
-                      <div className="font-semibold text-gray-900">{plugin.pluginId}</div>
-                      <div className="flex items-center gap-4 text-sm">
-                        <span className={`px-3 py-1 rounded-full border ${getStatusColor(plugin.status)}`}>
-                          {plugin.status}
-                        </span>
-                        <span className="text-gray-600">
-                          Performance: {Math.round(plugin.performance * 100)}%
-                        </span>
-                        <span className="text-red-600">
-                          Errors: {plugin.errors}
-                        </span>
                       </div>
                     </div>
-                    <Button 
-                      variant="secondary"
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      {plugin.status === PluginStatus.ENABLED ? 'Disable' : 'Enable'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+  );
+
+  const renderUsers = () => (
+    <div style={{ padding: '24px' }}>
+      <h2 style={{
+        fontSize: '24px',
+        fontWeight: '600',
+        color: '#1a1a1a',
+        margin: '0 0 24px 0'
+      }}>
+        User Management
+      </h2>
+      <div style={{
+        backgroundColor: '#ffffff',
+        borderRadius: '12px',
+        padding: '24px',
+        border: '1px solid #e5e7eb',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}>
+        <p style={{
+          fontSize: '16px',
+          color: '#6b7280',
+          textAlign: 'center',
+          margin: '48px 0'
+        }}>
+          User management features coming soon
+        </p>
           </div>
         </div>
-      )
-    },
-    {
-      id: 'reports',
-      label: 'Reports',
-      icon: <FileText className="w-5 h-5" />,
-      content: (
-        <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-gray-900">System Reports</h3>
-          <div className="flex gap-4">
-                         <Button 
-               onClick={handleGenerateReport}
-               disabled={isGeneratingReport}
-               variant="default"
-               className="flex items-center gap-2"
-             >
-              {isGeneratingReport ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <FileText className="w-4 h-4" />
-                  Generate Report
-                </>
-              )}
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            {reports?.map((report, index) => (
-              <Card key={index} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center">
-                    <div className="space-y-2">
-                      <div className="font-semibold text-gray-900">
-                        {report.timestamp.toLocaleDateString()}
+  );
+
+  const renderSystem = () => (
+    <div style={{ padding: '24px' }}>
+      <h2 style={{
+        fontSize: '24px',
+        fontWeight: '600',
+        color: '#1a1a1a',
+        margin: '0 0 24px 0'
+      }}>
+        System Settings
+      </h2>
+      <div style={{
+        backgroundColor: '#ffffff',
+        borderRadius: '12px',
+        padding: '24px',
+        border: '1px solid #e5e7eb',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+      }}>
+        <p style={{
+          fontSize: '16px',
+          color: '#6b7280',
+          textAlign: 'center',
+          margin: '48px 0'
+        }}>
+          System configuration options coming soon
+        </p>
                       </div>
                     </div>
-                    <Button 
-                      onClick={() => handleExportReport(report)}
-                      variant="secondary"
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Export
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )
-    },
-    {
-      id: 'errors',
-      label: 'Error Reporting',
-      icon: <AlertTriangle className="w-5 h-5" />,
-      content: (
-        <div className="space-y-6">
-          <ErrorReportingInterface />
-        </div>
-      )
-    }
+  );
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: <Activity size={20} /> },
+    { id: 'users', label: 'Users', icon: <Users size={20} /> },
+    { id: 'system', label: 'System', icon: <Settings size={20} /> }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6" role="main">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">System monitoring and administration</p>
+    <div style={{
+      display: 'flex',
+      height: '100%',
+      backgroundColor: '#fafafa'
+    }}>
+      {/* Sidebar */}
+      <div style={{
+        width: '280px',
+        backgroundColor: '#ffffff',
+        borderRight: '1px solid #e5e7eb',
+        padding: '24px 0'
+      }}>
+        <div style={{
+          padding: '0 24px 24px 24px',
+          borderBottom: '1px solid #e5e7eb',
+          marginBottom: '24px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '8px'
+          }}>
+            <Shield size={24} style={{ color: '#1a1a1a' }} />
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#1a1a1a',
+              margin: 0
+            }}>
+              Admin Panel
+            </h1>
+          </div>
+          <p style={{
+            fontSize: '14px',
+            color: '#6b7280',
+            margin: 0
+          }}>
+            System administration and monitoring
+          </p>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden">
-          <div className="border-b border-border">
-            <div className="flex overflow-x-auto" role="tablist">
-              {tabs.map(tab => (
+        <nav>
+          {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
-                    activeTab === tab.id 
-                      ? 'border-primary text-primary bg-primary/5' 
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                  onClick={() => handleTabChange(tab.id)}
-                >
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 24px',
+                backgroundColor: activeTab === tab.id ? '#f3f4f6' : 'transparent',
+                border: 'none',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div style={{
+                color: activeTab === tab.id ? '#1a1a1a' : '#6b7280'
+              }}>
                   {tab.icon}
+              </div>
+              <span style={{
+                fontSize: '14px',
+                fontWeight: '500',
+                color: activeTab === tab.id ? '#1a1a1a' : '#374151'
+              }}>
                   {tab.label}
+              </span>
                 </button>
               ))}
-            </div>
+        </nav>
           </div>
           
-          <div className="p-6" role="tabpanel">
-            {tabs.find(tab => tab.id === activeTab)?.content}
-          </div>
-        </div>
+      {/* Content */}
+      <div style={{
+        flex: 1,
+        backgroundColor: '#ffffff'
+      }}>
+        {activeTab === 'overview' && renderOverview()}
+        {activeTab === 'users' && renderUsers()}
+        {activeTab === 'system' && renderSystem()}
       </div>
     </div>
   );

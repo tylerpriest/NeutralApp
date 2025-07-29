@@ -90,8 +90,12 @@ describe('Keyboard Navigation', () => {
       navLinks.forEach((link) => {
         link.focus();
         expect(link).toHaveFocus();
-        // Should have visible focus indicator
-        expect(link).toHaveClass('nav-link');
+        // Should have visible focus indicator with Tailwind classes
+        expect(link).toHaveClass('flex');
+        expect(link).toHaveClass('items-center');
+        expect(link).toHaveClass('px-3');
+        expect(link).toHaveClass('py-2');
+        expect(link).toHaveClass('rounded-md');
       });
     });
   });

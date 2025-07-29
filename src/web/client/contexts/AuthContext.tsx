@@ -136,16 +136,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('AuthContext: Registration attempt for:', userData.email);
     
     try {
-      // For now, registration is the same as login
-      // In a real app, you'd have a separate registration endpoint
-      const response = await fetch('/api/auth/signin', {
+      // Call the registration endpoint
+      const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
           email: userData.email, 
-          password: userData.password 
+          password: userData.password,
+          firstName: userData.firstName,
+          lastName: userData.lastName
         }),
       });
 

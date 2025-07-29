@@ -1,158 +1,183 @@
-import React, { useState, useEffect } from 'react';
-import { DashboardManager } from '../../../features/ui-shell/services/dashboard.manager';
-import { DashboardWidget, DashboardLayout } from '../../../shared/types';
-import WidgetContainer from '../components/WidgetContainer';
+import React, { useEffect, useState } from 'react';
 import WelcomeScreen from '../components/WelcomeScreen';
-import { Button } from '../../../shared/ui/button';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+
+interface Widget {
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+}
 
 const DashboardPage: React.FC = () => {
-  const [widgets, setWidgets] = useState<DashboardWidget[]>([]);
-  const [layout, setLayout] = useState<DashboardLayout | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showWelcome, setShowWelcome] = useState(false);
-
-  // Use the global shared DashboardManager instance
-  const dashboardManager = DashboardManager.getInstance();
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // Fetch active widgets from API
-        const response = await fetch('/api/dashboard/widgets');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch widgets: ${response.status}`);
-        }
-        const data = await response.json();
-        const activeWidgets = data.widgets || [];
-        setWidgets(activeWidgets);
-
-        // Check if we should show welcome screen
-        const shouldShowWelcome = activeWidgets.length === 0;
-        setShowWelcome(shouldShowWelcome);
-
-        if (shouldShowWelcome) {
-          // Don't set layout if showing welcome screen
-          setLayout(null);
-        } else if (activeWidgets.length > 0) {
-          // Calculate optimal layout for widgets
-          const optimalLayout = dashboardManager.calculateOptimalLayout(activeWidgets);
-          setLayout(optimalLayout);
-        } else {
-          // Use default layout for empty state
-          setLayout({
-            grid: {
-              columns: 12,
-              rows: 8,
-              gap: '16px',
-              cellSize: { width: 100, height: 80 }
-            },
-            widgets: []
-          });
-        }
-      } catch (err) {
-        console.error('Failed to load dashboard:', err);
-        setError('Failed to load dashboard. Please try refreshing the page.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadDashboard();
   }, []);
 
-  const handleWidgetResize = (widgetId: string, size: any) => {
-    // Update widget size in DashboardManager
-    const updatedWidgets = widgets.map(widget => 
-      widget.id === widgetId ? { ...widget, size } : widget
-    );
-    setWidgets(updatedWidgets);
-    
-    // Recalculate layout
-    if (updatedWidgets.length > 0) {
-      const newLayout = dashboardManager.calculateOptimalLayout(updatedWidgets);
-      setLayout(newLayout);
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('/api/dashboard/widgets');
+      if (!response.ok) {
+        throw new Error('Failed to fetch widgets');
+      }
+      
+      const data = await response.json();
+      setWidgets(data.widgets || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleWidgetMove = (widgetId: string, position: any) => {
-    // Update widget position in DashboardManager
-    const updatedWidgets = widgets.map(widget => 
-      widget.id === widgetId ? { ...widget, position } : widget
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        padding: '48px'
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            border: '3px solid #f3f4f6',
+            borderTop: '3px solid #6b7280',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{
+            fontSize: '14px',
+            color: '#6b7280',
+            margin: 0
+          }}>Loading dashboard...</p>
+        </div>
+      </div>
     );
-    setWidgets(updatedWidgets);
-    
-    // Recalculate layout
-    if (updatedWidgets.length > 0) {
-      const newLayout = dashboardManager.calculateOptimalLayout(updatedWidgets);
-      setLayout(newLayout);
-    }
-  };
+  }
 
-  // Show welcome screen if no plugins are installed
-  if (showWelcome) {
+  if (error) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        padding: '48px',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          width: '64px',
+          height: '64px',
+          backgroundColor: '#fef2f2',
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '24px',
+          color: '#ef4444'
+        }}>
+          ⚠️
+        </div>
+        <h3 style={{
+          fontSize: '20px',
+          fontWeight: '600',
+          color: '#1a1a1a',
+          margin: '0 0 8px 0'
+        }}>
+          Failed to load dashboard
+        </h3>
+        <p style={{
+          fontSize: '14px',
+          color: '#6b7280',
+          margin: '0 0 24px 0',
+          maxWidth: '400px'
+        }}>
+          {error}. Please try refreshing the page.
+        </p>
+        <button
+          onClick={loadDashboard}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 24px',
+            backgroundColor: '#1a1a1a',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          🔄 Retry
+        </button>
+      </div>
+    );
+  }
+
+  // If no widgets, show welcome screen
+  if (widgets.length === 0) {
     return <WelcomeScreen />;
   }
 
-  // Show error state
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-6xl mx-auto p-8">
-          <div className="bg-white border border-red-300 rounded-md p-8 text-center mt-8">
-            <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-4" />
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button 
-              onClick={() => window.location.reload()}
-              variant="destructive"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Retry
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-6xl mx-auto p-8">
-          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-md mt-8">
-            <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-500">Loading dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show main dashboard
+  // If widgets exist, show dashboard grid
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600">
-            Manage your widgets and customize your workspace
-          </p>
-        </div>
-        
-        {layout && (
-          <WidgetContainer
-            widgets={widgets}
-            layout={layout}
-            onWidgetResize={handleWidgetResize}
-            onWidgetMove={handleWidgetMove}
-          />
-        )}
+    <div style={{
+      padding: '24px',
+      maxWidth: '1200px',
+      margin: '0 auto'
+    }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '24px',
+        marginBottom: '32px'
+      }}>
+        {widgets.map((widget) => (
+          <div
+            key={widget.id}
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '12px',
+              padding: '24px',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <h3 style={{
+              fontSize: '18px',
+              fontWeight: '600',
+              color: '#1a1a1a',
+              margin: '0 0 16px 0'
+            }}>
+              {widget.title}
+            </h3>
+            <div style={{
+              fontSize: '14px',
+              color: '#6b7280',
+              lineHeight: '1.6'
+            }}>
+              {widget.content}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

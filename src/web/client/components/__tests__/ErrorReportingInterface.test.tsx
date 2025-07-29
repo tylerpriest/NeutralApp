@@ -180,18 +180,18 @@ describe('ErrorReportingInterface', () => {
     });
 
     it('should render navigation tabs', () => {
-      expect(screen.getByRole('tab', { name: 'Overview' })).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: 'Error Details' })).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: 'Suggestions' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /Overview/ })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /Error Details/ })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /Suggestions/ })).toBeInTheDocument();
     });
 
     it('should show overview tab by default', () => {
-      const overviewTab = screen.getByRole('tab', { name: 'Overview' });
+      const overviewTab = screen.getByRole('tab', { name: /Overview/ });
       expect(overviewTab).toHaveAttribute('aria-selected', 'true');
     });
 
     it('should switch tabs when clicked', async () => {
-      const errorsTab = screen.getByRole('tab', { name: 'Error Details' });
+      const errorsTab = screen.getByRole('tab', { name: /Error Details/ });
       fireEvent.click(errorsTab);
 
       expect(errorsTab).toHaveAttribute('aria-selected', 'true');
@@ -250,7 +250,7 @@ describe('ErrorReportingInterface', () => {
         expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
       });
 
-      const errorsTab = screen.getByRole('tab', { name: 'Error Details' });
+      const errorsTab = screen.getByRole('tab', { name: /Error Details/ });
       fireEvent.click(errorsTab);
     });
 

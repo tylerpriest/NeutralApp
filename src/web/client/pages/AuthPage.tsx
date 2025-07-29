@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Button, Input, Card, CardHeader, CardContent, LoadingSpinner } from '../../../shared/ui';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Shield } from 'lucide-react';
 
 interface AuthFormData {
   email: string;
@@ -95,59 +94,55 @@ const AuthPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Temporarily disable validation for debugging
-    // if (!validateForm()) {
-    //   return;
-    // }
-    
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
     setErrors([]);
     setSuccessMessage('');
 
     try {
-      let success = false;
+      let result: boolean;
+      if (mode === 'login') {
+        result = await login(formData.email, formData.password);
+      } else if (mode === 'register') {
+        result = await register({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName!,
+          lastName: formData.lastName!
+        });
+      } else if (mode === 'reset') {
+        result = await resetPassword(formData.email);
+      } else {
+        result = false;
+      }
 
-      switch (mode) {
-        case 'login':
-          console.log('AuthPage: Attempting login with:', formData.email);
-          success = await login(formData.email, formData.password);
-          console.log('AuthPage: Login result:', success);
-          if (success) {
-            console.log('AuthPage: Login successful, redirect will happen automatically');
-            // The useEffect hook will handle the redirect when isAuthenticated becomes true
-          } else {
-            console.log('AuthPage: Login failed, showing error');
-            setErrors([{ field: 'general', message: 'Invalid email or password' }]);
-          }
-          break;
-        case 'register':
-          success = await register({
-            email: formData.email,
-            password: formData.password,
-            firstName: formData.firstName || '',
-            lastName: formData.lastName || ''
-          });
-          if (success) {
-            setSuccessMessage('Registration successful! Please check your email for verification.');
-            setMode('login');
-          } else {
-            setErrors([{ field: 'general', message: 'Registration failed. Please try again.' }]);
-          }
-          break;
-        case 'reset':
-          success = await resetPassword(formData.email);
-          if (success) {
-            setSuccessMessage('Password reset email sent! Please check your inbox.');
-            setMode('login');
-          } else {
-            setErrors([{ field: 'general', message: 'Password reset failed. Please try again.' }]);
-          }
-          break;
-        default:
-          throw new Error('Invalid auth mode');
+      if (result) {
+        if (mode === 'reset') {
+          setSuccessMessage('Password reset email sent! Please check your inbox.');
+          setMode('login');
+        }
+        // For login and register, the redirect will happen automatically
+      } else {
+        setErrors([{ field: 'general', message: 'Authentication failed. Please try again.' }]);
       }
     } catch (error) {
-      setErrors([{ field: 'general', message: 'Network error. Please try again.' }]);
+      console.error('Auth error:', error);
+      setErrors([{ field: 'general', message: 'An unexpected error occurred' }]);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setIsSubmitting(true);
+    try {
+      await loginAsGuest();
+    } catch (error) {
+      console.error('Guest login error:', error);
+      setErrors([{ field: 'general', message: 'Failed to login as guest' }]);
     } finally {
       setIsSubmitting(false);
     }
@@ -165,284 +160,624 @@ const AuthPage: React.FC = () => {
     switch (mode) {
       case 'login':
         return {
-          title: 'Welcome back',
-          subtitle: 'Sign in to your account to continue',
-          buttonText: 'Sign In',
-          buttonIcon: <ArrowRight className="w-4 h-4" />
+          title: 'Welcome back!',
+          subtitle: 'Please sign in to continue',
+          submitText: 'Sign In',
+          switchText: "Don't have an account?",
+          switchAction: 'Sign up',
+          switchMode: 'register' as const
         };
       case 'register':
         return {
-          title: 'Create your account',
-          subtitle: 'Join NeutralApp to get started',
-          buttonText: 'Create Account',
-          buttonIcon: <CheckCircle className="w-4 h-4" />
+          title: 'Create Account',
+          subtitle: 'Sign up to get started',
+          submitText: 'Create Account',
+          switchText: 'Already have an account?',
+          switchAction: 'Sign in',
+          switchMode: 'login' as const
         };
       case 'reset':
         return {
-          title: 'Reset your password',
-          subtitle: 'Enter your email to receive reset instructions',
-          buttonText: 'Send Reset Email',
-          buttonIcon: <Mail className="w-4 h-4" />
+          title: 'Reset Password',
+          subtitle: 'Enter your email to reset your password',
+          submitText: 'Send Reset Link',
+          switchText: 'Remember your password?',
+          switchAction: 'Sign in',
+          switchMode: 'login' as const
         };
     }
   };
 
-  const modeConfig = getModeConfig();
+  const config = getModeConfig();
+
+  if (isLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#1a1a1a',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            border: '3px solid #f3f4f6',
+            borderTop: '3px solid #6b7280',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{
+            fontSize: '14px',
+            color: '#6b7280',
+            margin: 0
+          }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo and Brand */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">NeutralApp</h1>
-          <p className="text-gray-600 text-sm">Modern, clean, and efficient</p>
-        </div>
-
-        {/* Auth Card */}
-        <Card className="shadow-xl border-0">
-          <CardHeader className="text-center pb-6">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              {modeConfig.title}
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#1a1a1a',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '400px'
+      }}>
+        {/* Main Card */}
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          padding: '32px'
+        }}>
+          {/* Header */}
+          <div style={{
+            textAlign: 'center',
+            marginBottom: '32px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#1a1a1a',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff'
+              }}>
+                <Shield size={24} />
+              </div>
+              <h1 style={{
+                fontSize: '28px',
+                fontWeight: 'bold',
+                color: '#1a1a1a',
+                margin: 0
+              }}>
+                NeutralApp
+              </h1>
+            </div>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: '600',
+              color: '#374151',
+              margin: '0 0 4px 0'
+            }}>
+              {config.title}
             </h2>
-            <p className="text-gray-600 text-sm">
-              {modeConfig.subtitle}
+            <p style={{
+              fontSize: '14px',
+              color: '#6b7280',
+              margin: 0
+            }}>
+              {config.subtitle}
             </p>
-          </CardHeader>
+          </div>
 
-          <CardContent className="space-y-6">
-            {/* Error Message */}
+          {/* Form */}
+          <form onSubmit={handleSubmit} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px'
+          }}>
+            {/* General Error */}
             {getGeneralError() && (
-              <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                <p className="text-red-700 text-sm">{getGeneralError()}</p>
+              <div style={{
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '8px'
+              }}>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#dc2626',
+                  margin: 0
+                }}>
+                  {getGeneralError()}
+                </p>
               </div>
             )}
 
             {/* Success Message */}
             {successMessage && (
-              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <p className="text-green-700 text-sm">{successMessage}</p>
+              <div style={{
+                backgroundColor: '#d1fae5',
+                border: '1px solid #a7f3d0',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '8px'
+              }}>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#059669',
+                  margin: 0
+                }}>
+                  {successMessage}
+                </p>
               </div>
             )}
 
-            {/* Auth Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Registration Fields */}
-              {mode === 'register' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                                         <Input
-                       type="text"
-                       placeholder="First Name"
-                       value={formData.firstName}
-                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('firstName', e.target.value)}
-                       className={getFieldError('firstName') ? 'border-red-300 focus:border-red-500' : ''}
-                       icon={<User className="w-4 h-4" />}
-                     />
-                    {getFieldError('firstName') && (
-                      <p className="text-red-600 text-xs">{getFieldError('firstName')}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                                         <Input
-                       type="text"
-                       placeholder="Last Name"
-                       value={formData.lastName}
-                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('lastName', e.target.value)}
-                       className={getFieldError('lastName') ? 'border-red-300 focus:border-red-500' : ''}
-                       icon={<User className="w-4 h-4" />}
-                     />
-                    {getFieldError('lastName') && (
-                      <p className="text-red-600 text-xs">{getFieldError('lastName')}</p>
-                    )}
-                  </div>
+            {/* Register Mode Fields */}
+            {mode === 'register' && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '16px'
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    placeholder="First Name"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: `1px solid ${getFieldError('firstName') ? '#f87171' : '#e5e7eb'}`,
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      backgroundColor: '#ffffff',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  {getFieldError('firstName') && (
+                    <p style={{
+                      fontSize: '12px',
+                      color: '#dc2626',
+                      margin: '4px 0 0 0'
+                    }}>
+                      {getFieldError('firstName')}
+                    </p>
+                  )}
                 </div>
-              )}
-
-              {/* Email Field */}
-              <div className="space-y-2">
-                                 <Input
-                   type="email"
-                   placeholder="Email Address"
-                   value={formData.email}
-                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('email', e.target.value)}
-                   className={getFieldError('email') ? 'border-red-300 focus:border-red-500' : ''}
-                   icon={<Mail className="w-4 h-4" />}
-                 />
-                {getFieldError('email') && (
-                  <p className="text-red-600 text-xs">{getFieldError('email')}</p>
-                )}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    placeholder="Last Name"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: `1px solid ${getFieldError('lastName') ? '#f87171' : '#e5e7eb'}`,
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      backgroundColor: '#ffffff',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  {getFieldError('lastName') && (
+                    <p style={{
+                      fontSize: '12px',
+                      color: '#dc2626',
+                      margin: '4px 0 0 0'
+                    }}>
+                      {getFieldError('lastName')}
+                    </p>
+                  )}
+                </div>
               </div>
+            )}
 
-              {/* Password Field */}
-              {mode !== 'reset' && (
-                <div className="space-y-2">
-                  <div className="relative">
-                                         <Input
-                       type={showPassword ? 'text' : 'password'}
-                       placeholder="Password"
-                       value={formData.password}
-                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('password', e.target.value)}
-                       className={getFieldError('password') ? 'border-red-300 focus:border-red-500 pr-12' : 'pr-12'}
-                       icon={<Lock className="w-4 h-4" />}
-                     />
+            {/* Email Field */}
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#374151',
+                marginBottom: '6px'
+              }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                placeholder="Email Address"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: `1px solid ${getFieldError('email') ? '#f87171' : '#e5e7eb'}`,
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  backgroundColor: '#ffffff',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease',
+                  boxSizing: 'border-box'
+                }}
+              />
+              {getFieldError('email') && (
+                <p style={{
+                  fontSize: '12px',
+                  color: '#dc2626',
+                  margin: '4px 0 0 0'
+                }}>
+                  {getFieldError('email')}
+                </p>
+              )}
+            </div>
+
+            {/* Password Fields */}
+            {mode !== 'reset' && (
+              <>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Password
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder="Password"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        paddingRight: '48px',
+                        border: `1px solid ${getFieldError('password') ? '#f87171' : '#e5e7eb'}`,
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        backgroundColor: '#ffffff',
+                        outline: 'none',
+                        transition: 'border-color 0.2s ease',
+                        boxSizing: 'border-box'
+                      }}
+                    />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#9ca3af'
+                      }}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                   {getFieldError('password') && (
-                    <p className="text-red-600 text-xs">{getFieldError('password')}</p>
+                    <p style={{
+                      fontSize: '12px',
+                      color: '#dc2626',
+                      margin: '4px 0 0 0'
+                    }}>
+                      {getFieldError('password')}
+                    </p>
                   )}
                 </div>
-              )}
 
-              {/* Confirm Password Field */}
-              {mode === 'register' && (
-                <div className="space-y-2">
-                  <div className="relative">
-                                         <Input
-                       type={showConfirmPassword ? 'text' : 'password'}
-                       placeholder="Confirm Password"
-                       value={formData.confirmPassword}
-                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('confirmPassword', e.target.value)}
-                       className={getFieldError('confirmPassword') ? 'border-red-300 focus:border-red-500 pr-12' : 'pr-12'}
-                       icon={<Lock className="w-4 h-4" />}
-                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {getFieldError('confirmPassword') && (
-                    <p className="text-red-600 text-xs">{getFieldError('confirmPassword')}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full h-12 text-base font-medium"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <LoadingSpinner size="sm" variant="white" />
-                    <span>Processing...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span>{modeConfig.buttonText}</span>
-                    {modeConfig.buttonIcon}
+                {/* Confirm Password for Register */}
+                {mode === 'register' && (
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: '6px'
+                    }}>
+                      Confirm Password
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={formData.confirmPassword}
+                        onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                        placeholder="Confirm Password"
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          paddingRight: '48px',
+                          border: `1px solid ${getFieldError('confirmPassword') ? '#f87171' : '#e5e7eb'}`,
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          backgroundColor: '#ffffff',
+                          outline: 'none',
+                          transition: 'border-color 0.2s ease',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#9ca3af'
+                        }}
+                      >
+                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {getFieldError('confirmPassword') && (
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#dc2626',
+                        margin: '4px 0 0 0'
+                      }}>
+                        {getFieldError('confirmPassword')}
+                      </p>
+                    )}
                   </div>
                 )}
-              </Button>
-            </form>
+              </>
+            )}
 
-            {/* Guest Mode Button */}
-            <div className="pt-4 border-t border-gray-200">
-              <Button
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                width: '100%',
+                padding: '12px 24px',
+                backgroundColor: '#1a1a1a',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                opacity: isSubmitting ? 0.6 : 1,
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              {isSubmitting ? (
+                <>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid #ffffff',
+                    borderTop: '2px solid transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                  {config.submitText}...
+                </>
+              ) : (
+                <>
+                  {config.submitText}
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Guest Login */}
+          {mode === 'login' && (
+            <div style={{ marginTop: '24px' }}>
+              <button
                 type="button"
-                variant="outline"
-                onClick={() => {
-                  loginAsGuest();
-                  console.log('AuthPage: Guest login clicked, redirect will happen automatically');
+                onClick={handleGuestLogin}
+                disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  padding: '12px 24px',
+                  backgroundColor: '#ffffff',
+                  color: '#1a1a1a',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  opacity: isSubmitting ? 0.6 : 1,
+                  transition: 'all 0.2s ease'
                 }}
-                className="w-full h-12 text-base font-medium border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400"
               >
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  <span>Continue as Guest</span>
-                </div>
-              </Button>
-              <p className="text-xs text-gray-500 mt-2 text-center">
+                Continue as Guest
+              </button>
+              <p style={{
+                fontSize: '12px',
+                color: '#6b7280',
+                textAlign: 'center',
+                margin: '8px 0 0 0'
+              }}>
                 Try NeutralApp without creating an account
               </p>
             </div>
+          )}
 
-            {/* Mode Switcher Links */}
-            <div className="space-y-3 pt-4 border-t border-gray-200">
-              {mode === 'login' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setMode('register')}
-                    className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    Don't have an account? <span className="font-medium">Sign up</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('reset')}
-                    className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    Forgot your password? <span className="font-medium">Reset it</span>
-                  </button>
-                </>
-              )}
-              {mode === 'register' && (
-                <button
-                  type="button"
-                  onClick={() => setMode('login')}
-                  className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Already have an account? <span className="font-medium">Sign in</span>
-                </button>
-              )}
-              {mode === 'reset' && (
-                <button
-                  type="button"
-                  onClick={() => setMode('login')}
-                  className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Remember your password? <span className="font-medium">Back to sign in</span>
-                </button>
-              )}
+          {/* Mode Switcher */}
+          <div style={{
+            marginTop: '24px',
+            textAlign: 'center'
+          }}>
+            <button
+              type="button"
+              onClick={() => setMode(config.switchMode)}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '14px',
+                color: '#6b7280',
+                cursor: 'pointer',
+                transition: 'color 0.2s ease'
+              }}
+            >
+              {config.switchText}{' '}
+              <span style={{
+                fontWeight: '600',
+                color: '#1a1a1a'
+              }}>
+                {config.switchAction}
+              </span>
+            </button>
+          </div>
+
+          {/* Forgot Password Link */}
+          {mode === 'login' && (
+            <div style={{
+              marginTop: '16px',
+              textAlign: 'center'
+            }}>
+              <button
+                type="button"
+                onClick={() => setMode('reset')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '14px',
+                  color: '#6b7280',
+                  cursor: 'pointer',
+                  transition: 'color 0.2s ease'
+                }}
+              >
+                Forgot your password?{' '}
+                <span style={{
+                  fontWeight: '600',
+                  color: '#1a1a1a'
+                }}>
+                  Reset it
+                </span>
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
 
-        {/* Demo Credentials - Only show in login mode */}
-        {mode === 'login' && (
-          <Card className="mt-6 shadow-lg border-0 bg-blue-50">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-blue-600" />
-                Demo Credentials
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Use these credentials for testing:
-              </p>
-              <div className="space-y-3">
-                <div className="bg-white rounded-lg p-3 border border-blue-200">
-                  <p className="text-sm font-medium text-gray-900 mb-1">Test User:</p>
-                  <div className="text-xs text-gray-600 space-y-1">
-                    <p>Email: <code className="bg-gray-100 px-1 rounded">test@example.com</code></p>
-                    <p>Password: <code className="bg-gray-100 px-1 rounded">password123</code></p>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-blue-200">
-                  <p className="text-sm font-medium text-gray-900 mb-1">Development User:</p>
-                  <div className="text-xs text-gray-600 space-y-1">
-                    <p>Email: <code className="bg-gray-100 px-1 rounded">any-valid-email@example.com</code></p>
-                    <p>Password: <code className="bg-gray-100 px-1 rounded">password123</code></p>
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
-                💡 These are demo credentials for testing purposes only.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        {/* Demo Credentials */}
+        <div style={{
+          marginTop: '24px',
+          backgroundColor: '#374151',
+          borderRadius: '12px',
+          padding: '20px'
+        }}>
+          <h3 style={{
+            fontSize: '14px',
+            fontWeight: '600',
+            color: '#d1d5db',
+            margin: '0 0 8px 0'
+          }}>
+            Demo Credentials
+          </h3>
+          <p style={{
+            fontSize: '12px',
+            color: '#9ca3af',
+            margin: '0 0 12px 0'
+          }}>
+            Use these credentials for testing:
+          </p>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            fontSize: '12px'
+          }}>
+            <div>
+              <span style={{ color: '#9ca3af' }}>Email:</span>{' '}
+              <code style={{
+                color: '#10b981',
+                backgroundColor: '#064e3b',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontSize: '11px'
+              }}>
+                test@example.com
+              </code>
+            </div>
+            <div>
+              <span style={{ color: '#9ca3af' }}>Password:</span>{' '}
+              <code style={{
+                color: '#10b981',
+                backgroundColor: '#064e3b',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontSize: '11px'
+              }}>
+                password123
+              </code>
+            </div>
+          </div>
+          <p style={{
+            fontSize: '12px',
+            color: '#6b7280',
+            margin: '12px 0 0 0'
+          }}>
+            💡 These are demo credentials for testing purposes only.
+          </p>
+        </div>
       </div>
     </div>
   );

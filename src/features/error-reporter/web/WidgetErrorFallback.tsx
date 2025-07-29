@@ -23,7 +23,7 @@ const getSeverityIcon = (severity: SecuritySeverity) => {
     case SecuritySeverity.MEDIUM:
       return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
     case SecuritySeverity.LOW:
-      return <AlertTriangle className="h-5 w-5 text-blue-500" />;
+      return <AlertTriangle className="h-5 w-5 text-info" />;
     default:
       return <AlertTriangle className="h-5 w-5 text-gray-500" />;
   }

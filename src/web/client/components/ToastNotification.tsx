@@ -79,7 +79,7 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
       case 'warning':
         return <AlertTriangle className={`${iconClasses} text-yellow-600`} />;
       case 'info':
-        return <Info className={`${iconClasses} text-blue-600`} />;
+        return <Info className={`${iconClasses} text-info`} />;
       default:
         return null;
     }
@@ -103,7 +103,7 @@ const ToastNotification: React.FC<ToastNotificationProps> = ({
   const getActionVariant = (variant?: string) => {
     switch (variant) {
       case 'primary':
-        return 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700';
+        return 'bg-info hover:bg-info/90 text-white border-info hover:border-info/90';
       case 'danger':
         return 'bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700';
       default:

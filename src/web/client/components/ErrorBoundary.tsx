@@ -114,7 +114,7 @@ class ErrorBoundary extends Component<Props, State> {
 
             {/* Recovery Status */}
             {this.state.isRecovering && (
-              <div className="flex flex-col items-center gap-3 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex flex-col items-center gap-3 mb-6 p-4 bg-info-light rounded-lg border border-info/20">
                 <div className="w-6 h-6 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
                 <p className="text-sm font-medium text-gray-700">Recovering...</p>
               </div>

@@ -71,11 +71,11 @@ const ErrorReportingInterface: React.FC<ErrorReportingInterfaceProps> = ({ class
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'text-red-600 bg-red-50 border-red-200';
-      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'medium': return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'low': return 'text-green-600 bg-green-50 border-green-200';
-      default: return 'text-blue-600 bg-blue-50 border-blue-200';
+      case 'critical': return 'text-error bg-error-light border-error/20';
+      case 'high': return 'text-warning bg-warning-light border-warning/20';
+      case 'medium': return 'text-info bg-info-light border-info/20';
+      case 'low': return 'text-success bg-success-light border-success/20';
+      default: return 'text-info bg-info-light border-info/20';
     }
   };
 
@@ -124,7 +124,7 @@ const ErrorReportingInterface: React.FC<ErrorReportingInterfaceProps> = ({ class
   return (
     <div className={`bg-white rounded-lg shadow-sm border border-border overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+      <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-white flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg">
@@ -214,9 +214,9 @@ const ErrorReportingInterface: React.FC<ErrorReportingInterfaceProps> = ({ class
               <Card className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-3 text-lg">
-                    <div className="p-2 bg-blue-50 rounded-lg">
-                      <Code className="w-5 h-5 text-blue-600" />
-                    </div>
+                                    <div className="p-2 bg-info-light rounded-lg">
+                  <Code className="w-5 h-5 text-info" />
+                </div>
                     Top Components
                   </CardTitle>
                 </CardHeader>
@@ -227,7 +227,7 @@ const ErrorReportingInterface: React.FC<ErrorReportingInterfaceProps> = ({ class
                     .map(([component, count]) => (
                       <div key={component} className="flex items-center justify-between">
                         <span className="font-medium truncate">{component}</span>
-                        <span className="font-semibold text-blue-600">{count}</span>
+                        <span className="font-semibold text-info">{count}</span>
                       </div>
                     ))}
                 </CardContent>
@@ -281,7 +281,7 @@ const ErrorReportingInterface: React.FC<ErrorReportingInterfaceProps> = ({ class
                       
                       <div className="space-y-3">
                         <div className="flex items-center gap-4 text-sm text-gray-medium">
-                          <span className="flex items-center gap-2 font-semibold text-blue-600">
+                          <span className="flex items-center gap-2 font-semibold text-info">
                             <Zap className="w-4 h-4" />
                             Occurred {error.count} times
                           </span>
@@ -320,7 +320,7 @@ const ErrorReportingInterface: React.FC<ErrorReportingInterfaceProps> = ({ class
                       <h4 className="text-lg font-semibold text-gray-dark">
                         Pattern: {suggestion.pattern.source}
                       </h4>
-                      <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-sm font-semibold uppercase">
+                      <span className="px-3 py-1 rounded-full bg-info-light text-info text-sm font-semibold uppercase">
                         {suggestion.action}
                       </span>
                     </div>

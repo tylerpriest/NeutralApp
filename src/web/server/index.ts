@@ -34,7 +34,9 @@ async function startFoundationServer() {
   }
 }
 
-if (require.main === module) {
+// Check if this module is being run directly
+const isMainModule = process.argv[1] && process.argv[1].endsWith('index.ts') || process.argv[1] && process.argv[1].endsWith('index.js');
+if (isMainModule) {
   startFoundationServer();
 }
 

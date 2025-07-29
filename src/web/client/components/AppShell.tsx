@@ -5,11 +5,26 @@ import Header from './Header';
 
 const AppShell: React.FC = () => {
   return (
-    <div className="app-shell">
+    <div style={{
+      display: 'flex',
+      height: '100vh',
+      backgroundColor: '#fafafa',
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    }}>
       <Navigation />
-      <div className="main-content">
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#ffffff'
+      }}>
         <Header />
-        <main className="content">
+        <main style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: '24px',
+          backgroundColor: '#fafafa'
+        }}>
           <Outlet />
         </main>
       </div>

@@ -57,7 +57,7 @@ describe('WelcomeScreen', () => {
       const secondaryButton = screen.getByRole('button', { name: /learn more/i });
       expect(secondaryButton).toBeInTheDocument();
       expect(secondaryButton).toHaveClass('border');
-      expect(secondaryButton).toHaveClass('bg-background');
+      expect(secondaryButton).toHaveClass('bg-white');
     });
 
     it('should navigate to plugin manager when primary CTA is clicked', () => {

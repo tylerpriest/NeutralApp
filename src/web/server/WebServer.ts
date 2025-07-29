@@ -110,7 +110,7 @@ export class WebServer {
     // Handle both development and production paths
     const buildPath = process.env.NODE_ENV === 'production' 
       ? path.join(__dirname, '../client')
-      : path.join(__dirname, '../../../src/dist/web/client');
+      : path.join(__dirname, '../../../dist/web/client');
     
     this.app.use(express.static(buildPath));
 

@@ -31,15 +31,15 @@ describe('AppShell', () => {
     expect(screen.getByTestId('header')).toBeInTheDocument();
   });
 
-  it('should have the correct CSS classes', () => {
+  it('should have the correct Tailwind CSS classes', () => {
     renderWithRouter(<AppShell />);
-    const appShell = screen.getByTestId('navigation').closest('.app-shell');
+    const appShell = screen.getByTestId('navigation').closest('[class*="flex h-screen bg-gray-50"]');
     expect(appShell).toBeInTheDocument();
     
-    const mainContent = screen.getByTestId('header').closest('.main-content');
+    const mainContent = screen.getByTestId('header').closest('[class*="flex-1 flex flex-col"]');
     expect(mainContent).toBeInTheDocument();
     
-    const content = mainContent?.querySelector('.content');
+    const content = mainContent?.querySelector('[class*="flex-1 overflow-auto"]');
     expect(content).toBeInTheDocument();
   });
 
@@ -56,7 +56,7 @@ describe('AppShell', () => {
   it('should render outlet for nested routes', () => {
     renderWithRouter(<AppShell />);
     // The Outlet component should be present in the content area
-    const content = screen.getByTestId('header').closest('.main-content')?.querySelector('.content');
+    const content = screen.getByTestId('header').closest('[class*="flex-1 flex flex-col"]')?.querySelector('[class*="flex-1 overflow-auto"]');
     expect(content).toBeInTheDocument();
   });
 }); 

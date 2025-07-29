@@ -4,7 +4,6 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  root: 'src/web/client',
   build: {
     outDir: path.resolve(__dirname, 'dist/web/client'),
     emptyOutDir: true,
@@ -81,7 +80,7 @@ export default defineConfig({
   },
   // Performance optimizations
   optimizeDeps: {
-            include: ['react', 'react-dom', 'react-router-dom'],
+    include: ['react', 'react-dom', 'react-router-dom'],
     exclude: ['@playwright/test'],
   },
   // Enable source maps for development
@@ -92,4 +91,7 @@ export default defineConfig({
   define: {
     __DEV__: process.env.NODE_ENV !== 'production',
   },
+  // Specify the entry point for development
+  root: '.',
+  publicDir: 'src/web/client/public',
 }); 

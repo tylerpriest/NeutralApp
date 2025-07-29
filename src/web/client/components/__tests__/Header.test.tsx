@@ -44,10 +44,13 @@ describe('Header', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
-  it('should have the correct CSS classes', () => {
+  it('should have the correct Tailwind CSS classes', () => {
     renderWithRouter(<Header />);
     const header = screen.getByRole('banner');
-    expect(header).toHaveClass('header');
+    expect(header).toHaveClass('h-16');
+    expect(header).toHaveClass('bg-white');
+    expect(header).toHaveClass('border-b');
+    expect(header).toHaveClass('border-gray-200');
   });
 
   it('should display page title', () => {
@@ -55,21 +58,27 @@ describe('Header', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
 
-  it('should render user menu', () => {
+  it('should render user menu with icon', () => {
     renderWithRouter(<Header />);
     expect(screen.getByText('Test User')).toBeInTheDocument();
+    // Check for user icon
+    const userIcon = screen.getByTestId('header').querySelector('svg');
+    expect(userIcon).toBeInTheDocument();
   });
 
-  it('should have logout functionality', () => {
+  it('should have logout functionality with icon', () => {
     renderWithRouter(<Header />);
-    const logoutButton = screen.getByText('Logout');
+    const logoutButton = screen.getByRole('button', { name: /logout/i });
     expect(logoutButton).toBeInTheDocument();
+    // Check for logout icon
+    const logoutIcon = logoutButton.querySelector('svg');
+    expect(logoutIcon).toBeInTheDocument();
   });
 
   it('should handle logout click', () => {
     renderWithRouter(<Header />);
     
-    const logoutButton = screen.getByText('Logout');
+    const logoutButton = screen.getByRole('button', { name: /logout/i });
     fireEvent.click(logoutButton);
     
     // In a real test, we would verify logout functionality
@@ -80,7 +89,7 @@ describe('Header', () => {
     renderWithRouter(<Header />);
     
     const header = screen.getByRole('banner');
-    expect(header).toHaveClass('header');
+    expect(header).toHaveClass('h-16'); // Fixed height
     
     // Test responsive behavior by checking if mobile classes are applied
     // This would require more sophisticated testing with different viewport sizes
@@ -92,5 +101,20 @@ describe('Header', () => {
     // The header should display some form of page title or breadcrumb
     const titleElement = screen.getByText('Dashboard');
     expect(titleElement).toBeInTheDocument();
+  });
+
+  it('should show guest mode badge when user is guest', () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      isAuthenticated: false,
+      isGuest: true,
+      isLoading: false,
+      logout: jest.fn(),
+    });
+
+    renderWithRouter(<Header />);
+    expect(screen.getByText('Guest User')).toBeInTheDocument();
+    expect(screen.getByText('Guest Mode')).toBeInTheDocument();
+    expect(screen.getByText('Exit Guest Mode')).toBeInTheDocument();
   });
 }); 
