@@ -92,14 +92,39 @@ export class WebServer {
   private setupRoutes(): void {
     // Health check endpoint
     this.app.get('/health', (req: Request, res: Response) => {
-      res.json({ 
+      const healthData = {
         status: 'healthy', 
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         version: '1.0.0',
-        architecture: 'feature-based modular'
-      });
+        architecture: 'feature-based modular',
+        mode: process.env.NODE_ENV || 'development',
+        hotReload: process.env.ENABLE_HOT_RELOAD === 'true'
+      };
+      
+      res.json(healthData);
     });
+
+    // Development server health check
+    if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_HOT_RELOAD === 'true') {
+      this.app.get('/health/dev-server', async (req: Request, res: Response) => {
+        try {
+          const response = await fetch('http://localhost:3001');
+          res.json({ 
+            status: 'healthy', 
+            devServer: 'running',
+            vitePort: 3001
+          });
+        } catch (error) {
+          res.status(503).json({ 
+            status: 'unhealthy', 
+            devServer: 'down',
+            error: 'Vite dev server not running',
+            message: 'Run: npm run dev:client'
+          });
+        }
+      });
+    }
 
     // JWT Authentication routes
     this.app.use('/api/auth', this.authRoutes.getRouter());
@@ -107,7 +132,7 @@ export class WebServer {
     // Other API routes
     this.app.use('/api', this.apiRouter.getRouter());
 
-    // Development mode: Proxy to Vite dev server for hot reloading
+        // Development mode: Proxy to Vite dev server for hot reloading
     if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_HOT_RELOAD === 'true') {
       console.log('🔥 Development mode: Proxying to Vite dev server for hot reloading');
       
