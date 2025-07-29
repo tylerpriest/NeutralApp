@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "A domain-agnostic, ultra-modular application shell",
   "main": "dist/index.js",
+  "type": "module",
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "scripts": {
     "build": "npm run build:client",
