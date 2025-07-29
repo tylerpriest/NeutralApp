@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('AuthContext: Guest mode in localStorage:', guestMode);
       
       if (guestMode === 'true') {
-        console.log('AuthContext: Setting guest mode');
+        console.log('AuthContext: Setting guest mode - THIS IS THE PROBLEM!');
         setIsGuest(true);
         setIsLoading(false);
         return;
@@ -107,6 +107,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log('AuthContext: Login attempt for:', email);
+    
+    // Clear any existing guest mode immediately
+    localStorage.removeItem('guest_mode');
+    setIsGuest(false);
+    console.log('AuthContext: Cleared guest mode at start of login');
     
     try {
       const response = await fetch('/api/auth/signin', {
