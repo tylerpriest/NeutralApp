@@ -2,7 +2,6 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 import { SimpleAPIRouter } from './SimpleAPIRouter';
 import { JWTAuthRoutes, JWTAuthMiddleware } from '../../features/auth';
 import { DashboardManager } from '../../features/ui-shell/services/dashboard.manager';
@@ -98,33 +97,13 @@ export class WebServer {
         uptime: process.uptime(),
         version: '1.0.0',
         architecture: 'feature-based modular',
-        mode: process.env.NODE_ENV || 'development',
-        hotReload: process.env.ENABLE_HOT_RELOAD === 'true'
+        mode: process.env.NODE_ENV || 'development'
       };
       
       res.json(healthData);
     });
 
-    // Development server health check
-    if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_HOT_RELOAD === 'true') {
-      this.app.get('/health/dev-server', async (req: Request, res: Response) => {
-        try {
-          const response = await fetch('http://localhost:3001');
-          res.json({ 
-            status: 'healthy', 
-            devServer: 'running',
-            vitePort: 3001
-          });
-        } catch (error) {
-          res.status(503).json({ 
-            status: 'unhealthy', 
-            devServer: 'down',
-            error: 'Vite dev server not running',
-            message: 'Run: npm run dev:client'
-          });
-        }
-      });
-    }
+
 
     // JWT Authentication routes
     this.app.use('/api/auth', this.authRoutes.getRouter());
@@ -132,42 +111,24 @@ export class WebServer {
     // Other API routes
     this.app.use('/api', this.apiRouter.getRouter());
 
-        // Development mode: Proxy to Vite dev server for hot reloading
-    if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_HOT_RELOAD === 'true') {
-      console.log('🔥 Development mode: Proxying to Vite dev server for hot reloading');
-      
-      // Proxy all non-API requests to Vite dev server
-      this.app.use('/', createProxyMiddleware({
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        ws: true, // Enable WebSocket proxying for HMR
-        pathFilter: (path) => {
-          // Don't proxy API routes or health checks
-          return !path.startsWith('/api/') && !path.startsWith('/health');
-        },
+        // Serve static files from React build (both development and production)
+    const buildPath = path.join(__dirname, '../client');
+    console.log(`📦 Serving static files from: ${buildPath}`);
+    
+    this.app.use(express.static(buildPath));
 
-      }));
-    } else {
-      // Production mode: Serve static files from React build
-      const buildPath = process.env.NODE_ENV === 'production' 
-        ? path.join(__dirname, '../client')
-        : path.join(__dirname, '../../../dist/web/client');
+    // React app catch-all handler (for client-side routing)
+    this.app.get('*', (req: Request, res: Response) => {
+      // Skip API routes
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+      }
       
-      this.app.use(express.static(buildPath));
-
-      // React app catch-all handler (for client-side routing)
-      this.app.get('*', (req: Request, res: Response) => {
-        // Skip API routes
-        if (req.path.startsWith('/api/')) {
-          return res.status(404).json({ error: 'API endpoint not found' });
-        }
-        
-        // Serve React app for all other routes
-        const indexPath = path.join(buildPath, 'index.html');
-        console.log(`📦 Serving React app from: ${indexPath}`);
-        return res.sendFile(indexPath);
-      });
-    }
+      // Serve React app for all other routes
+      const indexPath = path.join(buildPath, 'index.html');
+      console.log(`📦 Serving React app from: ${indexPath}`);
+      return res.sendFile(indexPath);
+    });
   }
 
   /**
