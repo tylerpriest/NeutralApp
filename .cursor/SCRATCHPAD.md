@@ -1,3 +1,6 @@
+Is there a way of testing for you to look at the dashboard with all the plugins installed and enabled and go huh this is badly laid out, ugly, unintuitive, bad UX we need to update this base on X design guide lines (whether ones we have or Material Design or Apple or Kindle or Notion or Plex or Stremio etc design guide lines)
+
+
 
 # What is the purpose here ? 
 

@@ -11,6 +11,14 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('User Story: Reading a Book', () => {
+  test.beforeEach(async ({ page }) => {
+    // Set up guest mode for testing
+    await page.addInitScript(() => {
+      localStorage.setItem('guest_mode', 'true');
+      localStorage.removeItem('auth_token');
+    });
+  });
+
   test('User can open a book and see the reading interface', async ({ page }) => {
     // Given: User is on the dashboard
     await page.goto('/dashboard');

@@ -11,13 +11,21 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('User Story: Basic Navigation', () => {
+  test.beforeEach(async ({ page }) => {
+    // Set up guest mode for testing
+    await page.addInitScript(() => {
+      localStorage.setItem('guest_mode', 'true');
+      localStorage.removeItem('auth_token');
+    });
+  });
+
   test('User can navigate to dashboard and see welcome screen', async ({ page }) => {
     // Given: User is on the application
     await page.goto('/dashboard');
-    
+
     // When: Page loads
     await page.waitForLoadState('networkidle');
-    
+
     // Then: User sees welcome screen
     await expect(page.getByText('Welcome to NeutralApp')).toBeVisible();
     await expect(page.getByText('Get started by installing your first plugin')).toBeVisible();
