@@ -63,5 +63,12 @@ Quick foundation check - if these fail, fix immediately and resume relentless pa
 
 ## Metadata
 priority: critical
+category: execution_philosophy
+scope: all_development
+enforcement: mandatory
+description: Relentless forward momentum ensuring continuous progress toward production-ready applications
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: true
 mode: relentless_always_forward
 philosophy: "relentless forward momentum"
+---

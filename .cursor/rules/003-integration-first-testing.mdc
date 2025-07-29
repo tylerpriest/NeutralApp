@@ -120,9 +120,10 @@ A feature is only "done" when:
 
 ## Metadata
 priority: critical
-category: testing_philosophy
-scope: all_testing
+category: testing_techniques
+scope: integration_testing
 enforcement: mandatory
-description: Integration-first testing approach
+description: Integration-first testing approach that prioritizes component cooperation over isolation
 globs: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"]
 alwaysApply: true
+---

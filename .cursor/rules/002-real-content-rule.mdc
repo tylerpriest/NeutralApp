@@ -194,6 +194,7 @@ priority: critical
 category: development_philosophy
 scope: all_features
 enforcement: mandatory
-description: Prevent generic placeholder anti-pattern
+description: Prevent generic placeholder anti-pattern and ensure real content delivery
 globs: ["**/*.tsx", "**/*.ts", "**/*.js", "**/*.jsx"]
 alwaysApply: true
+---

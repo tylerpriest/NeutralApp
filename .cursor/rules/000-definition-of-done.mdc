@@ -172,7 +172,12 @@ examples:
 
 metadata:
   priority: critical
+  category: project_workflow
+  scope: all_development
+  enforcement: strict
+  description: Enforces strict workflow with quality gates for production-ready development
+  globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+  alwaysApply: true
   version: 2.0
   type: kiro_workflow
-  enforcement: strict
-</rule>
+---
