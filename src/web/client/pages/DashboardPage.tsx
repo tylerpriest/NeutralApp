@@ -31,14 +31,44 @@ const DashboardPage: React.FC = () => {
           const installedPlugins = data.installed || [];
           
           // Create widgets for enabled plugins
-          const dashboardWidgets: Widget[] = installedPlugins
-            .filter((plugin: any) => plugin.status === 'enabled')
-            .map((plugin: any) => ({
-              id: `${plugin.id}-widget`,
-              pluginId: plugin.id,
-              title: `${plugin.name} Widget`,
-              size: { width: 2, height: 1 }
-            }));
+          const dashboardWidgets: Widget[] = [];
+          
+          for (const plugin of installedPlugins.filter((plugin: any) => plugin.status === 'enabled')) {
+            // Special handling for reading-core plugin which creates multiple widgets
+            if (plugin.id === 'reading-core') {
+              // Add library widget
+              dashboardWidgets.push({
+                id: 'reading-core-library',
+                pluginId: 'reading-core',
+                title: 'Book Library',
+                size: { width: 4, height: 3 }
+              });
+              
+              // Add recently read widget
+              dashboardWidgets.push({
+                id: 'reading-core-recent',
+                pluginId: 'reading-core-recent',
+                title: 'Recently Read',
+                size: { width: 2, height: 2 }
+              });
+            } else if (plugin.id.startsWith('reading-')) {
+              // Handle other reading plugins
+              dashboardWidgets.push({
+                id: `${plugin.id}-widget`,
+                pluginId: plugin.id,
+                title: `${plugin.name} Widget`,
+                size: { width: 2, height: 2 }
+              });
+            } else {
+              // Default widget for other plugins
+              dashboardWidgets.push({
+                id: `${plugin.id}-widget`,
+                pluginId: plugin.id,
+                title: `${plugin.name} Widget`,
+                size: { width: 2, height: 1 }
+              });
+            }
+          }
           
           setWidgets(dashboardWidgets);
           return;
@@ -49,14 +79,44 @@ const DashboardPage: React.FC = () => {
       
       // Fallback to mock data - check localStorage for installed plugins
       const installedPlugins = JSON.parse(localStorage.getItem('installed_plugins') || '[]');
-      const mockWidgets: Widget[] = installedPlugins
-        .filter((plugin: any) => plugin.enabled)
-        .map((plugin: any) => ({
-          id: `${plugin.id}-widget`,
-          pluginId: plugin.id,
-          title: `${plugin.name} Widget`,
-          size: { width: 2, height: 1 }
-        }));
+      const mockWidgets: Widget[] = [];
+      
+      for (const plugin of installedPlugins.filter((plugin: any) => plugin.enabled)) {
+        // Special handling for reading-core plugin which creates multiple widgets
+        if (plugin.id === 'reading-core') {
+          // Add library widget
+          mockWidgets.push({
+            id: 'reading-core-library',
+            pluginId: 'reading-core',
+            title: 'Book Library',
+            size: { width: 4, height: 3 }
+          });
+          
+          // Add recently read widget
+          mockWidgets.push({
+            id: 'reading-core-recent',
+            pluginId: 'reading-core-recent',
+            title: 'Recently Read',
+            size: { width: 2, height: 2 }
+          });
+        } else if (plugin.id.startsWith('reading-')) {
+          // Handle other reading plugins
+          mockWidgets.push({
+            id: `${plugin.id}-widget`,
+            pluginId: plugin.id,
+            title: `${plugin.name} Widget`,
+            size: { width: 2, height: 2 }
+          });
+        } else {
+          // Default widget for other plugins
+          mockWidgets.push({
+            id: `${plugin.id}-widget`,
+            pluginId: plugin.id,
+            title: `${plugin.name} Widget`,
+            size: { width: 2, height: 1 }
+          });
+        }
+      }
       
       setWidgets(mockWidgets);
     } catch (error) {

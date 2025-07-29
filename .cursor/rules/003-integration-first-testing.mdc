@@ -1,0 +1,128 @@
+# Integration-First Testing Rule
+
+## Core Principle
+**TEST INTEGRATION BEFORE ISOLATION** - Start with how components work together, not how they work alone. Integration tests catch real problems; unit tests catch theoretical problems.
+
+## Testing Hierarchy (Priority Order)
+
+### 1. **Integration Tests (HIGHEST PRIORITY)**
+```typescript
+// ✅ CORRECT: Test how components work together
+test('User can see reading widgets on dashboard', async () => {
+  // Mock real plugin installation
+  mockInstalledPlugins([{ id: 'reading-core', status: 'enabled' }]);
+  
+  render(<DashboardPage />);
+  
+  // Test the full integration
+  await waitFor(() => {
+    expect(screen.getByText('📚 Book Library')).toBeInTheDocument();
+    expect(screen.getByText('🕒 Recently Read')).toBeInTheDocument();
+  });
+});
+```
+
+### 2. **End-to-End Tests (HIGH PRIORITY)**
+```typescript
+// ✅ CORRECT: Test complete user journey
+test('User installs plugin and sees widgets', async () => {
+  // Test the entire flow
+  await installPlugin('reading-core');
+  await navigateToDashboard();
+  await expectWidgetsToAppear();
+});
+```
+
+### 3. **Unit Tests (LOWER PRIORITY)**
+```typescript
+// ✅ CORRECT: Only after integration tests pass
+test('Widget handles empty data gracefully', () => {
+  render(<Widget data={null} />);
+  expect(screen.getByText('No data available')).toBeInTheDocument();
+});
+```
+
+## Implementation Strategy
+
+### Step 1: Integration Tests
+```typescript
+// Start here - test the full integration
+describe('Dashboard Integration', () => {
+  test('shows reading widgets when plugin installed', async () => {
+    // Test the real scenario
+  });
+  
+  test('shows welcome screen when no plugins', async () => {
+    // Test the real scenario
+  });
+});
+```
+
+### Step 2: Component Integration Tests
+```typescript
+// Test how components work together
+describe('Widget Factory Integration', () => {
+  test('renders correct widgets for each plugin', () => {
+    // Test widget factory with real plugin IDs
+  });
+});
+```
+
+### Step 3: Unit Tests (Only After Integration Passes)
+```typescript
+// Only write unit tests after integration works
+describe('Individual Widget Tests', () => {
+  test('handles edge cases', () => {
+    // Test specific edge cases
+  });
+});
+```
+
+## Anti-Patterns to Avoid
+
+### 1. **Mock Data Dependency**
+```typescript
+// ❌ ANTI-PATTERN: Tests that always pass with mock data
+const mockData = { /* always works */ };
+render(<Component data={mockData} />);
+```
+
+### 2. **Isolation-Only Testing**
+```typescript
+// ❌ ANTI-PATTERN: Only test components in isolation
+test('Component renders', () => {
+  render(<Component />);
+  // No integration testing
+});
+```
+
+### 3. **Happy Path Only**
+```typescript
+// ❌ ANTI-PATTERN: Only test success scenarios
+test('Component works with data', () => {
+  // No failure scenario testing
+});
+```
+
+## Success Metrics
+
+### Quality Gates:
+- ✅ Integration tests pass with real data
+- ✅ End-to-end user journeys work
+- ✅ Failure scenarios are handled gracefully
+
+### Definition of Done:
+A feature is only "done" when:
+1. Integration tests pass with real scenarios
+2. End-to-end tests verify user journey
+3. Failure scenarios are tested and handled
+4. Unit tests cover edge cases
+
+## Metadata
+priority: critical
+category: testing_philosophy
+scope: all_testing
+enforcement: mandatory
+description: Integration-first testing approach
+globs: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"]
+alwaysApply: true

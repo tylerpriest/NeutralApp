@@ -60,31 +60,8 @@ const RecentlyReadWidget: React.FC<RecentlyReadWidgetProps> = ({
           setRecentBooks(recent);
         }
       } else {
-        // Fallback mock data for development
-        setRecentBooks([
-          {
-            id: '1',
-            title: 'Clean Code',
-            author: 'Robert Martin',
-            categories: ['Technical'],
-            readingProgress: { 
-              currentPosition: 0.45, 
-              isCompleted: false,
-              lastReadDate: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
-            }
-          },
-          {
-            id: '2',
-            title: 'The Pragmatic Programmer',
-            author: 'Hunt & Thomas',
-            categories: ['Technical'],
-            readingProgress: { 
-              currentPosition: 1.0, 
-              isCompleted: true,
-              lastReadDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 1 day ago
-            }
-          }
-        ]);
+        // No plugin API available - show empty state (Real Content or Fail Fast)
+        setRecentBooks([]);
       }
     } catch (error) {
       console.error('Failed to load recent books:', error);

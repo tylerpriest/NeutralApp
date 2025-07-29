@@ -70,28 +70,13 @@ const ReadingLibraryWidget: React.FC<ReadingLibraryWidgetProps> = ({
           setStats(libraryStats);
         }
       } else {
-        // Fallback mock data for development
-        setBooks([
-          {
-            id: '1',
-            title: 'The Art of Programming',
-            author: 'Jane Developer',
-            categories: ['Technical'],
-            readingProgress: { currentPosition: 0.65, isCompleted: false }
-          },
-          {
-            id: '2',
-            title: 'Design Patterns',
-            author: 'Gang of Four',
-            categories: ['Technical'],
-            readingProgress: { currentPosition: 1.0, isCompleted: true }
-          }
-        ]);
+        // No plugin API available - show empty state (Real Content or Fail Fast)
+        setBooks([]);
         setStats({
-          totalBooks: 12,
-          completedBooks: 8,
-          inProgressBooks: 3,
-          totalReadingTime: 240
+          totalBooks: 0,
+          completedBooks: 0,
+          inProgressBooks: 0,
+          totalReadingTime: 0
         });
       }
     } catch (error) {

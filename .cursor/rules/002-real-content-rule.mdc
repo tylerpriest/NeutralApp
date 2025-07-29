@@ -1,0 +1,199 @@
+# Real Content Rule - Prevent Generic Placeholder Anti-Pattern
+
+## Core Principle
+**REAL CONTENT OR FAIL FAST** - Never ship generic placeholders, fallbacks, or mock content to production. If a feature can't show real content, it should fail visibly and immediately.
+
+## The Anti-Pattern: "Generic Widget Syndrome"
+
+### What Happened
+- Widgets showed "Plugin widget content will appear here." instead of actual reading library
+- Dashboard displayed "Reading Core Widget" instead of "📚 Book Library"
+- Components rendered generic placeholders instead of real functionality
+- Tests passed because they only tested isolated components, not integration
+
+### Root Cause Analysis
+1. **Isolation Testing**: Only tested components in isolation
+2. **Mock Data Dependency**: Relied on mock data that didn't reflect real state
+3. **Fallback Logic**: Generic fallbacks masked missing functionality
+4. **Integration Blind Spots**: No tests for component interactions
+5. **Production vs Development Gap**: What worked in dev didn't work in production
+
+## High-Level Anti-Patterns to Prevent
+
+### 1. **The Placeholder Trap**
+```typescript
+// ❌ ANTI-PATTERN: Generic placeholders
+return <div>Plugin widget content will appear here.</div>
+
+// ✅ CORRECT: Real content or explicit failure
+if (!realData) {
+  return <div>No data available</div> // Explicit, not generic
+}
+```
+
+### 2. **The Mock Data Mirage**
+```typescript
+// ❌ ANTI-PATTERN: Tests pass with mock data, fail in reality
+const mockData = { books: [...], stats: {...} }; // Always works in tests
+
+// ✅ CORRECT: Test with real data flow
+test('should load real data from API', async () => {
+  mockAPI({ installed: [] }); // Test real scenarios
+  expect(screen.getByText('Welcome to NeutralApp')).toBeInTheDocument();
+});
+```
+
+### 3. **The Fallback Fallacy**
+```typescript
+// ❌ ANTI-PATTERN: Generic fallbacks hide real issues
+if (pluginId === 'reading-core') {
+  return <ReadingWidget />;
+} else {
+  return <GenericWidget />; // Hides missing implementation
+}
+
+// ✅ CORRECT: Explicit handling or failure
+if (pluginId === 'reading-core') {
+  return <ReadingWidget />;
+} else {
+  throw new Error(`No handler for plugin: ${pluginId}`); // Fail fast
+}
+```
+
+### 4. **The Integration Blind Spot**
+```typescript
+// ❌ ANTI-PATTERN: Only test components in isolation
+test('Widget renders', () => {
+  render(<Widget data={mockData} />);
+  expect(screen.getByText('Widget')).toBeInTheDocument();
+});
+
+// ✅ CORRECT: Test full integration
+test('Widget appears on dashboard with real data', async () => {
+  render(<DashboardPage />);
+  await waitFor(() => {
+    expect(screen.getByText('Real Widget Content')).toBeInTheDocument();
+  });
+});
+```
+
+## Development Rules
+
+### Rule 1: **Fail Fast, Not Gracefully**
+- If a feature can't work, make it fail visibly
+- Don't hide problems behind generic placeholders
+- Users should see "Feature not available" not "Generic content"
+
+### Rule 2: **Real Data or No Data**
+- Never use mock data in production code paths
+- If data isn't available, show explicit empty states
+- Test with real data scenarios, not just happy paths
+
+### Rule 3: **Integration Testing is Mandatory**
+- Every feature must have integration tests
+- Test component interactions, not just isolation
+- Verify end-to-end user journeys
+
+### Rule 4: **No Generic Fallbacks**
+- Don't create generic "catch-all" components
+- Each plugin/widget should have explicit handling
+- If no handler exists, throw an error
+
+### Rule 5: **Production Parity**
+- What works in development must work in production
+- Test with real plugin installation states
+- Verify actual data flows, not mock scenarios
+
+## Implementation Checklist
+
+### Before Creating Any Feature:
+- [ ] Define what "real content" looks like
+- [ ] Plan how to handle missing data explicitly
+- [ ] Design integration tests for the full flow
+- [ ] Plan failure scenarios and error states
+
+### Before Merging Any Code:
+- [ ] Feature shows real content, not placeholders
+- [ ] Integration tests pass with real data
+- [ ] No generic fallbacks in production code
+- [ ] Failure states are explicit and user-friendly
+
+### Before Deploying:
+- [ ] Test with actual plugin installation states
+- [ ] Verify real data flows work end-to-end
+- [ ] No generic placeholders visible to users
+- [ ] Error states are informative, not generic
+
+## Detection Methods
+
+### Code Review Red Flags:
+```typescript
+// 🚨 RED FLAGS - Look for these patterns:
+"Plugin widget content will appear here."
+"Generic Widget"
+"Placeholder content"
+"Mock data"
+"Fallback component"
+```
+
+### Test Red Flags:
+```typescript
+// 🚨 RED FLAGS - Tests that only use mock data:
+const mockData = { /* always works */ };
+render(<Component data={mockData} />);
+// No integration testing
+// No real API testing
+```
+
+### Production Red Flags:
+- Generic placeholder text visible to users
+- Components that always show the same content
+- Features that work in dev but not production
+- No error handling for missing data
+
+## Prevention Strategies
+
+### 1. **Integration-First Development**
+- Start with integration tests, not unit tests
+- Test the full user journey first
+- Build components to work together, not in isolation
+
+### 2. **Real Data Testing**
+- Test with actual plugin installation states
+- Use real API responses, not just mocks
+- Test both success and failure scenarios
+
+### 3. **Explicit Error Handling**
+- Don't hide errors behind generic content
+- Make failure states explicit and informative
+- Users should know when something isn't working
+
+### 4. **Production Parity Testing**
+- Test with the same data as production
+- Verify real plugin installation flows
+- Test actual user scenarios, not just happy paths
+
+## Success Metrics
+
+### Quality Gates:
+- ✅ No generic placeholder text in production
+- ✅ All features show real content or explicit errors
+- ✅ Integration tests pass with real data
+- ✅ Users never see "Plugin widget content will appear here."
+
+### Definition of Done:
+A feature is only "done" when:
+1. Shows real content, not placeholders
+2. Handles missing data explicitly
+3. Integration tests pass with real scenarios
+4. No generic fallbacks in production code
+5. Error states are user-friendly and informative
+
+## Metadata
+priority: critical
+category: development_philosophy
+scope: all_features
+enforcement: mandatory
+description: Prevent generic placeholder anti-pattern
+globs: ["**/*.tsx", "**/*.ts", "**/*.js", "**/*.jsx"]
+alwaysApply: true

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useParams } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import AuthGuard from './components/AuthGuard';
 import AppShell from './components/AppShell';
@@ -13,6 +13,13 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PluginManagerPage = lazy(() => import('./pages/PluginManagerPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
+const ReadingInterface = lazy(() => import('./components/ReadingInterface'));
+
+// Wrapper component to handle URL params for ReadingInterface
+const ReadingInterfaceWrapper: React.FC = () => {
+  const { bookId } = useParams<{ bookId: string }>();
+  return <ReadingInterface bookId={bookId || 'demo'} />;
+};
 
 const App: React.FC = () => {
   return (
@@ -35,6 +42,10 @@ const App: React.FC = () => {
                   <Route path="plugins" element={<PluginManagerPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="admin" element={<AdminPage />} />
+                  <Route path="reader" element={<ReadingInterfaceWrapper />} />
+                  <Route path="reader/book/:bookId" element={<ReadingInterfaceWrapper />} />
+                  <Route path="reader/import" element={<div>Import Books Page</div>} />
+                  <Route path="reader/library" element={<div>Library Page</div>} />
                 </Route>
               </Routes>
             </Suspense>
