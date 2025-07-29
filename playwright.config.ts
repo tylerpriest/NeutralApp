@@ -4,7 +4,9 @@ import { defineConfig, devices } from '@playwright/test';
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: './tests',
+  testMatch: '**/*.{test,spec}.{js,ts}',
+  testIgnore: '**/node_modules/**',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -15,8 +17,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    ['list'], // Console output for immediate feedback
-  // ['html', { outputFolder: 'playwright-report' }] // Rich reports for debugging
+    ['list'], // Real-time console output for immediate feedback
+    ['html', { outputFolder: 'playwright-report' }], // Rich reports for debugging
+    ['json', { outputFile: 'test-results/playwright-results.json' }] // JSON results for analysis
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -62,6 +65,7 @@ export default defineConfig({
   
   /* Run your local dev server before starting the tests */
   /* This enables running tests outside of Cursor IDE when MCP is not available */
+  /* Commented out since we're running the server manually
   webServer: {
     command: 'NODE_ENV=test npm run dev',
     url: 'http://localhost:3000',
@@ -72,4 +76,5 @@ export default defineConfig({
       NODE_ENV: 'test'
     }
   },
+  */
 }); 

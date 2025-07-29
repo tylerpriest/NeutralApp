@@ -19,8 +19,6 @@ export default defineConfig({
           // Vendor chunks for better caching
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
-          auth: [],
-          utils: ['cors', 'helmet'],
         },
         // Optimize chunk naming for better caching
         chunkFileNames: (chunkInfo) => {

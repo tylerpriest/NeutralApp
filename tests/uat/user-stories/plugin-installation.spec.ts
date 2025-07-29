@@ -10,7 +10,7 @@
 
 import { test, expect } from '@playwright/test';
 
-describe('User Story: Plugin Installation', () => {
+test.describe('User Story: Plugin Installation', () => {
   test('User can discover, install, and immediately use a plugin', async ({ page }) => {
     // Given: User is on dashboard and wants to add functionality
     await page.goto('/dashboard');

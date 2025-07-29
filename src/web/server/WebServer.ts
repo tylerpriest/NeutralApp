@@ -38,14 +38,14 @@ export class WebServer {
   private setupMiddleware(): void {
     // Security middleware
     this.app.use(helmet({
-      contentSecurityPolicy: {
+      contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
         directives: {
           defaultSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           scriptSrc: ["'self'"],
           imgSrc: ["'self'", "data:", "https:"],
         },
-      },
+      } : false,
     }));
 
     // CORS configuration
@@ -124,7 +124,7 @@ export class WebServer {
         return res.status(404).json({ error: 'API endpoint not found' });
       }
       
-      // Serve React app for all other routes
+      // Serve React app for all other routes (static files will be handled by express.static)
       const indexPath = path.join(buildPath, 'index.html');
       console.log(`📦 Serving React app from: ${indexPath}`);
       return res.sendFile(indexPath);

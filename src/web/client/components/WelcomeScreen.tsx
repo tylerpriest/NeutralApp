@@ -14,6 +14,14 @@ const WelcomeScreen: React.FC = () => {
     window.open('https://github.com/your-org/neutral-app', '_blank');
   };
 
+  const handleSettings = () => {
+    navigate('/settings');
+  };
+
+  const handleAdmin = () => {
+    navigate('/admin');
+  };
+
   return (
     <div style={{
       display: 'flex',
@@ -87,21 +95,25 @@ const WelcomeScreen: React.FC = () => {
           flexWrap: 'wrap',
           justifyContent: 'center'
         }}>
-          <button style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 24px',
-            backgroundColor: '#1a1a1a',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }} onClick={handleBrowsePlugins}>
+          <button 
+            data-testid="browse-plugins"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 24px',
+              backgroundColor: '#1a1a1a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }} 
+            onClick={handleBrowsePlugins}
+          >
             <Package size={18} />
             Browse Plugins
           </button>
@@ -122,6 +134,57 @@ const WelcomeScreen: React.FC = () => {
           }} onClick={handleLearnMore}>
             <BookOpen size={18} />
             Learn More
+          </button>
+        </div>
+
+        {/* Navigation Links */}
+        <div style={{
+          display: 'flex',
+          gap: '16px',
+          marginBottom: '32px',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <button 
+            data-testid="settings-link"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              backgroundColor: 'transparent',
+              color: '#6b7280',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }} 
+            onClick={handleSettings}
+          >
+            ⚙️ Settings
+          </button>
+          
+          <button 
+            data-testid="admin-link"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              backgroundColor: 'transparent',
+              color: '#6b7280',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }} 
+            onClick={handleAdmin}
+          >
+            🔧 Admin
           </button>
         </div>
 

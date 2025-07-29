@@ -312,6 +312,129 @@ export class QualityGates {
   }
 
   /**
+   * Check User Acceptance Test pass rate (Executable Specifications)
+   */
+  async checkUATPassRate(): Promise<QualityGateResult> {
+    try {
+      const uatResultsPath = 'test-results/uat-results.json';
+      if (!fs.existsSync(uatResultsPath)) {
+        return {
+          name: 'UAT Pass Rate (Executable Specifications)',
+          passed: false,
+          value: 0,
+          threshold: 100, // UAT must pass 100% - these are executable specifications
+          message: '❌ No UAT results found - missing executable specifications'
+        };
+      }
+
+      const uatResults = JSON.parse(fs.readFileSync(uatResultsPath, 'utf8'));
+      const total = uatResults.numTotalTests || 0;
+      const passed = uatResults.numPassedTests || 0;
+      const passRate = total > 0 ? (passed / total) * 100 : 0;
+
+      return {
+        name: 'UAT Pass Rate (Executable Specifications)',
+        passed: passRate === 100, // UAT must pass 100%
+        value: Math.round(passRate * 100) / 100,
+        threshold: 100,
+        message: passRate === 100 
+          ? `✅ UAT pass rate: ${passRate.toFixed(1)}% (100% required for executable specifications)`
+          : `❌ UAT pass rate: ${passRate.toFixed(1)}% (100% required for executable specifications)`
+      };
+    } catch (error) {
+      return {
+        name: 'UAT Pass Rate (Executable Specifications)',
+        passed: false,
+        value: 0,
+        threshold: 100,
+        message: '❌ Failed to read UAT results'
+      };
+    }
+  }
+
+  /**
+   * Check business value delivery (Value-Driven Testing)
+   */
+  async checkBusinessValueDelivery(): Promise<QualityGateResult> {
+    try {
+      const businessResultsPath = 'test-results/business-outcomes.json';
+      if (!fs.existsSync(businessResultsPath)) {
+        return {
+          name: 'Business Value Delivery',
+          passed: false,
+          value: 0,
+          threshold: 90,
+          message: '❌ No business outcome results found'
+        };
+      }
+
+      const businessResults = JSON.parse(fs.readFileSync(businessResultsPath, 'utf8'));
+      const outcomes = businessResults.outcomes || [];
+      const successfulOutcomes = outcomes.filter((o: any) => o.passed).length;
+      const successRate = outcomes.length > 0 ? (successfulOutcomes / outcomes.length) * 100 : 0;
+
+      return {
+        name: 'Business Value Delivery',
+        passed: successRate >= 90,
+        value: Math.round(successRate * 100) / 100,
+        threshold: 90,
+        message: successRate >= 90 
+          ? `✅ Business value delivery: ${successRate.toFixed(1)}% (>= 90%)`
+          : `❌ Business value delivery: ${successRate.toFixed(1)}% (< 90%)`
+      };
+    } catch (error) {
+      return {
+        name: 'Business Value Delivery',
+        passed: false,
+        value: 0,
+        threshold: 90,
+        message: '❌ Failed to read business outcome results'
+      };
+    }
+  }
+
+  /**
+   * Check executable specification coverage
+   */
+  async checkExecutableSpecCoverage(): Promise<QualityGateResult> {
+    try {
+      const specResultsPath = 'test-results/executable-specs.json';
+      if (!fs.existsSync(specResultsPath)) {
+        return {
+          name: 'Executable Specification Coverage',
+          passed: false,
+          value: 0,
+          threshold: 100,
+          message: '❌ No executable specification results found'
+        };
+      }
+
+      const specResults = JSON.parse(fs.readFileSync(specResultsPath, 'utf8'));
+      const total = specResults.numTotalTests || 0;
+      const passed = specResults.numPassedTests || 0;
+      const passRate = total > 0 ? (passed / total) * 100 : 0;
+
+      return {
+        name: 'Executable Specification Coverage',
+        passed: passRate === 100,
+        value: Math.round(passRate * 100) / 100,
+        threshold: 100,
+        message: passRate === 100 
+          ? `✅ Executable specification coverage: ${passRate.toFixed(1)}% (100% required)`
+          : `❌ Executable specification coverage: ${passRate.toFixed(1)}% (100% required)`
+      };
+    } catch (error) {
+      return {
+        name: 'Executable Specification Coverage',
+        passed: false,
+        value: 0,
+        threshold: 100,
+        message: '❌ Failed to read executable specification results'
+      };
+    }
+  }
+
+  /**
    * Run all quality gates
    */
   async runAllGates(): Promise<QualityReport> {
@@ -320,6 +443,9 @@ export class QualityGates {
     // Run all quality checks
     const tsCompilation = await this.checkTypeScriptCompilation();
     const testPassRate = await this.checkTestPassRate();
+    const uatPassRate = await this.checkUATPassRate();
+    const businessValue = await this.checkBusinessValueDelivery();
+    const executableSpecs = await this.checkExecutableSpecCoverage();
     const coverageResults = await this.checkCodeCoverage();
     const security = await this.checkSecurityVulnerabilities();
     const bundleSize = await this.checkBundleSize();
@@ -329,6 +455,9 @@ export class QualityGates {
     this.results = [
       tsCompilation,
       testPassRate,
+      uatPassRate,
+      businessValue,
+      executableSpecs,
       ...coverageResults,
       security,
       bundleSize,

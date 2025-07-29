@@ -6,7 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 
-describe('Business Outcome: Dashboard Value', () => {
+test.describe('Business Outcome: Dashboard Value', () => {
   test('New user can achieve first value within 5 minutes', async ({ page }) => {
     const startTime = Date.now();
     
