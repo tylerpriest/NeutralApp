@@ -1,6 +1,12 @@
 /**
  * Reading Interface - Beautiful, Uncluttered Design
  * Best practice implementation focused on reading experience
+ * 
+ * TODO: Modernize this component to use Tailwind classes instead of inline styles
+ * - Replace all inline styles with Tailwind utility classes
+ * - Improve responsive design with proper breakpoints
+ * - Add modern UI patterns and better visual hierarchy
+ * - Ensure accessibility compliance
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -17,6 +23,7 @@ import {
   Minimize2,
   BookOpen
 } from 'lucide-react';
+import { demoBookService, DemoBook } from '../services/DemoBookService';
 
 interface Book {
   id: string;
@@ -104,48 +111,45 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
     try {
       setLoading(true);
       
-      if (pluginAPI?.getPluginAPI) {
-        const readingAPI = pluginAPI.getPluginAPI('reading-core');
-        if (readingAPI) {
-          const bookData = await readingAPI.library.getBook(bookId);
-          if (bookData) {
-            setBook(bookData);
-          }
-        }
-      } else {
-        // Mock data for development
-        setBook({
-          id: bookId,
-          title: 'The Art of Programming',
-          author: 'Jane Developer',
-          content: `
-            <h1>Chapter 1: The Beginning</h1>
-            <p>Welcome to the wonderful world of programming! This is a sample book to demonstrate the reading interface. You can now read books in a beautiful, distraction-free environment.</p>
-            
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-            
-            <h2>Getting Started</h2>
-            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-            
-            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
-            
-            <h2>Key Concepts</h2>
-            <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
-            
-            <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.</p>
-            
-            <h2>Advanced Topics</h2>
-            <p>Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio.</p>
-            
-            <p>Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus.</p>
-          `,
-          readingProgress: {
-            currentPosition: 0.25,
-            currentChapter: 1,
-            bookmarks: []
-          }
-        });
+      // Try to load from demo book service first
+      const demoBook = await demoBookService.getBook(bookId);
+      if (demoBook) {
+        setBook(demoBook);
+        setLoading(false);
+        return;
       }
+
+      // Fallback to plugin API if demo book not found
+      if (pluginAPI) {
+        try {
+          const readingAPI = pluginAPI.getPluginAPI('reading-core');
+          if (readingAPI) {
+            const bookData = await readingAPI.library.getBook(bookId);
+            if (bookData) {
+              setBook(bookData);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load book from plugin API:', error);
+        }
+      }
+
+      // Final fallback to mock data
+      const mockBook: Book = {
+        id: bookId,
+        title: 'Test Book',
+        author: 'Test Author',
+        content: 'This is the content of the test book. It contains multiple paragraphs and sentences for testing the reading interface.',
+        readingProgress: {
+          currentPosition: 0.25,
+          currentChapter: 1,
+          bookmarks: []
+        }
+      };
+      
+      setBook(mockBook);
     } catch (error) {
       console.error('Failed to load book:', error);
     } finally {
@@ -189,70 +193,42 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
   };
 
   const addBookmark = async () => {
-    if (!book || !pluginAPI?.getPluginAPI) return;
+    if (!book) return;
     
     try {
-      const readingAPI = pluginAPI.getPluginAPI('reading-core');
-      if (readingAPI) {
-        await readingAPI.library.addBookmark(book.id, {
-          position: book.readingProgress.currentPosition,
-          text: 'Bookmarked section',
-          note: ''
-        });
-        // Reload book to get updated bookmarks
-        loadBook();
+      // Try demo book service first
+      await demoBookService.addBookmark(book.id, {
+        position: book.readingProgress.currentPosition,
+        text: 'Bookmarked section',
+        note: ''
+      });
+      
+      // Also try plugin API if available
+      if (pluginAPI) {
+        const readingAPI = pluginAPI.getPluginAPI('reading-core');
+        if (readingAPI) {
+          await readingAPI.library.addBookmark(book.id, {
+            position: book.readingProgress.currentPosition,
+            text: 'Bookmarked section',
+            note: ''
+          });
+        }
       }
+      
+      // Reload book to get updated bookmarks
+      loadBook();
     } catch (error) {
       console.error('Failed to add bookmark:', error);
     }
   };
 
-  const getThemeStyles = () => {
-    switch (settings.theme) {
-      case 'dark':
-        return {
-          backgroundColor: '#1F2937',
-          color: '#F9FAFB',
-          controlsBg: 'rgba(31, 41, 55, 0.9)',
-          settingsBg: '#374151'
-        };
-      case 'sepia':
-        return {
-          backgroundColor: '#FEF7E0',
-          color: '#78350F',
-          controlsBg: 'rgba(254, 247, 224, 0.9)',
-          settingsBg: '#FED7AA'
-        };
-      default: // light
-        return {
-          backgroundColor: '#FFFFFF',
-          color: '#1F2937',
-          controlsBg: 'rgba(255, 255, 255, 0.9)',
-          settingsBg: '#F9FAFB'
-        };
-    }
-  };
-
-  const themeStyles = getThemeStyles();
-
   if (loading) {
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: themeStyles.backgroundColor,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999
-      }}>
-        <div style={{ textAlign: 'center', color: themeStyles.color }}>
-          <BookOpen size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
-          <div style={{ fontSize: '18px', marginBottom: '8px' }}>Loading book...</div>
-          <div style={{ fontSize: '14px', opacity: 0.7 }}>Preparing your reading experience</div>
+      <div className="fixed inset-0 bg-white dark:bg-gray-800 flex items-center justify-center z-50">
+        <div className="text-center text-gray-900 dark:text-gray-100">
+          <BookOpen size={48} className="mb-4 opacity-50 mx-auto" />
+          <div className="text-lg mb-2">Loading book...</div>
+          <div className="text-sm opacity-70">Preparing your reading experience</div>
         </div>
       </div>
     );
@@ -260,30 +236,12 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
 
   if (!book) {
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: themeStyles.backgroundColor,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999
-      }}>
-        <div style={{ textAlign: 'center', color: themeStyles.color }}>
-          <div style={{ fontSize: '18px', marginBottom: '16px' }}>Book not found</div>
+      <div className="fixed inset-0 bg-white dark:bg-gray-800 flex items-center justify-center z-50">
+        <div className="text-center text-gray-900 dark:text-gray-100">
+          <div className="text-lg mb-4">Book not found</div>
           <button
             onClick={onClose}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#3B82F6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer'
-            }}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
           >
             Go Back
           </button>
@@ -293,84 +251,61 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: themeStyles.backgroundColor,
-      color: themeStyles.color,
-      zIndex: 9999,
-      transition: 'all 0.3s ease'
-    }}>
+    <div className={`fixed inset-0 z-50 transition-all duration-300 ${
+      settings.theme === 'dark' ? 'bg-gray-800 text-gray-100' :
+      settings.theme === 'sepia' ? 'bg-amber-50 text-amber-900' :
+      'bg-white text-gray-900'
+    }`}>
       {/* Top Controls Bar */}
       <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '60px',
-          background: themeStyles.controlsBg,
-          backdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 20px',
-          opacity: showControls ? 1 : 0,
-          transform: showControls ? 'translateY(0)' : 'translateY(-100%)',
-          transition: 'all 0.3s ease',
-          zIndex: 10
-        }}
+        className={`fixed top-0 left-0 right-0 h-15 flex items-center justify-between px-5 transition-all duration-300 z-10 backdrop-blur-md ${
+          showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'
+        } ${
+          settings.theme === 'dark' ? 'bg-gray-800/90' :
+          settings.theme === 'sepia' ? 'bg-amber-50/90' :
+          'bg-white/90'
+        }`}
       >
         {/* Left Side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="flex items-center gap-4">
           <button
             onClick={onClose}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 12px',
-              backgroundColor: 'transparent',
-              border: `1px solid ${themeStyles.color}20`,
-              borderRadius: '6px',
-              color: themeStyles.color,
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
+            aria-label="Close reading interface"
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+              settings.theme === 'dark' ? 'border-gray-600 text-gray-100 hover:bg-gray-700' :
+              settings.theme === 'sepia' ? 'border-amber-300 text-amber-900 hover:bg-amber-100' :
+              'border-gray-300 text-gray-900 hover:bg-gray-100'
+            }`}
           >
             <ChevronLeft size={16} />
             Library
           </button>
           
           <div>
-            <div style={{ fontSize: '16px', fontWeight: '600' }}>{book.title}</div>
-            <div style={{ fontSize: '12px', opacity: 0.7 }}>{book.author}</div>
+            <div className="text-base font-semibold">{book.title}</div>
+            <div className="text-xs opacity-70">{book.author}</div>
           </div>
         </div>
 
         {/* Right Side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="flex items-center gap-3">
           {/* Progress */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ fontSize: '12px', opacity: 0.7 }}>
+          <div className="flex items-center gap-2">
+            <div className="text-xs opacity-70">
               {Math.round(book.readingProgress.currentPosition * 100)}%
             </div>
-            <div style={{
-              width: '100px',
-              height: '3px',
-              backgroundColor: `${themeStyles.color}20`,
-              borderRadius: '2px'
-            }}>
+            <div className={`w-24 h-1 rounded-full ${
+              settings.theme === 'dark' ? 'bg-gray-600' :
+              settings.theme === 'sepia' ? 'bg-amber-300' :
+              'bg-gray-300'
+            }`}>
               <div
-                style={{
-                  width: `${book.readingProgress.currentPosition * 100}%`,
-                  height: '100%',
-                  backgroundColor: themeStyles.color,
-                  borderRadius: '2px'
-                }}
+                className={`h-full rounded-full transition-all duration-300 ${
+                  settings.theme === 'dark' ? 'bg-gray-100' :
+                  settings.theme === 'sepia' ? 'bg-amber-600' :
+                  'bg-blue-500'
+                }`}
+                style={{ width: `${book.readingProgress.currentPosition * 100}%` }}
               />
             </div>
           </div>
@@ -378,42 +313,40 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
           {/* Action Buttons */}
           <button
             onClick={addBookmark}
-            style={{
-              padding: '8px',
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: themeStyles.color,
-              cursor: 'pointer',
-              borderRadius: '4px'
-            }}
+            aria-label="Add bookmark"
+            className={`p-2 rounded-md transition-colors hover:bg-opacity-20 ${
+              settings.theme === 'dark' ? 'hover:bg-gray-600' :
+              settings.theme === 'sepia' ? 'hover:bg-amber-200' :
+              'hover:bg-gray-200'
+            }`}
           >
             <Bookmark size={18} />
           </button>
 
           <button
             onClick={() => setShowSettings(!showSettings)}
-            style={{
-              padding: '8px',
-              backgroundColor: showSettings ? `${themeStyles.color}20` : 'transparent',
-              border: 'none',
-              color: themeStyles.color,
-              cursor: 'pointer',
-              borderRadius: '4px'
-            }}
+            aria-label="Reading settings"
+            className={`p-2 rounded-md transition-colors ${
+              showSettings ? 
+                (settings.theme === 'dark' ? 'bg-gray-600 text-gray-100' : 
+                 settings.theme === 'sepia' ? 'bg-amber-200 text-amber-900' : 
+                 'bg-gray-200 text-gray-900') :
+              (settings.theme === 'dark' ? 'hover:bg-gray-600 text-gray-100' : 
+               settings.theme === 'sepia' ? 'hover:bg-amber-200 text-amber-900' : 
+               'hover:bg-gray-200 text-gray-900')
+            }`}
           >
             <Settings size={18} />
           </button>
 
           <button
             onClick={toggleFullscreen}
-            style={{
-              padding: '8px',
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: themeStyles.color,
-              cursor: 'pointer',
-              borderRadius: '4px'
-            }}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            className={`p-2 rounded-md transition-colors ${
+              settings.theme === 'dark' ? 'hover:bg-gray-600 text-gray-100' :
+              settings.theme === 'sepia' ? 'hover:bg-amber-200 text-amber-900' :
+              'hover:bg-gray-200 text-gray-900'
+            }`}
           >
             {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
           </button>
@@ -423,26 +356,19 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
       {/* Settings Panel */}
       {showSettings && (
         <div
-          style={{
-            position: 'fixed',
-            top: '60px',
-            right: '20px',
-            width: '300px',
-            backgroundColor: themeStyles.settingsBg,
-            border: `1px solid ${themeStyles.color}20`,
-            borderRadius: '8px',
-            padding: '20px',
-            zIndex: 10,
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)'
-          }}
+          className={`fixed top-15 right-5 w-80 p-5 rounded-lg border shadow-lg z-20 ${
+            settings.theme === 'dark' ? 'bg-gray-700 border-gray-600 text-gray-100' :
+            settings.theme === 'sepia' ? 'bg-amber-100 border-amber-300 text-amber-900' :
+            'bg-white border-gray-300 text-gray-900'
+          }`}
         >
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>
+          <h3 className="mb-4 text-base font-semibold">
             Reading Settings
           </h3>
 
           {/* Font Size */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
+          <div className="mb-4">
+            <label className="text-xs font-medium mb-2 block">
               Font Size: {settings.fontSize}px
             </label>
             <input
@@ -451,26 +377,23 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
               max="24"
               value={settings.fontSize}
               onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))}
-              style={{ width: '100%' }}
+              className="w-full"
             />
           </div>
 
           {/* Font Family */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
+          <div className="mb-4">
+            <label className="text-xs font-medium mb-2 block">
               Font Family
             </label>
             <select
               value={settings.fontFamily}
               onChange={(e) => handleSettingChange('fontFamily', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '4px',
-                border: `1px solid ${themeStyles.color}20`,
-                backgroundColor: themeStyles.backgroundColor,
-                color: themeStyles.color
-              }}
+              className={`w-full p-2 rounded-md border transition-colors ${
+                settings.theme === 'dark' ? 'border-gray-600 bg-gray-800 text-gray-100' :
+                settings.theme === 'sepia' ? 'border-amber-300 bg-amber-50 text-amber-900' :
+                'border-gray-300 bg-white text-gray-900'
+              }`}
             >
               <option value="serif">Serif</option>
               <option value="sans-serif">Sans Serif</option>
@@ -479,8 +402,8 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
           </div>
 
           {/* Line Height */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
+          <div className="mb-4">
+            <label className="text-xs font-medium mb-2 block">
               Line Height: {settings.lineHeight}
             </label>
             <input
@@ -490,31 +413,32 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
               step="0.1"
               value={settings.lineHeight}
               onChange={(e) => handleSettingChange('lineHeight', parseFloat(e.target.value))}
-              style={{ width: '100%' }}
+              className="w-full"
             />
           </div>
 
           {/* Column Width */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
+          <div className="mb-4">
+            <label className="text-xs font-medium mb-2 block">
               Column Width: {settings.columnWidth}px
             </label>
             <input
               type="range"
               min="600"
               max="900"
+              step="50"
               value={settings.columnWidth}
               onChange={(e) => handleSettingChange('columnWidth', parseInt(e.target.value))}
-              style={{ width: '100%' }}
+              className="w-full"
             />
           </div>
 
           {/* Theme */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '8px', display: 'block' }}>
+          <div className="mb-4">
+            <label className="text-xs font-medium mb-2 block">
               Theme
             </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="flex gap-2">
               {[
                 { key: 'light', icon: Sun, label: 'Light' },
                 { key: 'dark', icon: Moon, label: 'Dark' },
@@ -523,20 +447,15 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
                 <button
                   key={key}
                   onClick={() => handleSettingChange('theme', key)}
-                  style={{
-                    flex: 1,
-                    padding: '8px',
-                    backgroundColor: settings.theme === key ? `${themeStyles.color}20` : 'transparent',
-                    border: `1px solid ${themeStyles.color}20`,
-                    borderRadius: '4px',
-                    color: themeStyles.color,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '4px',
-                    fontSize: '10px'
-                  }}
+                  className={`flex-1 p-2 rounded-md border transition-colors flex flex-col items-center gap-1 text-xs ${
+                    settings.theme === key ? 
+                      (settings.theme === 'dark' ? 'bg-gray-600 border-gray-500 text-gray-100' : 
+                       settings.theme === 'sepia' ? 'bg-amber-200 border-amber-400 text-amber-900' : 
+                       'bg-gray-200 border-gray-400 text-gray-900') :
+                      (settings.theme === 'dark' ? 'border-gray-600 text-gray-100 hover:bg-gray-600' : 
+                       settings.theme === 'sepia' ? 'border-amber-300 text-amber-900 hover:bg-amber-200' : 
+                       'border-gray-300 text-gray-900 hover:bg-gray-200')
+                  }`}
                 >
                   <Icon size={16} />
                   {label}
@@ -547,18 +466,13 @@ const ReadingInterface: React.FC<ReadingInterfaceProps> = ({ bookId, pluginAPI, 
         </div>
       )}
 
-      {/* Main Reading Content */}
+      {/* Reading Content */}
       <div
         ref={contentRef}
-        style={{
-          padding: '80px 40px 40px 40px',
-          height: '100vh',
-          overflow: 'auto',
-          display: 'flex',
-          justifyContent: 'center'
-        }}
+        className="pt-15 px-8 pb-8 h-full overflow-auto flex justify-center"
       >
         <div
+          className="max-w-none mx-auto"
           style={{
             maxWidth: `${settings.columnWidth}px`,
             fontSize: `${settings.fontSize}px`,

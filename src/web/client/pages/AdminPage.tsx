@@ -148,6 +148,7 @@ const AdminPage: React.FC = () => {
         {metrics.map((metric) => (
           <div
             key={metric.id}
+            data-testid="card"
             style={{
               backgroundColor: '#ffffff',
               borderRadius: '12px',
@@ -198,8 +199,8 @@ const AdminPage: React.FC = () => {
                 color: '#6b7280'
               }}>
                 {metric.unit}
-                    </span>
-                  </div>
+              </span>
+            </div>
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -211,17 +212,17 @@ const AdminPage: React.FC = () => {
                 color: metric.trend === 'up' ? '#059669' : metric.trend === 'down' ? '#dc2626' : '#6b7280'
               }}>
                 {metric.trend === 'up' ? '↗' : metric.trend === 'down' ? '↘' : '→'}
-                  </span>
+              </span>
               <span style={{
                 fontSize: '12px',
                 color: '#6b7280'
               }}>
                 {metric.trend === 'up' ? 'Increasing' : metric.trend === 'down' ? 'Decreasing' : 'Stable'}
-                  </span>
-                </div>
+              </span>
+            </div>
           </div>
-            ))}
-          </div>
+        ))}
+      </div>
           
       {/* Recent Activity */}
       <div style={{
@@ -283,13 +284,13 @@ const AdminPage: React.FC = () => {
                   }}>
                     {activity.user} • {activity.timestamp}
                   </p>
-                    </div>
-                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-                      </div>
-                    </div>
+      </div>
+    </div>
   );
 
   const renderUsers = () => (
@@ -317,8 +318,8 @@ const AdminPage: React.FC = () => {
         }}>
           User management features coming soon
         </p>
-          </div>
-        </div>
+      </div>
+    </div>
   );
 
   const renderSystem = () => (
@@ -346,8 +347,8 @@ const AdminPage: React.FC = () => {
         }}>
           System configuration options coming soon
         </p>
-                      </div>
-                    </div>
+      </div>
+    </div>
   );
 
   const tabs = [
@@ -357,13 +358,17 @@ const AdminPage: React.FC = () => {
   ];
 
   return (
-    <div style={{
-      display: 'flex',
-      height: '100%',
-      backgroundColor: '#fafafa'
-    }}>
+    <main 
+      role="main"
+      className="min-h-screen bg-gray-very-light"
+      style={{
+        display: 'flex',
+        height: '100%',
+        backgroundColor: '#fafafa'
+      }}
+    >
       {/* Sidebar */}
-      <div style={{
+      <aside style={{
         width: '280px',
         backgroundColor: '#ffffff',
         borderRight: '1px solid #e5e7eb',
@@ -380,7 +385,7 @@ const AdminPage: React.FC = () => {
             gap: '12px',
             marginBottom: '8px'
           }}>
-            <Shield size={24} style={{ color: '#1a1a1a' }} />
+            <Shield size={24} style={{ color: '#1a1a1a' }} data-testid="shield-icon" />
             <h1 style={{
               fontSize: '24px',
               fontWeight: 'bold',
@@ -399,10 +404,13 @@ const AdminPage: React.FC = () => {
           </p>
         </div>
         
-        <nav>
-          {tabs.map((tab) => (
-                <button
-                  key={tab.id}
+        <nav role="tablist">
+          {tabs.map((tab, index) => (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`panel-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               style={{
                 width: '100%',
@@ -420,30 +428,34 @@ const AdminPage: React.FC = () => {
               <div style={{
                 color: activeTab === tab.id ? '#1a1a1a' : '#6b7280'
               }}>
-                  {tab.icon}
+                {tab.icon}
               </div>
               <span style={{
                 fontSize: '14px',
                 fontWeight: '500',
                 color: activeTab === tab.id ? '#1a1a1a' : '#374151'
               }}>
-                  {tab.label}
+                {tab.label}
               </span>
-                </button>
-              ))}
+            </button>
+          ))}
         </nav>
-          </div>
+      </aside>
           
       {/* Content */}
-      <div style={{
-        flex: 1,
-        backgroundColor: '#ffffff'
-      }}>
+      <div 
+        role="tabpanel"
+        aria-labelledby={`tab-${activeTab}`}
+        style={{
+          flex: 1,
+          backgroundColor: '#ffffff'
+        }}
+      >
         {activeTab === 'overview' && renderOverview()}
         {activeTab === 'users' && renderUsers()}
         {activeTab === 'system' && renderSystem()}
       </div>
-    </div>
+    </main>
   );
 };
 
