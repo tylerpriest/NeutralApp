@@ -22,7 +22,8 @@ describe('WelcomeScreen', () => {
     it('should display welcome title and subtitle', () => {
       renderWelcomeScreen();
       
-      expect(screen.getByText('Welcome to NeutralApp')).toBeInTheDocument();
+      // Check for the main welcome title (now in h1 with gradient text)
+      expect(screen.getByText(/Welcome to/)).toBeInTheDocument();
       expect(screen.getByText('Get started by installing your first plugin')).toBeInTheDocument();
     });
 
@@ -47,7 +48,8 @@ describe('WelcomeScreen', () => {
       
       const ctaButton = screen.getByRole('button', { name: /browse plugins/i });
       expect(ctaButton).toBeInTheDocument();
-      expect(ctaButton).toHaveClass('bg-primary');
+      // Updated to match new gradient design
+      expect(ctaButton).toHaveClass('bg-gradient-to-r');
       expect(ctaButton).toHaveClass('text-white');
     });
 
@@ -56,7 +58,8 @@ describe('WelcomeScreen', () => {
       
       const secondaryButton = screen.getByRole('button', { name: /learn more/i });
       expect(secondaryButton).toBeInTheDocument();
-      expect(secondaryButton).toHaveClass('border');
+      // Updated to match new border design
+      expect(secondaryButton).toHaveClass('border-2');
       expect(secondaryButton).toHaveClass('bg-white');
     });
 
@@ -89,15 +92,17 @@ describe('WelcomeScreen', () => {
       
       const welcomeScreen = screen.getByTestId('welcome-screen');
       expect(welcomeScreen).toHaveClass('flex');
-      expect(welcomeScreen).toHaveClass('items-center');
-      expect(welcomeScreen).toHaveClass('justify-center');
+      expect(welcomeScreen).toHaveClass('flex-col');
+      expect(welcomeScreen).toHaveClass('min-h-screen');
       
-      const content = screen.getByText('Welcome to NeutralApp').closest('div');
-      expect(content).toHaveClass('text-center');
-      expect(content).toHaveClass('max-w-2xl');
+      // Check for the main content area
+      const mainContent = screen.getByRole('main');
+      expect(mainContent).toHaveClass('flex');
+      expect(mainContent).toHaveClass('items-center');
+      expect(mainContent).toHaveClass('justify-center');
       
       const illustration = screen.getByTestId('welcome-illustration');
-      expect(illustration).toHaveClass('mb-8');
+      expect(illustration).toHaveClass('mb-6');
     });
 
     it('should be centered on the page', () => {
@@ -105,21 +110,25 @@ describe('WelcomeScreen', () => {
       
       const welcomeScreen = screen.getByTestId('welcome-screen');
       expect(welcomeScreen).toHaveClass('flex');
-      expect(welcomeScreen).toHaveClass('items-center');
-      expect(welcomeScreen).toHaveClass('justify-center');
-      // Note: CSS style testing is unreliable in JSDOM, so we just check the class exists
+      expect(welcomeScreen).toHaveClass('flex-col');
+      
+      const mainContent = screen.getByRole('main');
+      expect(mainContent).toHaveClass('flex');
+      expect(mainContent).toHaveClass('items-center');
+      expect(mainContent).toHaveClass('justify-center');
     });
 
     it('should have proper spacing and typography', () => {
       renderWelcomeScreen();
       
-      const title = screen.getByText('Welcome to NeutralApp');
+      // Check for the main title (now with responsive text sizing)
+      const title = screen.getByText(/Welcome to/);
       expect(title).toHaveClass('text-4xl');
       expect(title).toHaveClass('font-bold');
       
       const subtitle = screen.getByText('Get started by installing your first plugin');
       expect(subtitle).toHaveClass('text-xl');
-      expect(subtitle).toHaveClass('text-gray-700');
+      expect(subtitle).toHaveClass('text-gray-600');
       
       const description = screen.getByText(/Plugins add functionality to your dashboard/);
       expect(description).toHaveClass('text-gray-600');
@@ -130,9 +139,15 @@ describe('WelcomeScreen', () => {
     it('should have proper heading hierarchy', () => {
       renderWelcomeScreen();
       
-      const h1 = screen.getByRole('heading', { level: 1 });
-      expect(h1).toHaveTextContent('Welcome to NeutralApp');
+      // Check for all headings (we now have multiple h1s - one in header, one in main)
+      const headings = screen.getAllByRole('heading');
+      expect(headings.length).toBeGreaterThanOrEqual(2);
       
+      // Check that we have the main welcome heading
+      const welcomeHeading = headings.find(h => h.textContent?.includes('Welcome to'));
+      expect(welcomeHeading).toBeInTheDocument();
+      
+      // Check for the subtitle (now h2)
       const h2 = screen.getByRole('heading', { level: 2 });
       expect(h2).toHaveTextContent('Get started by installing your first plugin');
     });
@@ -161,12 +176,17 @@ describe('WelcomeScreen', () => {
       
       const welcomeScreen = screen.getByTestId('welcome-screen');
       expect(welcomeScreen).toHaveClass('flex');
-      expect(welcomeScreen).toHaveClass('items-center');
-      expect(welcomeScreen).toHaveClass('justify-center');
+      expect(welcomeScreen).toHaveClass('flex-col');
       
-      const content = screen.getByText('Welcome to NeutralApp').closest('div');
-      expect(content).toHaveClass('text-center');
-      expect(content).toHaveClass('max-w-2xl');
+      const mainContent = screen.getByRole('main');
+      expect(mainContent).toHaveClass('flex');
+      expect(mainContent).toHaveClass('items-center');
+      expect(mainContent).toHaveClass('justify-center');
+      
+      // Check for responsive text sizing
+      const title = screen.getByText(/Welcome to/);
+      expect(title).toHaveClass('text-4xl');
+      expect(title).toHaveClass('md:text-5xl');
     });
 
     it('should have proper action button layout', () => {
@@ -175,6 +195,8 @@ describe('WelcomeScreen', () => {
       const actionsContainer = screen.getByText('Browse Plugins').closest('div');
       expect(actionsContainer).toHaveClass('flex');
       expect(actionsContainer).toHaveClass('gap-4');
+      expect(actionsContainer).toHaveClass('flex-col');
+      expect(actionsContainer).toHaveClass('sm:flex-row');
     });
   });
 
@@ -183,7 +205,7 @@ describe('WelcomeScreen', () => {
       renderWelcomeScreen();
       
       const placeholder = screen.getByText('No plugins installed yet').closest('div');
-      expect(placeholder).toHaveClass('bg-gray-50');
+      expect(placeholder).toHaveClass('bg-white');
       expect(placeholder).toHaveClass('border-2');
       expect(placeholder).toHaveClass('border-dashed');
       expect(screen.getByText('Install plugins to see widgets here')).toBeInTheDocument();
@@ -194,6 +216,8 @@ describe('WelcomeScreen', () => {
       
       const placeholder = screen.getByText('No plugins installed yet').closest('div');
       expect(placeholder).toBeInTheDocument();
+      expect(placeholder).toHaveClass('rounded-2xl');
+      expect(placeholder).toHaveClass('p-12');
     });
   });
 }); 

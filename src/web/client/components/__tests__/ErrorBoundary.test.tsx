@@ -5,7 +5,7 @@ import ErrorBoundary from '../ErrorBoundary';
 // This is a known issue with ErrorBoundary tests - they sometimes pass in the UI but the logger calls fail due to component lifecycle timing
 // The ErrorBoundary component itself is working correctly as shown by the other passing tests
 
-// Mock the WebErrorLogger
+// Mock the WebErrorLogger - use proper Jest mock pattern
 const mockLogReactError = jest.fn();
 const mockLogWebError = jest.fn();
 
