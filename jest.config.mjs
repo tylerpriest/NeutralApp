@@ -9,7 +9,11 @@ export default {
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/tests/e2e/'
+    '/tests/e2e/',
+    '/tests/uat/',
+    '/tests/playwright/',
+    '.*\\.playwright\\.spec\\.ts$',
+    '.*\\.playwright\\.test\\.ts$'
   ],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
