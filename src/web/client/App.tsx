@@ -14,6 +14,7 @@ const PluginManagerPage = lazy(() => import('./pages/PluginManagerPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const ReadingInterface = lazy(() => import('./components/ReadingInterface'));
+const DashboardUXTestPage = lazy(() => import('./pages/DashboardUXTestPage'));
 
 // Wrapper component to handle URL params for ReadingInterface
 const ReadingInterfaceWrapper: React.FC = () => {
@@ -42,6 +43,7 @@ const App: React.FC = () => {
                   <Route path="plugins" element={<PluginManagerPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="admin" element={<AdminPage />} />
+                  <Route path="ux-test" element={<DashboardUXTestPage />} />
                   <Route path="reader" element={<ReadingInterfaceWrapper />} />
                   <Route path="reader/book/:bookId" element={<ReadingInterfaceWrapper />} />
                   <Route path="reader/import" element={<div>Import Books Page</div>} />
