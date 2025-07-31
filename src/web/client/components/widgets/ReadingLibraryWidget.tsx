@@ -4,374 +4,289 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Book, BookOpen, CheckCircle2, Clock, TrendingUp } from 'lucide-react';
+import { Search, Plus, Filter, Grid, List, BookOpen, Clock, Star } from 'lucide-react';
 
 interface Book {
   id: string;
   title: string;
   author: string;
+  description: string;
   coverUrl?: string;
-  readingProgress: {
-    currentPosition: number;
-    isCompleted: boolean;
+  progress: {
+    currentPage: number;
+    totalPages: number;
+    percentage: number;
+    lastRead: string | null;
   };
-  categories: string[];
-}
-
-interface LibraryStats {
-  totalBooks: number;
-  completedBooks: number;
-  inProgressBooks: number;
-  totalReadingTime: number;
+  rating: number;
+  tags: string[];
+  categoryId?: string;
 }
 
 interface ReadingLibraryWidgetProps {
-  pluginAPI?: any;
-  config?: {
-    showSearch?: boolean;
-    showCategories?: boolean;
-    viewMode?: 'grid' | 'list';
-    limit?: number;
+  data?: {
+    books?: Book[];
+    categories?: Array<{ id: string; name: string; color: string; icon: string }>;
   };
 }
 
-const ReadingLibraryWidget: React.FC<ReadingLibraryWidgetProps> = ({ 
-  pluginAPI, 
-  config = { showSearch: true, showCategories: true, viewMode: 'grid', limit: 6 } 
-}) => {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [stats, setStats] = useState<LibraryStats>({
-    totalBooks: 0,
-    completedBooks: 0,
-    inProgressBooks: 0,
-    totalReadingTime: 0
-  });
+const ReadingLibraryWidget: React.FC<ReadingLibraryWidgetProps> = ({ data }) => {
+  const [books, setBooks] = useState<Book[]>(data?.books || []);
+  const [categories, setCategories] = useState(data?.categories || []);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<'title' | 'author' | 'lastRead' | 'rating'>('title');
 
   useEffect(() => {
-    loadLibraryData();
-  }, []);
+    if (data?.books) {
+      setBooks(data.books);
+    }
+    if (data?.categories) {
+      setCategories(data.categories);
+    }
+  }, [data]);
 
-  const loadLibraryData = async () => {
-    try {
-      setLoading(true);
-      
-      // Get reading-core API if available
-      if (pluginAPI?.getPluginAPI) {
-        const readingAPI = pluginAPI.getPluginAPI('reading-core');
-        if (readingAPI) {
-          const [allBooks, libraryStats] = await Promise.all([
-            readingAPI.library.getAllBooks(),
-            readingAPI.library.getLibraryStats()
-          ]);
-          
-          setBooks(allBooks.slice(0, config.limit || 6));
-          setStats(libraryStats);
-        }
-      } else {
-        // No plugin API available - show empty state (Real Content or Fail Fast)
-        setBooks([]);
-        setStats({
-          totalBooks: 0,
-          completedBooks: 0,
-          inProgressBooks: 0,
-          totalReadingTime: 0
-        });
+  const filteredBooks = books
+    .filter(book => {
+      const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          book.author.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || book.categoryId === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'author':
+          return a.author.localeCompare(b.author);
+        case 'lastRead':
+          return (b.progress.lastRead ? new Date(b.progress.lastRead).getTime() : 0) -
+                 (a.progress.lastRead ? new Date(a.progress.lastRead).getTime() : 0);
+        case 'rating':
+          return b.rating - a.rating;
+        default:
+          return 0;
       }
-    } catch (error) {
-      console.error('Failed to load library data:', error);
-    } finally {
-      setLoading(false);
-    }
+    });
+
+  const getCategoryColor = (categoryId?: string) => {
+    if (!categoryId) return '#6B7280';
+    const category = categories.find(c => c.id === categoryId);
+    return category?.color || '#6B7280';
   };
 
-  const handleBookClick = (book: Book) => {
-    // Navigate to reading interface or book details
-    if (pluginAPI?.navigate) {
-      pluginAPI.navigate(`/reader/book/${book.id}`);
-    }
+  const getCategoryIcon = (categoryId?: string) => {
+    if (!categoryId) return '📚';
+    const category = categories.find(c => c.id === categoryId);
+    return category?.icon || '📚';
   };
 
-  const handleAddBook = () => {
-    if (pluginAPI?.navigate) {
-      pluginAPI.navigate('/reader/import');
-    }
+  const formatLastRead = (lastRead: string | null) => {
+    if (!lastRead) return 'Never read';
+    const date = new Date(lastRead);
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+    return date.toLocaleDateString();
   };
-
-  const handleViewAll = () => {
-    if (pluginAPI?.navigate) {
-      pluginAPI.navigate('/reader/library');
-    }
-  };
-
-  const filteredBooks = books.filter(book =>
-    searchTerm === '' || 
-    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    book.author.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (loading) {
-    return (
-      <div style={{
-        padding: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '300px'
-      }}>
-        <div style={{ textAlign: 'center', color: '#6B7280' }}>
-          <Book size={32} style={{ marginBottom: '8px' }} />
-          <div>Loading library...</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div style={{
-      padding: '20px',
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: 'white',
-      borderRadius: '8px'
-    }}>
-      {/* Header with Stats */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '12px'
-        }}>
-          <h3 style={{
-            margin: 0,
-            fontSize: '18px',
-            fontWeight: '600',
-            color: '#1F2937'
-          }}>
-            📚 Book Library
-          </h3>
-          
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <BookOpen className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">📚 Book Library</h3>
+            <p className="text-sm text-gray-500">{filteredBooks.length} books</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
           <button
-            onClick={handleAddBook}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '6px 12px',
-              backgroundColor: '#3B82F6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '12px',
-              cursor: 'pointer'
-            }}
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'
+            }`}
           >
-            <Plus size={14} />
+            <Grid className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search books..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(category => (
+              <option key={category.id} value={category.id}>
+                {category.icon} {category.name}
+              </option>
+            ))}
+          </select>
+          
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="title">Sort by Title</option>
+            <option value="author">Sort by Author</option>
+            <option value="lastRead">Sort by Last Read</option>
+            <option value="rating">Sort by Rating</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Books Grid/List */}
+      {filteredBooks.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No books found</h3>
+          <p className="text-gray-500 mb-4">
+            {searchTerm || selectedCategory !== 'all' 
+              ? 'Try adjusting your search or filters'
+              : 'Add your first book to get started'
+            }
+          </p>
+          <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <Plus className="w-4 h-4" />
             Add Book
           </button>
         </div>
-
-        {/* Quick Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '8px',
-          marginBottom: '12px'
-        }}>
-          <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: '#1F2937' }}>{stats.totalBooks}</div>
-            <div style={{ fontSize: '10px', color: '#6B7280' }}>Total</div>
-          </div>
-          <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#F0FDF4', borderRadius: '6px' }}>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: '#16A34A' }}>{stats.completedBooks}</div>
-            <div style={{ fontSize: '10px', color: '#16A34A' }}>Done</div>
-          </div>
-          <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#FEF3C7', borderRadius: '6px' }}>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: '#D97706' }}>{stats.inProgressBooks}</div>
-            <div style={{ fontSize: '10px', color: '#D97706' }}>Reading</div>
-          </div>
-          <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#EDE9FE', borderRadius: '6px' }}>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: '#7C3AED' }}>{Math.round(stats.totalReadingTime / 60)}h</div>
-            <div style={{ fontSize: '10px', color: '#7C3AED' }}>Time</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Search */}
-      {config.showSearch && (
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ position: 'relative' }}>
-            <Search
-              size={14}
-              style={{
-                position: 'absolute',
-                left: '8px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#9CA3AF'
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Search books..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 8px 8px 28px',
-                fontSize: '12px',
-                border: '1px solid #E5E7EB',
-                borderRadius: '6px',
-                outline: 'none'
-              }}
-            />
-          </div>
+      ) : (
+        <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
+          {filteredBooks.slice(0, 6).map(book => (
+            <div
+              key={book.id}
+              className={`bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors cursor-pointer ${
+                viewMode === 'list' ? 'flex items-center space-x-4 p-4' : 'p-4'
+              }`}
+            >
+              {viewMode === 'grid' ? (
+                // Grid View
+                <div>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg">{getCategoryIcon(book.categoryId)}</span>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getCategoryColor(book.categoryId) }} />
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${
+                            i < book.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <h4 className="font-medium text-gray-900 mb-1 line-clamp-2">{book.title}</h4>
+                  <p className="text-sm text-gray-600 mb-3">{book.author}</p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>Progress</span>
+                      <span>{book.progress.percentage}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${book.progress.percentage}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formatLastRead(book.progress.lastRead)}
+                      </span>
+                      <span>{book.progress.currentPage}/{book.progress.totalPages} pages</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // List View
+                <>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{getCategoryIcon(book.categoryId)}</span>
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getCategoryColor(book.categoryId) }} />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 truncate">{book.title}</h4>
+                    <p className="text-sm text-gray-600 truncate">{book.author}</p>
+                    <div className="flex items-center space-x-4 mt-1">
+                      <span className="text-xs text-gray-500">{formatLastRead(book.progress.lastRead)}</span>
+                      <span className="text-xs text-gray-500">{book.progress.percentage}% complete</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${
+                            i < book.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${book.progress.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Books Grid */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        {filteredBooks.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '40px 20px',
-            color: '#6B7280'
-          }}>
-            <BookOpen size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
-            <div style={{ fontSize: '12px' }}>
-              {searchTerm ? 'No books match your search' : 'No books in library'}
-            </div>
-            {!searchTerm && (
-              <button
-                onClick={handleAddBook}
-                style={{
-                  marginTop: '8px',
-                  padding: '6px 12px',
-                  backgroundColor: '#F3F4F6',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  cursor: 'pointer'
-                }}
-              >
-                Import your first book
-              </button>
-            )}
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: config.viewMode === 'grid' ? 'repeat(auto-fill, minmax(120px, 1fr))' : '1fr',
-            gap: '12px'
-          }}>
-            {filteredBooks.map((book) => (
-              <div
-                key={book.id}
-                onClick={() => handleBookClick(book)}
-                style={{
-                  padding: '12px',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: 'white'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#3B82F6';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#E5E7EB';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                {/* Book Cover or Icon */}
-                <div style={{
-                  width: '100%',
-                  height: '80px',
-                  backgroundColor: '#F3F4F6',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '8px',
-                  backgroundImage: book.coverUrl ? `url(${book.coverUrl})` : 'none',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}>
-                  {!book.coverUrl && <Book size={24} color="#9CA3AF" />}
-                </div>
-
-                {/* Book Info */}
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#1F2937', marginBottom: '2px' }}>
-                  {book.title.length > 25 ? `${book.title.substring(0, 25)}...` : book.title}
-                </div>
-                <div style={{ fontSize: '10px', color: '#6B7280', marginBottom: '6px' }}>
-                  {book.author}
-                </div>
-
-                {/* Progress Bar */}
-                <div style={{
-                  width: '100%',
-                  height: '3px',
-                  backgroundColor: '#E5E7EB',
-                  borderRadius: '2px',
-                  overflow: 'hidden',
-                  marginBottom: '4px'
-                }}>
-                  <div
-                    style={{
-                      width: `${book.readingProgress.currentPosition * 100}%`,
-                      height: '100%',
-                      backgroundColor: book.readingProgress.isCompleted ? '#16A34A' : '#3B82F6',
-                      transition: 'width 0.3s ease'
-                    }}
-                  />
-                </div>
-
-                {/* Status */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '9px', color: '#6B7280' }}>
-                    {Math.round(book.readingProgress.currentPosition * 100)}%
-                  </span>
-                  {book.readingProgress.isCompleted ? (
-                    <CheckCircle2 size={12} color="#16A34A" />
-                  ) : book.readingProgress.currentPosition > 0 ? (
-                    <Clock size={12} color="#3B82F6" />
-                  ) : null}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Footer */}
-      {filteredBooks.length > 0 && (
-        <div style={{
-          marginTop: '12px',
-          paddingTop: '12px',
-          borderTop: '1px solid #E5E7EB',
-          textAlign: 'center'
-        }}>
-          <button
-            onClick={handleViewAll}
-            style={{
-              padding: '6px 16px',
-              backgroundColor: 'transparent',
-              border: '1px solid #D1D5DB',
-              borderRadius: '6px',
-              fontSize: '11px',
-              cursor: 'pointer',
-              color: '#374151'
-            }}
-          >
-            View All Books →
+      {/* View All Button */}
+      {filteredBooks.length > 6 && (
+        <div className="mt-6 text-center">
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 font-medium transition-colors">
+            View All Books
+            <span className="text-sm text-gray-500">({filteredBooks.length})</span>
           </button>
         </div>
       )}

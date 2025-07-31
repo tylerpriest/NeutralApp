@@ -4,319 +4,210 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Clock, Play, TrendingUp } from 'lucide-react';
+import { Clock, Play, BookOpen, Star, Calendar } from 'lucide-react';
 
-interface RecentBook {
+interface Book {
   id: string;
   title: string;
   author: string;
   coverUrl?: string;
-  readingProgress: {
-    currentPosition: number;
-    isCompleted: boolean;
-    lastReadDate?: string;
+  progress: {
+    currentPage: number;
+    totalPages: number;
+    percentage: number;
+    lastRead: string | null;
   };
-  categories: string[];
+  rating: number;
+  categoryId?: string;
 }
 
 interface RecentlyReadWidgetProps {
-  pluginAPI?: any;
-  config?: {
-    limit?: number;
+  data?: {
+    books?: Book[];
+    categories?: Array<{ id: string; name: string; color: string; icon: string }>;
   };
 }
 
-const RecentlyReadWidget: React.FC<RecentlyReadWidgetProps> = ({ 
-  pluginAPI, 
-  config = { limit: 5 } 
-}) => {
-  const [recentBooks, setRecentBooks] = useState<RecentBook[]>([]);
-  const [loading, setLoading] = useState(true);
+const RecentlyReadWidget: React.FC<RecentlyReadWidgetProps> = ({ data }) => {
+  const [books, setBooks] = useState<Book[]>(data?.books || []);
+  const [categories, setCategories] = useState(data?.categories || []);
 
   useEffect(() => {
-    loadRecentBooks();
-  }, []);
-
-  const loadRecentBooks = async () => {
-    try {
-      setLoading(true);
-      
-      // Get reading-core API if available
-      if (pluginAPI?.getPluginAPI) {
-        const readingAPI = pluginAPI.getPluginAPI('reading-core');
-        if (readingAPI) {
-          const allBooks = await readingAPI.library.getAllBooks();
-          
-          // Sort by last read date and filter recent ones
-          const recent = allBooks
-            .filter((book: any) => book.readingProgress.lastReadDate || book.readingProgress.currentPosition > 0)
-            .sort((a: any, b: any) => {
-              const aDate = new Date(a.readingProgress.lastReadDate || a.lastModified);
-              const bDate = new Date(b.readingProgress.lastReadDate || b.lastModified);
-              return bDate.getTime() - aDate.getTime();
-            })
-            .slice(0, config.limit || 5);
-          
-          setRecentBooks(recent);
-        }
-      } else {
-        // No plugin API available - show empty state (Real Content or Fail Fast)
-        setRecentBooks([]);
-      }
-    } catch (error) {
-      console.error('Failed to load recent books:', error);
-    } finally {
-      setLoading(false);
+    if (data?.books) {
+      setBooks(data.books);
     }
+    if (data?.categories) {
+      setCategories(data.categories);
+    }
+  }, [data]);
+
+  const recentlyReadBooks = books
+    .filter(book => book.progress.lastRead)
+    .sort((a, b) => {
+      const dateA = a.progress.lastRead ? new Date(a.progress.lastRead).getTime() : 0;
+      const dateB = b.progress.lastRead ? new Date(b.progress.lastRead).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 5);
+
+  const getCategoryIcon = (categoryId?: string) => {
+    if (!categoryId) return '📚';
+    const category = categories.find(c => c.id === categoryId);
+    return category?.icon || '📚';
   };
 
-  const handleResumeReading = (book: RecentBook) => {
-    if (pluginAPI?.navigate) {
-      pluginAPI.navigate(`/reader/book/${book.id}`);
-    }
+  const getCategoryColor = (categoryId?: string) => {
+    if (!categoryId) return '#6B7280';
+    const category = categories.find(c => c.id === categoryId);
+    return category?.color || '#6B7280';
   };
 
-  const formatTimeAgo = (dateString?: string) => {
-    if (!dateString) return 'Recently';
-    
+  const formatLastRead = (lastRead: string | null) => {
+    if (!lastRead) return 'Never read';
+    const date = new Date(lastRead);
     const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return `${Math.floor(diffDays / 7)}w ago`;
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+    return date.toLocaleDateString();
   };
 
-  if (loading) {
-    return (
-      <div style={{
-        padding: '16px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '200px'
-      }}>
-        <div style={{ textAlign: 'center', color: '#6B7280' }}>
-          <Clock size={24} style={{ marginBottom: '8px' }} />
-          <div style={{ fontSize: '12px' }}>Loading recent books...</div>
-        </div>
-      </div>
-    );
-  }
+  const getProgressColor = (percentage: number) => {
+    if (percentage >= 80) return 'bg-green-500';
+    if (percentage >= 50) return 'bg-blue-500';
+    if (percentage >= 20) return 'bg-yellow-500';
+    return 'bg-gray-400';
+  };
 
   return (
-    <div style={{
-      padding: '16px',
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: 'white',
-      borderRadius: '8px'
-    }}>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '16px'
-      }}>
-        <h3 style={{
-          margin: 0,
-          fontSize: '16px',
-          fontWeight: '600',
-          color: '#1F2937',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px'
-        }}>
-          🕒 Recently Read
-        </h3>
-        
-        {recentBooks.length > 0 && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            fontSize: '11px',
-            color: '#6B7280'
-          }}>
-            <TrendingUp size={12} />
-            Active
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+            <Clock className="w-5 h-5 text-white" />
           </div>
-        )}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">🕒 Recently Read</h3>
+            <p className="text-sm text-gray-500">Continue where you left off</p>
+          </div>
+        </div>
       </div>
 
-      {/* Recent Books List */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        {recentBooks.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '32px 16px',
-            color: '#6B7280'
-          }}>
-            <BookOpen size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
-            <div style={{ fontSize: '12px', marginBottom: '4px' }}>
-              No recent reading activity
-            </div>
-            <div style={{ fontSize: '10px', opacity: 0.7 }}>
-              Start reading to see your progress here
-            </div>
+      {/* Recently Read Books */}
+      {recentlyReadBooks.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <BookOpen className="w-6 h-6 text-gray-400" />
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {recentBooks.map((book) => (
-              <div
-                key={book.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '8px',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: 'white'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#3B82F6';
-                  e.currentTarget.style.backgroundColor = '#F8FAFC';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#E5E7EB';
-                  e.currentTarget.style.backgroundColor = 'white';
-                }}
-                onClick={() => handleResumeReading(book)}
-              >
-                {/* Book Cover/Icon */}
-                <div style={{
-                  width: '32px',
-                  height: '40px',
-                  backgroundColor: '#F3F4F6',
-                  borderRadius: '3px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: '10px',
-                  flexShrink: 0,
-                  backgroundImage: book.coverUrl ? `url(${book.coverUrl})` : 'none',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}>
-                  {!book.coverUrl && <BookOpen size={14} color="#9CA3AF" />}
+          <h4 className="text-sm font-medium text-gray-900 mb-1">No recent reading</h4>
+          <p className="text-xs text-gray-500">Start reading to see your recent books</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {recentlyReadBooks.map(book => (
+            <div
+              key={book.id}
+              className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+            >
+              {/* Book Cover/Icon */}
+              <div className="flex-shrink-0">
+                {book.coverUrl ? (
+                  <img
+                    src={book.coverUrl}
+                    alt={book.title}
+                    className="w-12 h-16 object-cover rounded-md"
+                  />
+                ) : (
+                  <div className="w-12 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-md flex items-center justify-center">
+                    <span className="text-lg">{getCategoryIcon(book.categoryId)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Book Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-gray-900 truncate">{book.title}</h4>
+                    <p className="text-xs text-gray-600 truncate">{book.author}</p>
+                  </div>
+                  <div className="flex items-center space-x-1 ml-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-3 h-3 ${
+                          i < book.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
 
-                {/* Book Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
-                    color: '#1F2937',
-                    marginBottom: '2px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {book.title}
+                {/* Progress and Last Read */}
+                <div className="mt-2 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Progress</span>
+                    <span className="text-xs font-medium text-gray-700">{book.progress.percentage}%</span>
                   </div>
-                  
-                  <div style={{ 
-                    fontSize: '9px', 
-                    color: '#6B7280',
-                    marginBottom: '4px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {book.author}
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div style={{
-                    width: '100%',
-                    height: '2px',
-                    backgroundColor: '#E5E7EB',
-                    borderRadius: '1px',
-                    overflow: 'hidden',
-                    marginBottom: '3px'
-                  }}>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
                     <div
-                      style={{
-                        width: `${book.readingProgress.currentPosition * 100}%`,
-                        height: '100%',
-                        backgroundColor: book.readingProgress.isCompleted ? '#16A34A' : '#3B82F6',
-                        transition: 'width 0.3s ease'
-                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${getProgressColor(book.progress.percentage)}`}
+                      style={{ width: `${book.progress.percentage}%` }}
                     />
                   </div>
-
-                  {/* Progress Info */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <span style={{ fontSize: '8px', color: '#6B7280' }}>
-                      {book.readingProgress.isCompleted 
-                        ? '✓ Complete' 
-                        : `${Math.round(book.readingProgress.currentPosition * 100)}%`
-                      }
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {formatLastRead(book.progress.lastRead)}
                     </span>
-                    <span style={{ fontSize: '8px', color: '#9CA3AF' }}>
-                      {formatTimeAgo(book.readingProgress.lastReadDate)}
-                    </span>
+                    <span>{book.progress.currentPage}/{book.progress.totalPages} pages</span>
                   </div>
                 </div>
-
-                {/* Resume Button */}
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  backgroundColor: book.readingProgress.isCompleted ? '#F0FDF4' : '#EBF8FF',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginLeft: '8px',
-                  flexShrink: 0
-                }}>
-                  {book.readingProgress.isCompleted ? (
-                    <BookOpen size={12} color="#16A34A" />
-                  ) : (
-                    <Play size={10} color="#3B82F6" fill="#3B82F6" />
-                  )}
-                </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* Footer */}
-      {recentBooks.length > 0 && (
-        <div style={{
-          marginTop: '12px',
-          paddingTop: '8px',
-          borderTop: '1px solid #E5E7EB',
-          textAlign: 'center'
-        }}>
-          <button
-            onClick={() => pluginAPI?.navigate?.('/reader/library')}
-            style={{
-              padding: '4px 12px',
-              backgroundColor: 'transparent',
-              border: '1px solid #D1D5DB',
-              borderRadius: '4px',
-              fontSize: '10px',
-              cursor: 'pointer',
-              color: '#374151'
-            }}
-          >
-            View Library →
+              {/* Continue Reading Button */}
+              <div className="flex-shrink-0">
+                <button className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <Play className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* View All Button */}
+      {recentlyReadBooks.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <button className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+            View All Recently Read
           </button>
+        </div>
+      )}
+
+      {/* Reading Streak */}
+      {recentlyReadBooks.length > 0 && (
+        <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-900">Reading Streak</p>
+              <p className="text-xs text-gray-600">Keep up the momentum!</p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-blue-600">
+                {recentlyReadBooks.filter(book => {
+                  const lastRead = book.progress.lastRead ? new Date(book.progress.lastRead) : null;
+                  const today = new Date();
+                  return lastRead && lastRead.toDateString() === today.toDateString();
+                }).length > 0 ? '🔥' : '📚'}
+              </p>
+              <p className="text-xs text-gray-500">Today</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

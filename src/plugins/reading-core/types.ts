@@ -1,27 +1,32 @@
 /**
  * Reading Core Plugin Types
- * Defines interfaces and types for the book library management system
+ * Defines interfaces and types for the enhanced book library management system
  */
 
 export interface Book {
   id: string;
   title: string;
   author: string;
-  description?: string;
+  description: string;
   coverUrl?: string;
   content?: string;
   contentType: 'text' | 'html' | 'epub' | 'pdf';
   fileSize?: number;
-  pageCount?: number;
+  totalPages?: number;
   wordCount?: number;
   language?: string;
   publisher?: string;
   publishedDate?: string;
   isbn?: string;
-  categories: string[];
+  categoryId?: string;
   tags: string[];
+  rating: number;
+  readingMode: ReadingMode;
+  settings: ReadingSettings;
+  progress: ReadingProgress;
+  bookmarks: Bookmark[];
+  notes: Note[];
   metadata: BookMetadata;
-  readingProgress: ReadingProgress;
   dateAdded: string;
   lastModified: string;
 }
@@ -36,15 +41,11 @@ export interface BookMetadata {
 }
 
 export interface ReadingProgress {
-  currentPosition: number; // 0-1 (percentage)
-  currentChapter?: number;
-  currentPage?: number;
-  totalPages?: number;
-  lastReadDate?: string;
-  readingTime?: number; // in minutes
-  isCompleted: boolean;
-  bookmarks: Bookmark[];
-  notes: Note[];
+  currentPage: number;
+  totalPages: number;
+  percentage: number;
+  readingTime: number; // in minutes
+  lastRead: string | null;
 }
 
 export interface Bookmark {
@@ -83,42 +84,39 @@ export interface Category {
 export interface LibraryStats {
   totalBooks: number;
   completedBooks: number;
-  inProgressBooks: number;
+  readingBooks: number;
+  toReadBooks: number;
+  totalPages: number;
+  pagesRead: number;
+  averageRating: number;
   totalReadingTime: number;
-  averageReadingSpeed: number; // words per minute
+  averageSpeed: number;
+  readingStreak: number;
   favoriteGenres: string[];
-  recentActivity: ActivityEntry[];
 }
 
 export interface ActivityEntry {
-  id: string;
-  type: 'book_added' | 'reading_started' | 'reading_completed' | 'bookmark_added' | 'note_added';
+  type: 'book:added' | 'progress:updated' | 'bookmark:added' | 'note:added' | 'category:created' | 'category:updated' | 'category:deleted';
   bookId: string;
   bookTitle: string;
-  details?: Record<string, unknown>;
   timestamp: string;
+  data?: Record<string, unknown>;
 }
 
 export interface SearchQuery {
-  term?: string;
-  author?: string;
-  category?: string;
-  tags?: string[];
-  isCompleted?: boolean;
-  dateRange?: {
-    start: string;
-    end: string;
-  };
-  sortBy?: 'title' | 'author' | 'dateAdded' | 'lastRead' | 'progress';
-  sortOrder?: 'asc' | 'desc';
+  text?: string;
+  categoryId?: string;
+  status?: 'reading' | 'completed' | 'to-read';
+  minRating?: number;
+  sortBy?: 'title' | 'author' | 'dateAdded' | 'lastRead' | 'rating';
   limit?: number;
   offset?: number;
 }
 
 export interface SearchResult {
   books: Book[];
-  totalCount: number;
-  hasMore: boolean;
+  total: number;
+  query: SearchQuery;
 }
 
 export interface LibraryService {
@@ -157,11 +155,11 @@ export interface LibraryService {
 }
 
 export interface LibraryChangeEvent {
-  type: 'book_added' | 'book_updated' | 'book_removed' | 'category_added' | 'category_updated' | 'category_removed';
+  type: 'book:added' | 'book:updated' | 'book:removed' | 'category:created' | 'category:updated' | 'category:deleted';
+  book?: Book;
   bookId?: string;
+  category?: Category;
   categoryId?: string;
-  data?: unknown;
-  timestamp: string;
 }
 
 export interface ReadingCoreAPI {
@@ -170,4 +168,77 @@ export interface ReadingCoreAPI {
   setCurrentBook(bookId: string): Promise<void>;
   clearCurrentBook(): Promise<void>;
   updateSidebarBadge(itemId: string, badge: string | number | null): Promise<void>;
+}
+
+// Enhanced Reading Features
+
+export type ReadingMode = 'continuous' | 'paginated' | 'presentation' | 'distractionFree';
+
+export interface ReadingSettings {
+  defaultFontSize: number;
+  defaultLineSpacing: number;
+  defaultTheme: 'light' | 'dark' | 'sepia';
+  defaultFontFamily: string;
+  autoSaveProgress: boolean;
+  readingMode: ReadingMode;
+  enableAnalytics: boolean;
+  enableSocialFeatures: boolean;
+  enableAIFeatures: boolean;
+}
+
+export interface ReadingAnalytics {
+  readingSessions: ReadingSession[];
+  bookStats: Record<string, BookStats>;
+  totalReadingTime: number;
+  booksCompleted: number;
+  averageSpeed: number;
+}
+
+export interface ReadingSession {
+  bookId: string;
+  startTime: string;
+  duration: number;
+  pagesRead: number;
+}
+
+export interface BookStats {
+  totalReadingTime: number;
+  totalPagesRead: number;
+  sessions: number;
+  averageSpeed: number;
+}
+
+export interface SocialReading {
+  shareBook(book: Book, platform: string): Promise<void>;
+  shareProgress(book: Book, progress: ReadingProgress): Promise<void>;
+  shareNotes(book: Book, notes: Note[]): Promise<void>;
+  joinReadingGroups(group: any): Promise<void>;
+  participateInDiscussions(book: Book, topic: string): Promise<void>;
+  createReadingChallenges(challenge: any): Promise<void>;
+  getFriendRecommendations(): Promise<Book[]>;
+  seeWhatFriendsAreReading(): Promise<Book[]>;
+  compareReadingProgress(friendId: string): Promise<any>;
+}
+
+export interface CrossDeviceSync {
+  syncProgress(deviceId: string): Promise<void>;
+  syncBookmarks(deviceId: string): Promise<void>;
+  syncNotes(deviceId: string): Promise<void>;
+  syncSettings(deviceId: string): Promise<void>;
+  downloadForOffline(book: Book): Promise<void>;
+  syncWhenOnline(): Promise<void>;
+  listConnectedDevices(): Promise<any[]>;
+  manageDeviceSync(deviceId: string, settings: any): Promise<void>;
+}
+
+export interface AIReadingAssistant {
+  summarizeChapters(chapter: any): Promise<any>;
+  explainComplexConcepts(text: string): Promise<any>;
+  provideContext(reference: any): Promise<any>;
+  suggestReadingPace(book: Book, userSpeed: number): Promise<any>;
+  highlightKeyPassages(chapter: any): Promise<any[]>;
+  generateDiscussionQuestions(chapter: any): Promise<any[]>;
+  createStudyGuides(book: Book): Promise<any>;
+  generateFlashcards(concepts: any[]): Promise<any[]>;
+  trackLearningProgress(concepts: any[]): Promise<any>;
 }
