@@ -256,10 +256,13 @@ This project follows a structured documentation hierarchy:
 - **[Deployment Documentation](docs/deployment/)** - Complete deployment and operations guide
 
 ### **Project Documentation**
-- **[Requirements](.kiro/specs/COMPLETED/neutral-app-foundation/requirements.md)** - Detailed functional requirements
-- **[Design](.kiro/specs/COMPLETED/neutral-app-foundation/design.md)** - Architecture and design decisions
-- **[Tasks](.kiro/specs/COMPLETED/neutral-app-foundation/tasks.md)** - Implementation plan and task breakdown
-- **[Steering Guidelines](.kiro/steering/)** - Implementation guidelines and coding standards
+- **[Prioritized Roadmap](.kiro/specs/03-PRIORITIZED-ROADMAP.md)** - High-level strategy and feature priorities
+- **[Immediate Tasks](.kiro/specs/04-IMMEDIATE-TASKS.md)** - Detailed implementation tasks for next 1-2 weeks
+- **[Progress Tracker](.kiro/specs/05-PROGRESS-TRACKER.md)** - Current status and component tracking
+- **[Development Summary](.cursor/Summary.md)** - Recent development sessions and achievements
+- **[Completed Features](.kiro/specs/COMPLETED/)** - Historical documentation of completed work
+- **[Steering Guidelines](.kiro/steering/)** - Implementation guidelines and coding 
+standards
 - **[Development Rules](.cursor/rules/)** - Development process and workflow rules
 
 ## 🤝 Contributing
