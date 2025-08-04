@@ -55,12 +55,16 @@ export class JWTAuthRoutes {
         return;
       }
 
-      // Return success response
+      // Generate refresh token
+      const refreshToken = this.jwtService.generateRefreshToken(result.user!);
+
+      // Return success response with both tokens
       res.status(200).json({
         success: true,
         user: result.user,
         token: result.token,
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        refreshToken: refreshToken,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
       });
 
     } catch (error) {
@@ -91,7 +95,7 @@ export class JWTAuthRoutes {
       res.status(200).json({
         success: true,
         user,
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
       });
 
     } catch (error) {
@@ -108,8 +112,20 @@ export class JWTAuthRoutes {
    */
   private async handleSignout(req: Request, res: Response): Promise<void> {
     try {
-      // JWT tokens are stateless, so we just return success
-      // In a more sophisticated implementation, you might want to blacklist the token
+      // Extract token from Authorization header
+      const authHeader = req.headers.authorization;
+      const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+
+      // Revoke the token if provided
+      if (token) {
+        try {
+          this.jwtService.revokeToken(token);
+        } catch (error) {
+          console.warn('Failed to revoke token during signout:', error);
+          // Continue with signout even if token revocation fails
+        }
+      }
+
       res.status(200).json({ 
         success: true,
         message: 'Successfully signed out'
@@ -129,10 +145,10 @@ export class JWTAuthRoutes {
    */
   private async handleRefreshToken(req: Request, res: Response): Promise<void> {
     try {
-      const authHeader = req.headers.authorization;
-      const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+      // Get refresh token from request body instead of Authorization header
+      const { refreshToken } = req.body;
 
-      if (!token) {
+      if (!refreshToken) {
         res.status(401).json({ 
           error: 'Refresh token required',
           success: false 
@@ -140,15 +156,16 @@ export class JWTAuthRoutes {
         return;
       }
 
-      // Refresh the token
-      const newToken = this.jwtService.refreshToken(token);
-      const user = this.jwtService.extractUserFromToken(newToken);
+      // Refresh the tokens using the refresh token
+      const tokenResult = this.jwtService.refreshToken(refreshToken);
+      const user = this.jwtService.extractUserFromToken(tokenResult.accessToken);
 
       res.status(200).json({
         success: true,
         user,
-        token: newToken,
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        token: tokenResult.accessToken,
+        refreshToken: tokenResult.refreshToken,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
       });
 
     } catch (error) {
