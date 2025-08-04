@@ -19,6 +19,7 @@ export interface EnvironmentConfig {
   NEXTAUTH_SECRET: string;
   AUTH_SECRET: string;
   JWT_SECRET: string;
+  JWT_REFRESH_SECRET: string;
   
   // Logging Configuration
   LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
@@ -101,16 +102,27 @@ export class EnvironmentManager {
   private loadConfiguration(): EnvironmentConfig {
     const configPath = path.join(process.cwd(), 'config', 'environments', `${this.environment}.env`);
     
+    // Start with process.env variables (for tests and runtime)
+    const processEnvVars: Record<string, string> = {};
+    for (const [key, value] of Object.entries(process.env)) {
+      if (value !== undefined) {
+        processEnvVars[key] = value;
+      }
+    }
+    
     if (!fs.existsSync(configPath)) {
       console.warn(`⚠️  Environment config file not found: ${configPath}`);
       console.warn(`Using default configuration for environment: ${this.environment}`);
-      return this.getDefaultConfig();
+      return this.mergeWithDefaults(processEnvVars);
     }
 
     const envContent = fs.readFileSync(configPath, 'utf-8');
-    const envVars = this.parseEnvFile(envContent);
+    const fileEnvVars = this.parseEnvFile(envContent);
     
-    return this.mergeWithDefaults(envVars);
+    // Merge file vars with process.env (process.env takes precedence)
+    const mergedVars = { ...fileEnvVars, ...processEnvVars };
+    
+    return this.mergeWithDefaults(mergedVars);
   }
 
   /**
@@ -221,6 +233,7 @@ export class EnvironmentManager {
       NEXTAUTH_SECRET: 'default-secret-key',
       AUTH_SECRET: 'default-auth-secret',
       JWT_SECRET: 'default-jwt-secret-key',
+      JWT_REFRESH_SECRET: 'default-jwt-refresh-secret-key',
       LOG_LEVEL: 'info',
       LOG_FORMAT: 'dev',
       ENABLE_DEBUG_MODE: false,

@@ -4,38 +4,51 @@ import {
   JWTPayload, 
   TokenValidationResult, 
   AuthenticationResult,
-  JWTAuthServiceInterface 
+  JWTAuthServiceInterface,
+  RefreshTokenResult 
 } from '../types/jwt.types';
 import { env } from '../../../shared/utils/environment-manager';
 
 export class JWTAuthService implements JWTAuthServiceInterface {
   private readonly jwtSecret: string;
-  private readonly tokenExpiration: string = '30d';
+  private readonly refreshSecret: string;
+  private readonly tokenExpiration: string = '24h';
+  private readonly refreshTokenExpiration: string = '7d';
+  private readonly revokedTokens: Set<string> = new Set();
 
   // Test user credentials (in production, this would come from a database)
   private readonly testUsers: User[] = [
     {
       id: '1',
       email: 'test@example.com',
-      name: 'Test User'
+      name: 'Test User',
+      role: 'user'
     },
     {
       id: 'admin1',
       email: 'admin@example.com',
-      name: 'System Administrator'
+      name: 'System Administrator',
+      role: 'admin'
     }
   ];
 
   constructor() {
     const secret = env.get('JWT_SECRET');
+    const refreshSecret = env.get('JWT_REFRESH_SECRET');
+    
     if (!secret) {
       throw new Error('JWT_SECRET not configured');
     }
+    if (!refreshSecret) {
+      throw new Error('JWT_REFRESH_SECRET not configured');
+    }
+    
     this.jwtSecret = secret;
+    this.refreshSecret = refreshSecret;
   }
 
   /**
-   * Generate a JWT token for a user
+   * Generate a JWT access token for a user
    */
   generateToken(user: User): string {
     if (!this.jwtSecret) {
@@ -43,15 +56,36 @@ export class JWTAuthService implements JWTAuthServiceInterface {
     }
 
     // Create payload object for JWT
-    const payload = {
+    const payload: JWTPayload = {
       userId: user.id,
       email: user.email,
-      name: user.name
+      name: user.name,
+      role: user.role
     };
 
-    return (jwt as any).sign(payload, this.jwtSecret, {
+    return jwt.sign(payload, this.jwtSecret, {
       expiresIn: this.tokenExpiration
-    });
+    } as jwt.SignOptions);
+  }
+
+  /**
+   * Generate a refresh token for a user  
+   */
+  generateRefreshToken(user: User): string {
+    if (!this.refreshSecret) {
+      throw new Error('JWT_REFRESH_SECRET not configured');
+    }
+
+    const payload: JWTPayload = {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role
+    };
+
+    return jwt.sign(payload, this.refreshSecret, {
+      expiresIn: this.refreshTokenExpiration
+    } as jwt.SignOptions);
   }
 
   /**
@@ -62,13 +96,23 @@ export class JWTAuthService implements JWTAuthServiceInterface {
       throw new Error('JWT_SECRET not configured');
     }
 
+    // Check if token is revoked
+    if (this.isTokenRevoked(token)) {
+      return {
+        isValid: false,
+        user: null,
+        error: 'Token revoked'
+      };
+    }
+
     try {
       const decoded = jwt.verify(token, this.jwtSecret) as JWTPayload;
       
       const user: User = {
         id: decoded.userId,
         email: decoded.email,
-        name: decoded.name
+        name: decoded.name,
+        role: decoded.role
       };
 
       return {
@@ -135,16 +179,33 @@ export class JWTAuthService implements JWTAuthServiceInterface {
   }
 
   /**
-   * Refresh a JWT token
+   * Refresh JWT tokens using a refresh token
    */
-  refreshToken(token: string): string {
-    const validation = this.validateToken(token);
-    
-    if (!validation.isValid || !validation.user) {
-      throw new Error(validation.error || 'Invalid token');
+  refreshToken(refreshToken: string): RefreshTokenResult {
+    if (!this.refreshSecret) {
+      throw new Error('JWT_REFRESH_SECRET not configured');
     }
 
-    return this.generateToken(validation.user);
+    try {
+      const decoded = jwt.verify(refreshToken, this.refreshSecret) as JWTPayload;
+      
+      const user: User = {
+        id: decoded.userId,
+        email: decoded.email,
+        name: decoded.name,
+        role: decoded.role
+      };
+
+      const newAccessToken = this.generateToken(user);
+      const newRefreshToken = this.generateRefreshToken(user);
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken
+      };
+    } catch (error) {
+      throw new Error('Invalid refresh token');
+    }
   }
 
   /**
@@ -158,5 +219,19 @@ export class JWTAuthService implements JWTAuthServiceInterface {
     }
 
     return validation.user;
+  }
+
+  /**
+   * Revoke a token (add to blacklist)
+   */
+  revokeToken(token: string): void {
+    this.revokedTokens.add(token);
+  }
+
+  /**
+   * Check if a token is revoked
+   */
+  isTokenRevoked(token: string): boolean {
+    return this.revokedTokens.has(token);
   }
 } 

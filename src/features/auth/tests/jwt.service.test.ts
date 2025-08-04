@@ -2,12 +2,14 @@ import jwt from 'jsonwebtoken';
 import { JWTAuthService } from '../services/jwt.service';
 import { env } from '../../../shared/utils/environment-manager';
 
-// Test environment JWT secret (matches test.env)
-const testJWTSecret = 'test-secret-key';
+// Test environment JWT secrets (match test setup)
+const testJWTSecret = 'test-jwt-secret-key-for-testing-only';
+const testRefreshSecret = 'test-jwt-refresh-secret-key-for-testing-only';
 const mockUser = {
   id: '1',
   email: 'test@example.com',
-  name: 'Test User'
+  name: 'Test User',
+  role: 'user' as const
 };
 
 describe('JWTAuthService', () => {
@@ -40,6 +42,7 @@ describe('JWTAuthService', () => {
       expect(decoded.userId).toBe(mockUser.id);
       expect(decoded.email).toBe(mockUser.email);
       expect(decoded.name).toBe(mockUser.name);
+      expect(decoded.role).toBe(mockUser.role);
     });
 
     it('should include expiration time in token', () => {
@@ -49,8 +52,8 @@ describe('JWTAuthService', () => {
       expect(decoded.exp).toBeDefined();
       expect(decoded.iat).toBeDefined();
       
-      // Check if expiration is set to 30 days from now
-      const expectedExp = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
+      // Check if expiration is set to 24 hours from now
+      const expectedExp = Math.floor(Date.now() / 1000) + (24 * 60 * 60);
       expect(decoded.exp).toBeGreaterThan(expectedExp - 60); // Allow 1 minute tolerance
       expect(decoded.exp).toBeLessThan(expectedExp + 60);
     });
@@ -88,8 +91,8 @@ describe('JWTAuthService', () => {
     it('should reject an expired JWT token', () => {
       // Create a token that expires immediately using test secret
       const expiredToken = jwt.sign(
-        { userId: mockUser.id, email: mockUser.email, name: mockUser.name },
-        'test-secret-key', // Use the same secret as test.env
+        { userId: mockUser.id, email: mockUser.email, name: mockUser.name, role: mockUser.role },
+        testJWTSecret,
         { expiresIn: '0s' }
       );
       
@@ -102,9 +105,9 @@ describe('JWTAuthService', () => {
 
     it('should reject a token with wrong secret', () => {
       const wrongSecretToken = jwt.sign(
-        { userId: mockUser.id, email: mockUser.email, name: mockUser.name },
+        { userId: mockUser.id, email: mockUser.email, name: mockUser.name, role: mockUser.role },
         'wrong-secret',
-        { expiresIn: '30d' }
+        { expiresIn: '24h' }
       );
       
       const result = jwtService.validateToken(wrongSecretToken);
@@ -174,34 +177,102 @@ describe('JWTAuthService', () => {
     });
   });
 
+  describe('generateRefreshToken', () => {
+    it('should generate a valid refresh token', () => {
+      const refreshToken = jwtService.generateRefreshToken(mockUser);
+      
+      expect(refreshToken).toBeDefined();
+      expect(typeof refreshToken).toBe('string');
+      
+      // Verify refresh token can be decoded with refresh secret
+      const decoded = jwt.verify(refreshToken, testRefreshSecret) as any;
+      expect(decoded.userId).toBe(mockUser.id);
+      expect(decoded.email).toBe(mockUser.email);
+      expect(decoded.name).toBe(mockUser.name);
+      expect(decoded.role).toBe(mockUser.role);
+    });
+  });
+
   describe('refreshToken', () => {
-    it('should refresh a valid token', () => {
-      const originalToken = jwtService.generateToken(mockUser);
-      const refreshedToken = jwtService.refreshToken(originalToken);
+    it('should refresh tokens using a valid refresh token', () => {
+      const refreshToken = jwtService.generateRefreshToken(mockUser);
+      const result = jwtService.refreshToken(refreshToken);
       
-      expect(refreshedToken).toBeDefined();
-      expect(typeof refreshedToken).toBe('string');
+      expect(result).toBeDefined();
+      expect(result.accessToken).toBeDefined();
+      expect(result.refreshToken).toBeDefined();
+      expect(typeof result.accessToken).toBe('string');
+      expect(typeof result.refreshToken).toBe('string');
       
-      // Verify refreshed token is valid
-      const result = jwtService.validateToken(refreshedToken);
-      expect(result.isValid).toBe(true);
-      expect(result.user).toEqual(mockUser);
+      // Verify new access token is valid
+      const validation = jwtService.validateToken(result.accessToken);
+      expect(validation.isValid).toBe(true);
+      expect(validation.user).toEqual(mockUser);
     });
 
-    it('should throw error when refreshing invalid token', () => {
-      const invalidToken = 'invalid.token.here';
+    it('should throw error when refreshing with invalid refresh token', () => {
+      const invalidToken = 'invalid.refresh.token';
       
-      expect(() => jwtService.refreshToken(invalidToken)).toThrow('Invalid token');
+      expect(() => jwtService.refreshToken(invalidToken)).toThrow('Invalid refresh token');
     });
 
-    it('should throw error when refreshing expired token', () => {
-      const expiredToken = jwt.sign(
-        { userId: mockUser.id, email: mockUser.email, name: mockUser.name },
-        'test-secret-key', // Use the same secret as test.env
+    it('should throw error when refreshing with expired refresh token', () => {
+      const expiredRefreshToken = jwt.sign(
+        { userId: mockUser.id, email: mockUser.email, name: mockUser.name, role: mockUser.role },
+        testRefreshSecret,
         { expiresIn: '0s' }
       );
       
-      expect(() => jwtService.refreshToken(expiredToken)).toThrow('Token expired');
+      expect(() => jwtService.refreshToken(expiredRefreshToken)).toThrow('Invalid refresh token');
+    });
+  });
+
+  describe('revokeToken and isTokenRevoked', () => {
+    it('should revoke a token and mark it as invalid', () => {
+      const token = jwtService.generateToken(mockUser);
+      
+      // Token should be valid initially
+      const initialValidation = jwtService.validateToken(token);
+      expect(initialValidation.isValid).toBe(true);
+      expect(jwtService.isTokenRevoked(token)).toBe(false);
+      
+      // Revoke the token
+      jwtService.revokeToken(token);
+      expect(jwtService.isTokenRevoked(token)).toBe(true);
+      
+      // Token should now be invalid
+      const revokedValidation = jwtService.validateToken(token);
+      expect(revokedValidation.isValid).toBe(false);
+      expect(revokedValidation.error).toBe('Token revoked');
+    });
+
+    it('should not affect other tokens when revoking one', () => {
+      // Create tokens for different users to ensure they're different
+      const mockUser2 = {
+        id: '2',
+        email: 'test2@example.com',
+        name: 'Test User 2',
+        role: 'user' as const
+      };
+      
+      const token1 = jwtService.generateToken(mockUser);
+      const token2 = jwtService.generateToken(mockUser2);
+      
+      // Ensure tokens are different
+      expect(token1).not.toBe(token2);
+      
+      // Both tokens should be valid initially
+      expect(jwtService.validateToken(token1).isValid).toBe(true);
+      expect(jwtService.validateToken(token2).isValid).toBe(true);
+      
+      // Revoke only token1
+      jwtService.revokeToken(token1);
+      
+      // token1 should be revoked, token2 should still be valid
+      expect(jwtService.isTokenRevoked(token1)).toBe(true);
+      expect(jwtService.isTokenRevoked(token2)).toBe(false);
+      expect(jwtService.validateToken(token1).isValid).toBe(false);
+      expect(jwtService.validateToken(token2).isValid).toBe(true);
     });
   });
 
@@ -217,6 +288,13 @@ describe('JWTAuthService', () => {
       const invalidToken = 'invalid.token.here';
       
       expect(() => jwtService.extractUserFromToken(invalidToken)).toThrow('Invalid token');
+    });
+
+    it('should throw error when extracting from revoked token', () => {
+      const token = jwtService.generateToken(mockUser);
+      jwtService.revokeToken(token);
+      
+      expect(() => jwtService.extractUserFromToken(token)).toThrow('Token revoked');
     });
   });
 }); 

@@ -2,14 +2,21 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  role: 'admin' | 'user';
 }
 
 export interface JWTPayload {
   userId: string;
   email: string;
   name: string;
+  role: 'admin' | 'user';
   iat?: number;
   exp?: number;
+}
+
+export interface RefreshTokenResult {
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface TokenValidationResult {
@@ -27,8 +34,11 @@ export interface AuthenticationResult {
 
 export interface JWTAuthServiceInterface {
   generateToken(user: User): string;
+  generateRefreshToken(user: User): string;
   validateToken(token: string): TokenValidationResult;
   authenticateUser(email: string, password: string): AuthenticationResult;
-  refreshToken(token: string): string;
+  refreshToken(refreshToken: string): RefreshTokenResult;
   extractUserFromToken(token: string): User;
+  revokeToken(token: string): void;
+  isTokenRevoked(token: string): boolean;
 } 
