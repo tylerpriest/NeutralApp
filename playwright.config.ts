@@ -32,6 +32,17 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    /* Smoke tests - fast critical path validation */
+    {
+      name: 'smoke',
+      testDir: './tests/smoke',
+      use: { 
+        ...devices['Desktop Chrome'],
+        headless: true,
+      },
+      timeout: 60000, // 1 minute for entire smoke suite
+    },
+    
     /* Debug project optimized for MCP integration */
     {
       name: 'debug-webkit',

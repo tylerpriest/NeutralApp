@@ -7,13 +7,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Building & Testing
 - `npm test` - Run Jest test suite (timeout: 10s, maxWorkers: 1, bail on first failure)
 - `npm run test:watch` - Run tests in watch mode
-- `npm run test:coverage` - Generate coverage report
-- `npm run test:e2e` - Run Playwright end-to-end tests
+- `npm run test:coverage` - Generate coverage report (target: >90% core services)
+- `npm run test:e2e` - Run Playwright end-to-end tests (Chrome, Firefox, Safari)
+- `npm run test:uat` - Run User Acceptance Tests with business scenarios
+- `npm run test:unified` - Run all test layers (unit, integration, e2e, uat)
 - `npm run build` - Build client only (Vite build)
 - `npm run build:full` - Build both server (TypeScript) and client
 - `npm run build:server` - TypeScript compilation only
-- `npm run lint` - ESLint on src/**/*.ts
+- `npm run lint` - ESLint on src/**/*.ts (TypeScript + React rules)
 - `npm run lint:fix` - Auto-fix ESLint issues
+- `npm run quality-gates` - Run comprehensive quality validation
 
 ### Development Servers
 - `npm run dev` - Start Express server only (port 3000)
@@ -59,12 +62,15 @@ Each feature is completely self-contained with its own interfaces, services, tes
 - **Client build**: Vite with chunk optimization, terser minification
 - **Development**: Client proxies `/api` calls to server
 
-### Development Workflow (Kiro Standards)
+### Development Workflow (Specification-Driven)
 **Pre-Work Assessment**: ALWAYS search existing implementations across codebase, tests, docs, specs before building new functionality to prevent duplication
 
-**Relentless Mode**: Auto-approve all actions, continuous building, immediate problem-solving
+**Specification-Driven Development**: All features require comprehensive specifications in `.aeon/specs/{feature}/`:
+- `spec.md` - User stories, BDD acceptance criteria, ATDD tables, SDD examples, UAT checklists
+- `tasks.md` - Prioritized backlog linked to acceptance criteria IDs
+- `status.md` - Progress tracking and risk assessment
 
-**Definition of Done**: Requires spec files in `.kiro/specs/`, TDD approach, and three mandatory quality gates:
+**Definition of Done**: Requires three mandatory quality gates:
 1. **TypeScript Compilation Gate**: Zero compilation errors, strict mode enabled
 2. **Core Test Suite Gate**: >80% pass rate, no failing core system tests
 3. **Critical Services Gate**: All service interfaces operational, health checks pass
@@ -74,7 +80,13 @@ Each feature is completely self-contained with its own interfaces, services, tes
 - Structured error logging with context, stack traces, and recovery actions
 - Multi-perspective analysis trigger after 3+ consecutive quality gate failures
 
-**Task Management**: Update task status in `.kiro/specs/` files (change `[ ]` to `[x]` when completed)
+**Task Management**: Update task status in `.aeon/specs/{feature}/status.md` files with progress and blockers
+
+### Human-in-the-Loop (HITL) Process
+- **Decisions & Escalations**: Document in `.aeon/scratchpad.md` for user review
+- **Assumptions**: Validate technical assumptions before implementation
+- **Requirements Gaps**: Interview stakeholders for missing requirements
+- **Risk Assessment**: Flag high-risk changes for explicit approval
 
 ## Key Implementation Patterns
 
@@ -112,15 +124,33 @@ eventBus.on('user:authenticated', handler);
 
 ## Testing Infrastructure
 
-- **Unit Tests**: Jest + React Testing Library
-- **Integration Tests**: API and service testing
-- **E2E Tests**: Playwright with visual regression
+- **Unit Tests**: Jest + React Testing Library (target: >90% coverage)
+- **Integration Tests**: API and service interaction testing
+- **E2E Tests**: Playwright with Chrome/Firefox/Safari (visual regression included)
+- **UAT Tests**: Business scenario validation with executable specifications
+- **Smoke Tests**: Critical path validation for deployments
 - **Mocks**: Custom mocks for jose, openid-client in `src/web/client/__mocks__/`
-- **Coverage**: Targets 90% for core services, 100% for security-critical paths
+- **Coverage**: 90% for core services, 100% for security-critical paths
+
+## CI/CD Pipeline
+
+### Required Checks (Must Pass)
+- **TypeScript Compilation**: Zero errors, strict mode enforcement
+- **Test Suite**: Jest unit tests >80% pass rate
+- **Code Quality**: ESLint compliance with TypeScript/React rules
+- **Security**: npm audit with moderate+ severity blocking
+- **E2E**: Playwright tests across browsers
+- **Performance**: Bundle size and load time thresholds
+
+### Deployment Pipeline
+- **Staging**: Automatic deployment on develop branch after CI passes
+- **Production**: Manual deployment on main branch with additional verification
+- **Rollback**: Automated rollback capability for failed deployments
+- **Monitoring**: Health checks and smoke tests post-deployment
 
 ## Quality Standards
 
-All development follows Kiro spec-driven methodology with `.kiro/specs/` documentation. 
+All development follows specification-driven methodology with `.aeon/specs/` documentation.
 
 ### Industry-Standard Practices (MANDATORY)
 - **Proven solutions first**: Prioritize battle-tested solutions over custom implementations
@@ -131,16 +161,36 @@ All development follows Kiro spec-driven methodology with `.kiro/specs/` documen
 
 ### Error Requirements
 - **Complete error capture**: Every error must be captured automatically with full context
-- **No console log copy-pasting**: All errors accessible via dashboards
+- **Structured logging**: All errors include user context, component info, timestamps, reproduction steps
 - **Graceful degradation**: All errors result in user-friendly messages with recovery actions
-- **Full traceability**: Stack traces, user context, plugin info, timestamps, reproduction steps
+- **External monitoring**: Integration with production monitoring service (Sentry recommended)
 
-### Pre-Production Checklist
-- All tests passing (unit, integration, e2e)
-- No TODOs in code
-- All acceptance criteria met
-- Error handling tested for all failure modes
-- Task status updated in spec files (checked boxes)
-- If any gate failed 3+ times, Multi-Perspective Problem Analysis completed
+### Code Standards
+- **TypeScript**: Strict mode, explicit types, no `any` usage
+- **React**: Functional components, hooks, proper error boundaries
+- **Testing**: TDD approach, test-first development
+- **Accessibility**: WCAG 2.1 AA compliance required
+- **Performance**: Core Web Vitals compliance, bundle optimization
+
+## Commits & Pull Requests
+
+### Commit Guidelines
+- **Small & Atomic**: Single logical change per commit
+- **Descriptive**: Clear commit messages with context
+- **Tested**: All commits must include tests for new functionality
+- **Documented**: Update documentation with code changes
+
+### PR Requirements
+- **AC Checklist**: All acceptance criteria validated and checked off
+- **Test Evidence**: Screenshots, test results, coverage reports
+- **Risk Assessment**: Document potential impacts and rollback plans
+- **Review**: Minimum one approving review before merge
+
+## Relentless Mode
+
+**Default State**: OFF - Requires explicit user confirmation for major actions  
+**When Enabled**: Proceeds with implementation without routine confirmations  
+**Auto-stops on**: EMERGENCY STOP command, security risks, data loss potential, destructive operations without backup  
+**Documentation**: See `/docs/runbooks/relentless-mode.md` for complete operational guide  
 
 Plugin system ensures fail-safe operation where core always remains available even if plugins fail.

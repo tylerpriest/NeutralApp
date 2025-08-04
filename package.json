@@ -4,7 +4,8 @@
   "description": "A domain-agnostic, ultra-modular application shell",
   "main": "dist/index.js",
   "engines": {
-    "node": "20.x"
+    "node": "20.x",
+    "npm": ">=10.0.0"
   },
   "scripts": {
     "build": "npm run build:client",
@@ -56,6 +57,10 @@
     "start": "node dist/web/server/index.js",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
+    "audit:security": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix",
+    "validate:dependencies": "npm ls --depth=0",
+    "smoke:test": "playwright test tests/smoke/ --project=chromium",
     "mcp": "npx @playwright/mcp@latest --port 8931"
   },
   "keywords": [
@@ -103,6 +108,8 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
+    "@sentry/browser": "^7.99.0",
+    "@sentry/node": "^7.99.0",
     "@types/cors": "^2.8.19",
     "@types/http-proxy-middleware": "^0.19.3",
     "@types/jsonwebtoken": "^9.0.10",
