@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import WelcomeScreen from '../components/WelcomeScreen';
-import WidgetFactory from '../components/WidgetFactory';
+import EnhancedWidgetFactory from '../components/EnhancedWidgetFactory';
 
 interface Widget {
   id: string;
@@ -129,32 +129,10 @@ const DashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        padding: '48px'
-      }}>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '16px'
-        }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            border: '3px solid #f3f4f6',
-            borderTop: '3px solid #1a1a1a',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }} />
-          <p style={{
-            fontSize: '14px',
-            color: '#6b7280',
-            margin: 0
-          }}>
+      <div className="flex items-center justify-center h-full p-12">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-3 border-gray-light border-t-primary rounded-full animate-spin" />
+          <p className="text-sm text-gray-medium">
             Loading dashboard...
           </p>
         </div>
@@ -164,60 +142,19 @@ const DashboardPage: React.FC = () => {
 
   if (error) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        padding: '48px',
-        textAlign: 'center'
-      }}>
-        <div style={{
-          width: '64px',
-          height: '64px',
-          backgroundColor: '#fef2f2',
-          borderRadius: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '24px',
-          color: '#ef4444'
-        }}>
+      <div className="flex flex-col items-center justify-center h-full p-12 text-center">
+        <div className="w-16 h-16 bg-error-light rounded-2xl flex items-center justify-center mb-6 text-error text-2xl">
           ⚠️
         </div>
-        <h3 style={{
-          fontSize: '20px',
-          fontWeight: '600',
-          color: '#1a1a1a',
-          margin: '0 0 8px 0'
-        }}>
+        <h3 className="text-xl font-semibold text-primary mb-2">
           Failed to load dashboard
         </h3>
-        <p style={{
-          fontSize: '14px',
-          color: '#6b7280',
-          margin: '0 0 24px 0',
-          maxWidth: '400px'
-        }}>
+        <p className="text-sm text-gray-medium mb-6 max-w-sm">
           {error}. Please try refreshing the page.
         </p>
         <button
           onClick={loadDashboard}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 24px',
-            backgroundColor: '#1a1a1a',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all duration-fast hover:bg-primary/90"
         >
           🔄 Retry
         </button>
@@ -232,51 +169,48 @@ const DashboardPage: React.FC = () => {
 
   // Show widgets in a grid layout
   return (
-    <div style={{
-      padding: '24px',
-      maxWidth: '1200px',
-      margin: '0 auto'
-    }}>
-      <div style={{
-        marginBottom: '32px'
-      }}>
-        <h1 style={{
-          fontSize: '28px',
-          fontWeight: 'bold',
-          color: '#1a1a1a',
-          margin: '0 0 8px 0'
-        }}>
+    <div className="p-6 max-w-content mx-auto">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-primary mb-2">
           Dashboard
         </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#6b7280',
-          margin: 0
-        }}>
+        <p className="text-base text-gray-medium">
           Your installed plugins and widgets
         </p>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '24px'
-      }}>
-        {widgets.map((widget) => (
-          <div
-            key={widget.id}
-            style={{
-              minHeight: '200px',
-              gridColumn: `span ${widget.size.width}`,
-              gridRow: `span ${widget.size.height}`
-            }}
-          >
-            <WidgetFactory
-              pluginId={widget.pluginId}
-              title={widget.title}
-            />
-          </div>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {widgets.map((widget) => {
+          // Determine size based on widget dimensions
+          const getWidgetSize = (width: number, height: number) => {
+            if (width >= 4 || height >= 3) return 'large';
+            if (width >= 2 || height >= 2) return 'medium';
+            return 'small';
+          };
+
+          const widgetSize = getWidgetSize(widget.size.width, widget.size.height);
+          const gridSpan = widget.size.width >= 2 ? 'md:col-span-2' : '';
+          
+          return (
+            <div
+              key={widget.id}
+              className={`${gridSpan} ${
+                widget.size.width >= 4 ? 'lg:col-span-2 xl:col-span-2' : ''
+              }`}
+              style={{ minHeight: `${Math.max(200, widget.size.height * 100)}px` }}
+            >
+              <EnhancedWidgetFactory
+                pluginId={widget.pluginId}
+                title={widget.title}
+                size={widgetSize}
+                onConfigure={() => {
+                  // TODO: Implement plugin configuration
+                  console.log('Configure plugin:', widget.pluginId);
+                }}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
