@@ -39,8 +39,8 @@ interface ApiClientConfig {
  * Authentication Token Storage
  */
 class TokenStorage {
-  private static readonly TOKEN_KEY = 'neutral_app_token';
-  private static readonly REFRESH_TOKEN_KEY = 'neutral_app_refresh_token';
+  private static readonly TOKEN_KEY = 'auth_token';
+  private static readonly REFRESH_TOKEN_KEY = 'refresh_token';
 
   static getToken(): string | null {
     try {
@@ -78,6 +78,7 @@ class TokenStorage {
     try {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+      localStorage.removeItem('guest_mode');
     } catch (error) {
       console.warn('Failed to clear tokens:', error);
     }
@@ -369,7 +370,7 @@ export class ApiClient {
    * Authentication methods
    */
   async login(credentials: { email: string; password: string }): Promise<ApiResponse<{ token: string; refreshToken: string; user: any }>> {
-    const response = await this.post<{ token: string; refreshToken: string; user: any }>('/auth/login', credentials);
+    const response = await this.post<{ token: string; refreshToken: string; user: any }>('/auth/signin', credentials);
     
     if (response.success && response.data) {
       TokenStorage.setToken(response.data.token);
@@ -381,7 +382,7 @@ export class ApiClient {
 
   async logout(): Promise<void> {
     try {
-      await this.post('/auth/logout');
+      await this.post('/auth/signout');
     } catch (error) {
       console.warn('Logout request failed:', error);
     } finally {

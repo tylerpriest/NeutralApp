@@ -3,8 +3,8 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 interface User {
   id: string;
   email: string;
-  name?: string | null;
-  emailVerified?: Date | null;
+  name: string;
+  role: 'admin' | 'user';
 }
 
 interface AuthContextType {
@@ -17,6 +17,7 @@ interface AuthContextType {
   register: (userData: RegisterData) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
   loginAsGuest: () => void;
+  refreshAuthToken: () => Promise<boolean>;
 }
 
 interface RegisterData {
@@ -40,6 +41,25 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Token management functions
+const getStoredTokens = () => {
+  return {
+    accessToken: localStorage.getItem('auth_token'),
+    refreshToken: localStorage.getItem('refresh_token')
+  };
+};
+
+const setStoredTokens = (accessToken: string, refreshToken: string) => {
+  localStorage.setItem('auth_token', accessToken);
+  localStorage.setItem('refresh_token', refreshToken);
+};
+
+const clearStoredTokens = () => {
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('guest_mode');
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isGuest, setIsGuest] = useState(false);
@@ -50,14 +70,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkAuth = async () => {
       console.log('AuthContext: Checking authentication on mount...');
       
-      const token = localStorage.getItem('auth_token');
-      console.log('AuthContext: Token in localStorage:', token ? 'exists' : 'none');
+      const { accessToken, refreshToken } = getStoredTokens();
+      console.log('AuthContext: Access token in localStorage:', accessToken ? 'exists' : 'none');
+      console.log('AuthContext: Refresh token in localStorage:', refreshToken ? 'exists' : 'none');
       
-      if (token) {
+      if (accessToken) {
         try {
           const response = await fetch('/api/auth/session', {
             headers: {
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${accessToken}`
             }
           });
           
@@ -70,8 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const textContent = await response.text();
               if (textContent.includes('<html') || textContent.includes('<!DOCTYPE')) {
                 console.error('AuthContext: Server returned HTML instead of JSON');
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('guest_mode');
+                clearStoredTokens();
                 return;
               }
             }
@@ -80,17 +100,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log('AuthContext: Session check successful, user:', data.user);
             setUser(data.user);
             setIsGuest(false);
-            // Clear any guest mode if we have a valid session
-            localStorage.removeItem('guest_mode');
+          } else if (response.status === 401 && refreshToken) {
+            // Try to refresh the token
+            console.log('AuthContext: Access token expired, attempting refresh...');
+            const refreshSuccess = await refreshAuthToken();
+            if (!refreshSuccess) {
+              console.log('AuthContext: Token refresh failed, clearing tokens');
+              clearStoredTokens();
+            }
           } else {
-            console.log('AuthContext: Session check failed, removing token');
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('guest_mode');
+            console.log('AuthContext: Session check failed, clearing tokens');
+            clearStoredTokens();
           }
         } catch (error) {
           console.error('Session check failed:', error);
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('guest_mode');
+          clearStoredTokens();
         }
       } else {
         // Check for guest mode only if no token exists
@@ -107,6 +131,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     checkAuth();
   }, []);
+
+  // Refresh token function
+  const refreshAuthToken = async (): Promise<boolean> => {
+    try {
+      const { refreshToken } = getStoredTokens();
+      
+      if (!refreshToken) {
+        console.log('AuthContext: No refresh token available');
+        return false;
+      }
+
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('AuthContext: Token refresh successful');
+        
+        // Update stored tokens
+        setStoredTokens(data.token, data.refreshToken);
+        setUser(data.user);
+        setIsGuest(false);
+        
+        return true;
+      } else {
+        console.log('AuthContext: Token refresh failed');
+        return false;
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      return false;
+    }
+  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log('AuthContext: Login attempt for:', email);
@@ -145,7 +207,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Clear any existing guest mode
         localStorage.removeItem('guest_mode');
         
-        localStorage.setItem('auth_token', data.token);
+        // Store both access and refresh tokens
+        setStoredTokens(data.token, data.refreshToken);
         setUser(data.user);
         setIsGuest(false);
         
@@ -181,20 +244,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      await fetch('/api/auth/signout', { method: 'POST' });
+      const { accessToken } = getStoredTokens();
+      
+      // Send logout request with token for revocation
+      if (accessToken) {
+        await fetch('/api/auth/signout', { 
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+      }
     } catch (error) {
       console.error('Logout request failed:', error);
     } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('guest_mode');
+      clearStoredTokens();
       setUser(null);
       setIsGuest(false);
     }
   };
 
   const loginAsGuest = (): void => {
+    clearStoredTokens();
     localStorage.setItem('guest_mode', 'true');
-    localStorage.removeItem('auth_token');
     setIsGuest(true);
     setUser(null);
     console.log('AuthContext: Logged in as guest');
@@ -220,7 +292,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('auth_token', data.token);
+        setStoredTokens(data.token, data.refreshToken);
         setUser(data.user);
         return true;
       } else {
@@ -265,6 +337,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     resetPassword,
     loginAsGuest,
+    refreshAuthToken,
   };
 
   return (
