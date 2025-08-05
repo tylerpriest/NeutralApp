@@ -673,12 +673,15 @@ const PluginManagerPage: React.FC = () => {
                 display: 'flex',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                marginBottom: '16px'
+                marginBottom: '16px',
+                position: 'relative'
               }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px'
+                  gap: '12px',
+                  flex: 1,
+                  paddingRight: '12px'
                 }}>
                   <div style={{
                     width: '40px',
@@ -688,39 +691,50 @@ const PluginManagerPage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: plugin.category === 'reading' ? '#3B82F6' : '#6b7280'
+                    color: plugin.category === 'reading' ? '#3B82F6' : '#6b7280',
+                    flexShrink: 0
                   }}>
                     {plugin.category === 'reading' ? <BookOpen size={20} /> : <Package size={20} />}
                   </div>
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <h3 style={{
                       fontSize: '18px',
                       fontWeight: '600',
                       color: '#1a1a1a',
-                      margin: '0 0 4px 0'
+                      margin: '0 0 4px 0',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap'
                     }}>
                       {plugin.name}
                     </h3>
                     <p style={{
                       fontSize: '12px',
                       color: '#9ca3af',
-                      margin: 0
+                      margin: 0,
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap'
                     }}>
                       v{plugin.version} by {plugin.author}
                     </p>
                   </div>
                 </div>
                 {plugin.installed && (
-                  <span style={{
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    right: '0',
                     fontSize: '12px',
-                    color: '#059669',
-                    backgroundColor: '#d1fae5',
+                    color: plugin.enabled ? '#059669' : '#6b7280',
+                    backgroundColor: plugin.enabled ? '#d1fae5' : '#f3f4f6',
                     padding: '4px 8px',
                     borderRadius: '4px',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap'
                   }}>
                     {plugin.enabled ? 'Enabled' : 'Disabled'}
-                  </span>
+                  </div>
                 )}
               </div>
 
