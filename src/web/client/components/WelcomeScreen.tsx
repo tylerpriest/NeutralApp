@@ -50,37 +50,9 @@ const WelcomeScreen: React.FC = () => {
   const readingPlugin = installedPlugins.find(plugin => plugin.id === 'reading-core');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col" data-testid="welcome-screen">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Package className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-xl font-bold text-gray-900">NeutralApp</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleSettings}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-            <button
-              onClick={handleAdmin}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Admin"
-            >
-              <Shield className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <div className="p-6 max-w-4xl mx-auto" data-testid="welcome-screen">
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+      <div className="flex items-center justify-center min-h-96">
         <div className="max-w-4xl w-full">
           {/* Hero Section */}
           <div className="text-center mb-12">
@@ -89,7 +61,7 @@ const WelcomeScreen: React.FC = () => {
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Welcome to <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">NeutralApp</span>
+              Welcome to your Dashboard
             </h1>
 
             <h2 className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
@@ -271,7 +243,7 @@ const WelcomeScreen: React.FC = () => {
             </button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
