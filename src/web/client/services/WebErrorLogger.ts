@@ -1,4 +1,4 @@
-import { LoggingService } from '../../../features/error-reporter/services/logging.service';
+import { ClientLoggingService as LoggingService } from '../../../features/error-reporter/services/client-logging.service';
 import { LoggingConfiguration, LogContext, ErrorContext, ErrorSeverity, UserFriendlyError, ErrorAction } from '../../../features/error-reporter/interfaces/logging.interface';
 
 export interface WebErrorContext {

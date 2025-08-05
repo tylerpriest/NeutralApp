@@ -1,6 +1,6 @@
-// Mock the LoggingService before importing the module
-jest.mock('../../../../features/error-reporter/services/logging.service', () => ({
-  LoggingService: jest.fn().mockImplementation(() => ({
+// Mock the ClientLoggingService before importing the module
+jest.mock('../../../../features/error-reporter/services/client-logging.service', () => ({
+  ClientLoggingService: jest.fn().mockImplementation(() => ({
     logError: jest.fn(),
     logWarning: jest.fn(),
     logInfo: jest.fn(),
@@ -36,8 +36,8 @@ import { WebErrorLogger, webErrorLogger } from '../WebErrorLogger';
 import { ErrorSeverity } from '../../../../features/error-reporter/interfaces/logging.interface';
 
 // Get the mock instance for testing
-const { LoggingService } = require('../../../../features/error-reporter/services/logging.service');
-const mockLoggingService = LoggingService.mock.results[0].value;
+const { ClientLoggingService } = require('../../../../features/error-reporter/services/client-logging.service');
+const mockLoggingService = ClientLoggingService.mock.results[0].value;
 
 describe('WebErrorLogger', () => {
   let logger: WebErrorLogger;
@@ -47,7 +47,7 @@ describe('WebErrorLogger', () => {
     jest.clearAllMocks();
     
     // Reset the mock implementation
-    LoggingService.mockImplementation(() => mockLoggingService);
+    ClientLoggingService.mockImplementation(() => mockLoggingService);
     
     // Create a new instance for each test
     logger = new WebErrorLogger();

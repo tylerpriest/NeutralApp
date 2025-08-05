@@ -14,6 +14,7 @@ import {
   LoggingConfiguration,
   ErrorHandler
 } from '../interfaces/logging.interface';
+import { ClientMonitoringService, MonitoringConfig, MonitoringProvider } from './client-monitoring.service';
 
 export interface LogContext {
   userId?: string;
@@ -22,12 +23,12 @@ export interface LogContext {
   metadata?: any;
 }
 
-export class LoggingService implements ILoggingService {
+export class ClientLoggingService implements ILoggingService {
   private storage: Map<string, LogEntry>;
   private maxEntries: number;
   private enableConsoleOutput: boolean;
   private errorHandler: ErrorHandlerImpl;
-  private externalMonitoring?: ExternalMonitoringService;
+  private externalMonitoring?: ClientMonitoringService;
 
   constructor(config: LoggingConfiguration) {
     this.storage = config.storage;
@@ -169,9 +170,9 @@ export class LoggingService implements ILoggingService {
       const errorType = this.extractErrorType(log.message);
       byType[errorType] = (byType[errorType] || 0) + 1;
       
-              // Count by component
-        const component = log.context.component ?? log.context.pluginId ?? 'Unknown';
-        byComponent[component] = (byComponent[component] || 0) + 1;
+      // Count by component
+      const component = log.context.component ?? log.context.pluginId ?? 'Unknown';
+      byComponent[component] = (byComponent[component] || 0) + 1;
       
       // Count by severity
       const severity = log.level === LogLevel.CRITICAL ? ErrorSeverity.CRITICAL : ErrorSeverity.HIGH;
@@ -366,7 +367,7 @@ export class LoggingService implements ILoggingService {
     const monitoringConfig = this.getMonitoringConfig();
     if (monitoringConfig.enabled) {
       try {
-        this.externalMonitoring = new ExternalMonitoringService(monitoringConfig);
+        this.externalMonitoring = new ClientMonitoringService(monitoringConfig);
         console.log('[LoggingService] External monitoring initialized');
       } catch (error) {
         console.warn('[LoggingService] Failed to initialize external monitoring:', error);
@@ -375,246 +376,27 @@ export class LoggingService implements ILoggingService {
   }
 
   private getMonitoringConfig(): MonitoringConfig {
+    // Client-side configuration from environment variables or window config
+    const windowConfig = (window as any).__APP_CONFIG__ || {};
+    
     return {
-      enabled: process.env.MONITORING_ENABLED === 'true',
-      provider: (process.env.MONITORING_PROVIDER as MonitoringProvider) || 'sentry',
-      dsn: process.env.MONITORING_DSN,
-      environment: process.env.NODE_ENV || 'development',
-      release: process.env.APP_VERSION,
-      sampleRate: parseFloat(process.env.MONITORING_SAMPLE_RATE || '1.0'),
-      debug: process.env.NODE_ENV === 'development'
+      enabled: windowConfig.MONITORING_ENABLED === 'true' || false,
+      provider: (windowConfig.MONITORING_PROVIDER as MonitoringProvider) || 'sentry',
+      dsn: windowConfig.MONITORING_DSN,
+      environment: windowConfig.NODE_ENV || 'development',
+      release: windowConfig.APP_VERSION,
+      sampleRate: parseFloat(windowConfig.MONITORING_SAMPLE_RATE || '1.0'),
+      debug: windowConfig.NODE_ENV === 'development'
     };
-  }
-}
-
-interface MonitoringConfig {
-  enabled: boolean;
-  provider: MonitoringProvider;
-  dsn?: string;
-  environment: string;
-  release?: string;
-  sampleRate: number;
-  debug: boolean;
-}
-
-type MonitoringProvider = 'sentry' | 'datadog' | 'bugsnag';
-
-interface MonitoringContext {
-  user?: { id: string };
-  tags?: Record<string, string>;
-  extra?: Record<string, any>;
-}
-
-class ExternalMonitoringService {
-  private config: MonitoringConfig;
-  private initialized = false;
-
-  constructor(config: MonitoringConfig) {
-    this.config = config;
-    this.initialize();
-  }
-
-  private async initialize(): Promise<void> {
-    try {
-      switch (this.config.provider) {
-        case 'sentry':
-          await this.initializeSentry();
-          break;
-        case 'datadog':
-          await this.initializeDatadog();
-          break;
-        case 'bugsnag':
-          await this.initializeBugsnag();
-          break;
-        default:
-          throw new Error(`Unsupported monitoring provider: ${this.config.provider}`);
-      }
-      this.initialized = true;
-    } catch (error) {
-      console.error(`Failed to initialize ${this.config.provider}:`, error);
-    }
-  }
-
-  private async initializeSentry(): Promise<void> {
-    if (typeof window !== 'undefined') {
-      // Client-side Sentry
-      const { init, configureScope } = await import('@sentry/browser');
-      init({
-        dsn: this.config.dsn,
-        environment: this.config.environment,
-        release: this.config.release,
-        sampleRate: this.config.sampleRate,
-        debug: this.config.debug,
-        beforeSend: (event) => {
-          // Filter out non-critical errors in development
-          if (this.config.environment === 'development' && event.level === 'info') {
-            return null;
-          }
-          return event;
-        }
-      });
-    } else {
-      // Server-side Sentry
-      const { init } = await import('@sentry/node');
-      init({
-        dsn: this.config.dsn,
-        environment: this.config.environment,
-        release: this.config.release,
-        sampleRate: this.config.sampleRate,
-        debug: this.config.debug
-      });
-    }
-  }
-
-  private async initializeDatadog(): Promise<void> {
-    // Placeholder for Datadog initialization
-    console.log('Datadog monitoring would be initialized here');
-  }
-
-  private async initializeBugsnag(): Promise<void> {
-    // Placeholder for Bugsnag initialization
-    console.log('Bugsnag monitoring would be initialized here');
-  }
-
-  captureException(error: Error, context?: MonitoringContext): void {
-    if (!this.initialized) return;
-
-    try {
-      switch (this.config.provider) {
-        case 'sentry':
-          this.captureSentryException(error, context);
-          break;
-        case 'datadog':
-          this.captureDatadogException(error, context);
-          break;
-        case 'bugsnag':
-          this.captureBugsnagException(error, context);
-          break;
-      }
-    } catch (captureError) {
-      console.error('Failed to capture exception:', captureError);
-    }
-  }
-
-  captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info', context?: MonitoringContext): void {
-    if (!this.initialized) return;
-
-    try {
-      switch (this.config.provider) {
-        case 'sentry':
-          this.captureSentryMessage(message, level, context);
-          break;
-        case 'datadog':
-          this.captureDatadogMessage(message, level, context);
-          break;
-        case 'bugsnag':
-          this.captureBugsnagMessage(message, level, context);
-          break;
-      }
-    } catch (captureError) {
-      console.error('Failed to capture message:', captureError);
-    }
-  }
-
-  private async captureSentryException(error: Error, context?: MonitoringContext): Promise<void> {
-    if (typeof window !== 'undefined') {
-      const { captureException, configureScope } = await import('@sentry/browser');
-      configureScope((scope) => {
-        if (context?.user) scope.setUser(context.user);
-        if (context?.tags) {
-          Object.entries(context.tags).forEach(([key, value]) => {
-            scope.setTag(key, value);
-          });
-        }
-        if (context?.extra) {
-          Object.entries(context.extra).forEach(([key, value]) => {
-            scope.setExtra(key, value);
-          });
-        }
-      });
-      captureException(error);
-    } else {
-      const { captureException, configureScope } = await import('@sentry/node');
-      configureScope((scope) => {
-        if (context?.user) scope.setUser(context.user);
-        if (context?.tags) {
-          Object.entries(context.tags).forEach(([key, value]) => {
-            scope.setTag(key, value);
-          });
-        }
-        if (context?.extra) {
-          Object.entries(context.extra).forEach(([key, value]) => {
-            scope.setExtra(key, value);
-          });
-        }
-      });
-      captureException(error);
-    }
-  }
-
-  private async captureSentryMessage(message: string, level: 'info' | 'warning' | 'error', context?: MonitoringContext): Promise<void> {
-    if (typeof window !== 'undefined') {
-      const { captureMessage, configureScope } = await import('@sentry/browser');
-      configureScope((scope) => {
-        if (context?.user) scope.setUser(context.user);
-        if (context?.tags) {
-          Object.entries(context.tags).forEach(([key, value]) => {
-            scope.setTag(key, value);
-          });
-        }
-        if (context?.extra) {
-          Object.entries(context.extra).forEach(([key, value]) => {
-            scope.setExtra(key, value);
-          });
-        }
-      });
-      captureMessage(message, level);
-    } else {
-      const { captureMessage, configureScope } = await import('@sentry/node');
-      configureScope((scope) => {
-        if (context?.user) scope.setUser(context.user);
-        if (context?.tags) {
-          Object.entries(context.tags).forEach(([key, value]) => {
-            scope.setTag(key, value);
-          });
-        }
-        if (context?.extra) {
-          Object.entries(context.extra).forEach(([key, value]) => {
-            scope.setExtra(key, value);
-          });
-        }
-      });
-      captureMessage(message, level);
-    }
-  }
-
-  private captureDatadogException(error: Error, context?: MonitoringContext): void {
-    // Placeholder for Datadog exception capture
-    console.log('Datadog exception capture:', error.message, context);
-  }
-
-  private captureDatadogMessage(message: string, level: string, context?: MonitoringContext): void {
-    // Placeholder for Datadog message capture
-    console.log('Datadog message capture:', message, level, context);
-  }
-
-  private captureBugsnagException(error: Error, context?: MonitoringContext): void {
-    // Placeholder for Bugsnag exception capture
-    console.log('Bugsnag exception capture:', error.message, context);
-  }
-
-  private captureBugsnagMessage(message: string, level: string, context?: MonitoringContext): void {
-    // Placeholder for Bugsnag message capture
-    console.log('Bugsnag message capture:', message, level, context);
   }
 }
 
 class ErrorHandlerImpl implements ErrorHandler {
   private userErrorDisplayCallback?: (error: UserFriendlyError) => void;
   private adminNotificationCallback?: (notification: AdminNotification) => void;
-  private loggingService: LoggingService;
+  private loggingService: ClientLoggingService;
 
-  constructor(loggingService: LoggingService) {
+  constructor(loggingService: ClientLoggingService) {
     this.loggingService = loggingService;
   }
 
