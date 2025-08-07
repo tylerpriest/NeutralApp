@@ -447,19 +447,10 @@ const SettingsPage: React.FC = () => {
           borderBottom: '1px solid #e5e7eb',
           marginBottom: '24px'
         }}>
-          <h1 style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#1a1a1a',
-            margin: '0 0 8px 0'
-          }}>
+          <h1 className="text-4xl font-bold text-black mb-2">
             Settings
           </h1>
-          <p style={{
-            fontSize: '14px',
-            color: '#6b7280',
-            margin: 0
-          }}>
+          <p className="text-lg text-gray-500">
             Manage your account preferences
           </p>
         </div>

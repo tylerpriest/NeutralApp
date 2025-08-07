@@ -40,14 +40,11 @@ const WelcomeScreen: React.FC = () => {
     <div className="p-6 max-w-content mx-auto" data-testid="welcome-screen">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-primary mb-2">
+        <h1 className="text-4xl font-bold text-black mb-2">
           Dashboard
         </h1>
-        <p className="text-base text-gray-medium">
-          {readingPlugin 
-            ? "Your plugins are ready to use"
-            : "Get started by installing your first plugin"
-          }
+        <p className="text-lg text-gray-500">
+          Get started by installing your first plugin
         </p>
       </div>
 

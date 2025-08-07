@@ -22,8 +22,8 @@ describe('WelcomeScreen', () => {
     it('should display welcome title and subtitle', () => {
       renderWelcomeScreen();
       
-      // Check for the main welcome title (now in h1 with gradient text)
-      expect(screen.getByText(/Welcome to/)).toBeInTheDocument();
+      // Check for the main dashboard title 
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
       expect(screen.getByText('Get started by installing your first plugin')).toBeInTheDocument();
     });
 

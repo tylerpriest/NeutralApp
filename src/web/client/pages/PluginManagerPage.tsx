@@ -404,20 +404,11 @@ const PluginManagerPage: React.FC = () => {
       </div>
 
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{
-          fontSize: '28px',
-          fontWeight: 'bold',
-          color: '#1a1a1a',
-          margin: '0 0 8px 0'
-        }}>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-black mb-2">
           Plugin Manager
         </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#6b7280',
-          margin: 0
-        }}>
+        <p className="text-lg text-gray-500">
           Install and manage plugins to extend your dashboard functionality
         </p>
       </div>
