@@ -169,48 +169,49 @@ const DashboardPage: React.FC = () => {
 
   // Show widgets in a grid layout
   return (
-    <div className="p-6 max-w-content mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-primary mb-2">
-          Dashboard
-        </h1>
-        <p className="text-base text-gray-medium">
-          Your installed plugins and widgets
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Dashboard
+          </h1>
+          <p className="text-base text-gray-600 mt-1">
+            Your installed plugins and widgets
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {widgets.map((widget) => {
-          // Determine size based on widget dimensions
-          const getWidgetSize = (width: number, height: number) => {
-            if (width >= 4 || height >= 3) return 'large';
-            if (width >= 2 || height >= 2) return 'medium';
-            return 'small';
-          };
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {widgets.map((widget) => {
+            // Determine size based on widget dimensions
+            const getWidgetSize = (width: number, height: number) => {
+              if (width >= 4 || height >= 3) return 'large';
+              if (width >= 2 || height >= 2) return 'medium';
+              return 'small';
+            };
 
-          const widgetSize = getWidgetSize(widget.size.width, widget.size.height);
-          const gridSpan = widget.size.width >= 2 ? 'md:col-span-2' : '';
-          
-          return (
-            <div
-              key={widget.id}
-              className={`${gridSpan} ${
-                widget.size.width >= 4 ? 'lg:col-span-2 xl:col-span-2' : ''
-              }`}
-              style={{ minHeight: `${Math.max(200, widget.size.height * 100)}px` }}
-            >
-              <EnhancedWidgetFactory
-                pluginId={widget.pluginId}
-                title={widget.title}
-                size={widgetSize}
-                onConfigure={() => {
-                  // TODO: Implement plugin configuration
-                  console.log('Configure plugin:', widget.pluginId);
-                }}
-              />
-            </div>
-          );
-        })}
+            const widgetSize = getWidgetSize(widget.size.width, widget.size.height);
+            const gridSpan = widget.size.width >= 2 ? 'md:col-span-2' : '';
+            
+            return (
+              <div
+                key={widget.id}
+                className={`${gridSpan} ${
+                  widget.size.width >= 4 ? 'lg:col-span-2 xl:col-span-2' : ''
+                }`}
+              >
+                <EnhancedWidgetFactory
+                  pluginId={widget.pluginId}
+                  title={widget.title}
+                  size={widgetSize}
+                  onConfigure={() => {
+                    // TODO: Implement plugin configuration
+                    console.log('Configure plugin:', widget.pluginId);
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

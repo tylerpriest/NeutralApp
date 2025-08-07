@@ -104,30 +104,26 @@ const PluginCard: React.FC<PluginCardProps> = ({
   return (
     <Card 
       className={cn(
-        'group relative transition-all duration-normal hover:shadow-medium',
-        getStatusColor(),
+        'group relative transition-all duration-200 hover:shadow-lg bg-white border border-gray-200',
         sizeClasses[size],
-        isWidget && 'cursor-pointer hover:scale-[1.02]',
+        isWidget && 'cursor-pointer',
         className
       )}
       onClick={isWidget && onOpen ? onOpen : undefined}
     >
-      {/* Status indicator */}
-      <div className="absolute top-3 right-3 z-10">
-        {getStatusIcon()}
-      </div>
+      {/* Status indicator - removed for cleaner look */}
 
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-3 pt-4">
         <div className="flex items-start gap-3">
           {/* Plugin icon */}
           <div className="flex-shrink-0">
             {icon ? (
-              <div className="h-8 w-8 flex items-center justify-center text-primary">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-700">
                 {icon}
               </div>
             ) : (
-              <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-semibold text-primary">
+              <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <span className="text-lg font-semibold text-gray-700">
                   {name.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -137,46 +133,46 @@ const PluginCard: React.FC<PluginCardProps> = ({
           {/* Plugin info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-primary text-sm leading-none truncate">
+              <h3 className="font-semibold text-gray-900 text-base leading-none">
                 {name}
               </h3>
               {version && (
-                <span className="text-xs text-gray-medium bg-gray-light px-1.5 py-0.5 rounded">
+                <span className="text-xs text-gray-500 font-normal">
                   v{version}
                 </span>
               )}
             </div>
             
             {author && (
-              <p className="text-xs text-gray-medium mb-1">by {author}</p>
+              <p className="text-sm text-gray-500 mb-1">by {author}</p>
             )}
             
-            <p className="text-xs text-gray-dark line-clamp-2 leading-relaxed">
+            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed mt-1">
               {description}
             </p>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="py-2">
+      <CardContent className="py-0 px-6">
         {/* Category and tags */}
         {(category || tags.length > 0) && (
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="flex flex-wrap gap-1.5 mb-3">
             {category && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/10 text-primary">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                 {category}
               </span>
             )}
             {tags.slice(0, 2).map((tag, index) => (
               <span 
                 key={index}
-                className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-light text-gray-dark"
+                className="inline-flex items-center px-2.5 py-1 rounded-md text-xs bg-gray-100 text-gray-600"
               >
                 {tag}
               </span>
             ))}
             {tags.length > 2 && (
-              <span className="text-xs text-gray-medium">
+              <span className="text-xs text-gray-500">
                 +{tags.length - 2} more
               </span>
             )}
@@ -186,9 +182,9 @@ const PluginCard: React.FC<PluginCardProps> = ({
 
       {/* Actions */}
       {showActions && (
-        <CardFooter className="pt-0 pb-3">
+        <CardFooter className="pt-2 pb-4 px-6">
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               {status === 'enabled' ? (
                 <Button
                   size="sm"
@@ -198,14 +194,14 @@ const PluginCard: React.FC<PluginCardProps> = ({
                     onDisable && handleAction(onDisable);
                   }}
                   disabled={isLoading}
-                  className="h-7 px-2 text-xs"
+                  className="h-8 px-3 text-sm bg-gray-900 text-white border-gray-900 hover:bg-gray-800 hover:border-gray-800"
                 >
                   {isLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Pause className="h-3 w-3" />
+                    <Pause className="h-4 w-4" />
                   )}
-                  <span className="ml-1">Disable</span>
+                  <span className="ml-1.5">Disable</span>
                 </Button>
               ) : (
                 <Button
@@ -216,14 +212,14 @@ const PluginCard: React.FC<PluginCardProps> = ({
                     onEnable && handleAction(onEnable);
                   }}
                   disabled={isLoading}
-                  className="h-7 px-2 text-xs"
+                  className="h-8 px-3 text-sm bg-gray-900 text-white hover:bg-gray-800"
                 >
                   {isLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Play className="h-3 w-3" />
+                    <Play className="h-4 w-4" />
                   )}
-                  <span className="ml-1">Enable</span>
+                  <span className="ml-1.5">Install</span>
                 </Button>
               )}
 
@@ -235,9 +231,9 @@ const PluginCard: React.FC<PluginCardProps> = ({
                     e.stopPropagation();
                     onConfigure();
                   }}
-                  className="h-7 w-7 p-0"
+                  className="h-8 w-8 p-0 hover:bg-gray-100"
                 >
-                  <Settings className="h-3 w-3" />
+                  <Settings className="h-4 w-4 text-gray-600" />
                 </Button>
               )}
             </div>
@@ -250,9 +246,9 @@ const PluginCard: React.FC<PluginCardProps> = ({
                   e.stopPropagation();
                   onOpen();
                 }}
-                className="h-7 w-7 p-0"
+                className="h-8 w-8 p-0 hover:bg-gray-100"
               >
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-4 w-4 text-gray-600" />
               </Button>
             )}
           </div>
@@ -261,10 +257,10 @@ const PluginCard: React.FC<PluginCardProps> = ({
 
       {/* Loading overlay */}
       {status === 'loading' && (
-        <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-md">
+        <div className="absolute inset-0 bg-white/90 flex items-center justify-center rounded-lg">
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <span className="text-xs text-gray-medium">Loading...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
+            <span className="text-sm text-gray-600">Loading...</span>
           </div>
         </div>
       )}
